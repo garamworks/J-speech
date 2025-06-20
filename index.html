@@ -301,27 +301,8 @@
     </div>
 
     <script>
-        // Flashcard data with Japanese anime/movie dialogue and Korean translations
-        const flashcards = [
-            {
-                japanese: "君の名前は何ですか？",
-                korean: "당신의 이름은 무엇입니까?",
-                romanji: "Kimi no namae wa nan desu ka?",
-                character: "🦁"
-            },
-            {
-                japanese: "一緒に頑張りましょう！",
-                korean: "함께 힘내자!",
-                romanji: "Issho ni ganbarimashou!",
-                character: "👤"
-            },
-            {
-                japanese: "諦めるな、最後まで戦うんだ！",
-                korean: "포기하지 마, 끝까지 싸우는 거야!",
-                romanji: "Akirameru na, saigo made tatakau nda!",
-                character: "🎭"
-            }
-        ];
+        // Flashcard data - will be loaded from Notion
+        let flashcards = [];
 
         let currentCardIndex = 0;
         let isFlipped = false;
@@ -338,6 +319,47 @@
         const nextBtn = document.getElementById('next-btn');
         const currentCardSpan = document.getElementById('current-card');
         const totalCardsSpan = document.getElementById('total-cards');
+
+        // Load flashcards from Notion
+        async function loadFlashcardsFromNotion() {
+            try {
+                const response = await fetch('/api/flashcards');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch flashcards');
+                }
+                const data = await response.json();
+                flashcards = data;
+                
+                if (flashcards.length === 0) {
+                    showError('노션 데이터베이스에서 플래시카드를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                init();
+            } catch (error) {
+                console.error('Error loading flashcards:', error);
+                showError('노션 데이터베이스 연결에 실패했습니다. 설정을 확인해주세요.');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #ff6b6b;
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+                z-index: 1000;
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+        }
 
         // Initialize the app
         function init() {
