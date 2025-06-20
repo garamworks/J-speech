@@ -15,9 +15,10 @@ function extractDatabaseIdFromUrl(pageUrl) {
     throw Error("Failed to extract database ID from URL");
 }
 
-// Use the correct database ID for the dialogue data
-const DATABASE_ID = "218fe404b3dc8019ba05cd4635a94446";
-// Character images database ID
+// Extract database ID from the new URL
+const NEW_DATABASE_URL = "https://www.notion.so/doungle/218fe404b3dc80eb9941ed534568ead1?v=218fe404b3dc80238171000c9309f545&source=copy_link";
+const DATABASE_ID = extractDatabaseIdFromUrl(NEW_DATABASE_URL);
+// Character images database ID - will need to be updated based on the new workspace
 const IMAGES_DATABASE_ID = "218fe404b3dc8059bdf1d40cf85d7e47";
 
 // Get all child databases from the page
@@ -129,12 +130,12 @@ async function getFlashcardsFromNotion() {
                 return prop?.select?.name || "";
             };
 
-            // Map the actual column names from the dialogue database
-            const japanese = getTextContent(properties.문장);  // Japanese dialogue
-            const korean = getTextContent(properties.한국어);  // Korean translation
-            const speaker = getTextContent(properties.사람);  // Character name
-            const time = getTextContent(properties.Time);  // Timestamp
-            const episode = properties.ep?.select?.name || "1화";  // Episode number
+            // Map the actual column names from the new database
+            const japanese = getTextContent(properties['일본어 문장']);  // Japanese sentence
+            const korean = getTextContent(properties['한국어']);  // Korean translation
+            const sentenceId = getTextContent(properties['문장 ID']);  // Sentence ID
+            const n2Word = getTextContent(properties['N2 단어']);  // N2 vocabulary word
+            const episode = "1화";  // Default episode
 
             // Map character names to emojis
             const characterEmojis = {
@@ -148,11 +149,11 @@ async function getFlashcardsFromNotion() {
             return {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
-                character: characterEmojis[speaker] || characterEmojis.default,
-                characterImage: characterImages[speaker]?.imageUrl || null,
-                gender: characterImages[speaker]?.gender || null,
-                romanji: time || "",
-                speaker: speaker || "unknown",
+                character: characterEmojis.default,
+                characterImage: null, // No character images in this database structure
+                gender: null,
+                romanji: sentenceId || "",
+                speaker: n2Word || "학습자료",
                 episode: episode
             };
         });
