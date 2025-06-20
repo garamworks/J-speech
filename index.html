@@ -38,12 +38,44 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
+        .episode-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
         .episode-title {
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
             font-weight: 400;
-            margin-bottom: 1rem;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .episode-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .episode-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .episode-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
         .flashcard-container {
@@ -199,15 +231,15 @@
         }
 
         .character-avatar {
-            width: 160px;
-            height: 160px;
+            width: 128px;
+            height: 128px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
             margin: 0 auto 1rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 4rem;
             border: 3px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             overflow: hidden;
@@ -216,8 +248,8 @@
         }
 
         .character-avatar img {
-            width: 160px;
-            height: 160px;
+            width: 128px;
+            height: 128px;
             object-fit: cover;
             border-radius: 50%;
             position: absolute;
@@ -279,14 +311,15 @@
             }
             
             .character-avatar {
-                width: 120px;
-                height: 120px;
+                width: 96px;
+                height: 96px;
                 margin-bottom: 0.75rem;
+                font-size: 3.2rem;
             }
             
             .character-avatar img {
-                width: 120px;
-                height: 120px;
+                width: 96px;
+                height: 96px;
             }
             
             .speaker-name {
@@ -329,8 +362,19 @@
 </head>
 <body>
     <div class="app-container">
-        <h1 class="app-title">3월의 라이온</h1>
-        <div class="episode-title">1화</div>
+        <div class="episode-nav">
+            <button class="episode-btn prev-episode" id="prev-episode" style="display: none;">
+                <svg class="episode-icon" viewBox="0 0 24 24">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+            </button>
+            <div class="episode-title" id="episode-title">ep.01</div>
+            <button class="episode-btn next-episode" id="next-episode" style="display: none;">
+                <svg class="episode-icon" viewBox="0 0 24 24">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+            </button>
+        </div>
         
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
@@ -395,6 +439,9 @@
         const nextBtn = document.getElementById('next-btn');
         const currentCardSpan = document.getElementById('current-card');
         const totalCardsSpan = document.getElementById('total-cards');
+        const episodeTitle = document.getElementById('episode-title');
+        const prevEpisodeBtn = document.getElementById('prev-episode');
+        const nextEpisodeBtn = document.getElementById('next-episode');
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -437,16 +484,86 @@
             document.body.appendChild(errorDiv);
         }
 
+        // Episode management
+        let currentEpisode = 1;
+        let episodeData = {};
+        let currentEpisodeCards = [];
+
+        // Parse episode data from flashcards
+        function parseEpisodes() {
+            episodeData = {};
+            flashcards.forEach(card => {
+                const episodeMatch = card.romanji.match(/^(\d+)-(\d+)$/);
+                if (episodeMatch) {
+                    const episodeNum = parseInt(episodeMatch[1]);
+                    const sentenceNum = parseInt(episodeMatch[2]);
+                    
+                    if (!episodeData[episodeNum]) {
+                        episodeData[episodeNum] = [];
+                    }
+                    episodeData[episodeNum].push({...card, sentenceNum});
+                }
+            });
+            
+            // Sort sentences within each episode
+            Object.keys(episodeData).forEach(ep => {
+                episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
+            });
+            
+            // Set current episode to the first available episode
+            const availableEpisodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+            if (availableEpisodes.length > 0) {
+                currentEpisode = availableEpisodes[0];
+                loadEpisode(currentEpisode);
+            }
+        }
+
+        // Load cards for specific episode
+        function loadEpisode(episodeNum) {
+            currentEpisode = episodeNum;
+            currentEpisodeCards = episodeData[episodeNum] || [];
+            currentCardIndex = 0;
+            
+            episodeTitle.textContent = `ep.${episodeNum.toString().padStart(2, '0')}`;
+            
+            if (currentEpisodeCards.length > 0) {
+                loadCard(currentCardIndex);
+                totalCardsSpan.textContent = currentEpisodeCards.length;
+                updateNavigationButtons();
+                updateEpisodeButtons();
+            }
+        }
+
+        // Update episode navigation buttons
+        function updateEpisodeButtons() {
+            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+            const currentIndex = episodes.indexOf(currentEpisode);
+            
+            // Show/hide previous episode button
+            if (currentIndex > 0) {
+                prevEpisodeBtn.style.display = 'flex';
+            } else {
+                prevEpisodeBtn.style.display = 'none';
+            }
+            
+            // Show/hide next episode button
+            if (currentIndex < episodes.length - 1) {
+                nextEpisodeBtn.style.display = 'flex';
+            } else {
+                nextEpisodeBtn.style.display = 'none';
+            }
+        }
+
         // Initialize the app
         function init() {
-            totalCardsSpan.textContent = flashcards.length;
-            loadCard(currentCardIndex);
-            updateNavigationButtons();
+            parseEpisodes();
         }
 
         // Load a specific card
         function loadCard(index) {
-            const card = flashcards[index];
+            if (index < 0 || index >= currentEpisodeCards.length) return;
+            
+            const card = currentEpisodeCards[index];
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
