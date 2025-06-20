@@ -224,6 +224,54 @@
             fill: currentColor;
         }
 
+        .speaker-btn {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: #4299e1;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .word-speaker-btn {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: #48bb78;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .speaker-btn:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .word-speaker-btn:hover {
+            background: #38a169;
+            transform: scale(1.05);
+        }
+
         .nav-icon {
             width: 20px;
             height: 20px;
@@ -303,11 +351,19 @@
             }
             
             .speaker-btn {
-                width: 80px;
-                height: 80px;
+                width: 2.5rem;
+                height: 2.5rem;
                 bottom: 0.75rem;
                 right: 0.75rem;
-                font-size: 1.8rem;
+                font-size: 1rem;
+            }
+            
+            .word-speaker-btn {
+                width: 2.5rem;
+                height: 2.5rem;
+                bottom: 0.75rem;
+                left: 0.75rem;
+                font-size: 1rem;
             }
             
             .character-avatar {
@@ -387,6 +443,11 @@
                             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
                         </svg>
                     </button>
+                    <button class="word-speaker-btn" id="word-speaker-btn" title="Listen to word pronunciation">
+                        <svg class="speaker-icon" viewBox="0 0 24 24">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                        </svg>
+                    </button>
                 </div>
                 <div class="card-face card-back">
                     <div class="character-avatar" id="character-avatar-back"></div>
@@ -395,6 +456,11 @@
                     <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
                         <svg class="speaker-icon" viewBox="0 0 24 24">
                             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
+                    <button class="word-speaker-btn" id="word-speaker-btn-back" title="Listen to word pronunciation">
+                        <svg class="speaker-icon" viewBox="0 0 24 24">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                         </svg>
                     </button>
                 </div>
@@ -435,6 +501,8 @@
         const speakerName = document.getElementById('speaker-name');
         const speakerBtn = document.getElementById('speaker-btn');
         const speakerBtnBack = document.getElementById('speaker-btn-back');
+        const wordSpeakerBtn = document.getElementById('word-speaker-btn');
+        const wordSpeakerBtnBack = document.getElementById('word-speaker-btn-back');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const currentCardSpan = document.getElementById('current-card');
@@ -684,6 +752,57 @@
             speechSynthesis.speak(utterance);
         }
 
+        // Text-to-speech for N2 words
+        function speakWord() {
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (!currentCard.speaker) return; // No word to speak
+            
+            const utterance = new SpeechSynthesisUtterance(currentCard.speaker);
+            
+            // Wait for voices to load on mobile browsers
+            const voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                // Retry after voices are loaded
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    speakWord();
+                }, { once: true });
+                return;
+            }
+            
+            // Find Japanese voice
+            const selectedVoice = voices.find(voice => 
+                voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')
+            );
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.7; // Slower for individual words
+            utterance.pitch = 1.0;
+            
+            // Visual feedback for speaking
+            wordSpeakerBtn.style.background = '#2d7748';
+            wordSpeakerBtnBack.style.background = '#2d7748';
+            
+            utterance.onend = () => {
+                wordSpeakerBtn.style.background = '#48bb78';
+                wordSpeakerBtnBack.style.background = '#48bb78';
+            };
+            
+            utterance.onerror = () => {
+                wordSpeakerBtn.style.background = '#48bb78';
+                wordSpeakerBtnBack.style.background = '#48bb78';
+                console.warn('Speech synthesis error - Japanese voice may not be available');
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
         // Navigation functions
         function goToPreviousCard() {
             if (currentCardIndex > 0) {
@@ -715,6 +834,14 @@
         speakerBtnBack.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
             speakJapanese();
+        });
+        wordSpeakerBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card flip when clicking speaker
+            speakWord();
+        });
+        wordSpeakerBtnBack.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card flip when clicking speaker
+            speakWord();
         });
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
