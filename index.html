@@ -622,90 +622,82 @@
             }
         }
 
-        // Get appropriate emoji based on sentence content and mood
-        function getEmojiForSentence(japanese) {
+        // Get diverse emoji based on sentence index and content
+        function getEmojiForSentence(japanese, cardIndex = 0) {
+            // Wide variety of emojis to ensure diversity
+            const emojiPool = [
+                '😊', '😄', '😃', '😀', '😁', '🙂', '😇', '😆', '🤣', '😂',
+                '🥰', '😍', '🤩', '😋', '😜', '🤪', '😎', '🤓', '🥳', '😌',
+                '😉', '😏', '🙃', '😗', '😙', '😚', '🤗', '🤭', '🤫', '🤨',
+                '😐', '😑', '🙄', '😶', '😯', '😮', '😲', '😵', '🤯', '🥴',
+                '🤔', '🤐', '🤥', '😴', '😪', '🥱', '😔', '😟', '😕', '🙁',
+                '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
+                '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥',
+                '😓', '🤗', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤠', '😈',
+                '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾',
+                '🤖', '🎭', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️',
+                '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎',
+                '💋', '💯', '💢', '💥', '💫', '💦', '💨', '🕳️', '💣', '💬',
+                '👁️', '🗨️', '🗯️', '💭', '💤', '👋', '🤚', '🖐️', '✋', '🖖',
+                '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉',
+                '👆', '🖕', '👇', '☝️', '👍', '👎', '👊', '✊', '🤛', '🤜'
+            ];
+            
+            // Use card index to ensure variety across consecutive cards
+            let baseIndex = cardIndex % emojiPool.length;
+            
+            // Add some randomness based on text content
+            const textHash = japanese.split('').reduce((hash, char) => {
+                return ((hash << 5) - hash + char.charCodeAt(0)) & 0xffffffff;
+            }, 0);
+            
+            const finalIndex = (baseIndex + Math.abs(textHash) % 20) % emojiPool.length;
+            
+            // Still check for specific emotional content to override with appropriate emojis
             const text = japanese.toLowerCase();
             
-            // Question patterns
             if (text.includes('？') || text.includes('?')) {
-                if (text.includes('どこ') || text.includes('何') || text.includes('いつ')) {
-                    return '🤔'; // Thinking/wondering
-                }
-                return '❓'; // Question
+                const questionEmojis = ['❓', '❔', '🤔', '🧐', '💭', '🤷', '🙋'];
+                return questionEmojis[Math.abs(textHash) % questionEmojis.length];
             }
             
-            // Emotional expressions
             if (text.includes('ありがとう') || text.includes('感謝')) {
-                return '😊'; // Grateful
+                const thankfulEmojis = ['😊', '🙏', '😇', '🥰', '😍', '💖', '✨'];
+                return thankfulEmojis[Math.abs(textHash) % thankfulEmojis.length];
             }
+            
             if (text.includes('すみません') || text.includes('ごめん')) {
-                return '😅'; // Apologetic
+                const sorryEmojis = ['😅', '😓', '🙇', '😔', '😞', '🥺', '😰'];
+                return sorryEmojis[Math.abs(textHash) % sorryEmojis.length];
             }
+            
             if (text.includes('うれしい') || text.includes('楽しい') || text.includes('よかった')) {
-                return '😄'; // Happy
-            }
-            if (text.includes('悲しい') || text.includes('つらい') || text.includes('大変')) {
-                return '😢'; // Sad
-            }
-            if (text.includes('びっくり') || text.includes('驚')) {
-                return '😲'; // Surprised
-            }
-            if (text.includes('怒') || text.includes('むかつく')) {
-                return '😠'; // Angry
-            }
-            if (text.includes('疲れ') || text.includes('眠い')) {
-                return '😴'; // Tired
+                const happyEmojis = ['😄', '😁', '🥳', '😆', '🤩', '✨', '🎉', '💃'];
+                return happyEmojis[Math.abs(textHash) % happyEmojis.length];
             }
             
-            // Action patterns
+            if (text.includes('悲しい') || text.includes('つらい')) {
+                const sadEmojis = ['😢', '😭', '😔', '😞', '🥺', '💔', '😿'];
+                return sadEmojis[Math.abs(textHash) % sadEmojis.length];
+            }
+            
             if (text.includes('食べ') || text.includes('飲み') || text.includes('美味')) {
-                return '😋'; // Eating/drinking
+                const foodEmojis = ['😋', '🤤', '🍽️', '🥢', '🍜', '🍱', '🍔', '🥗'];
+                return foodEmojis[Math.abs(textHash) % foodEmojis.length];
             }
+            
             if (text.includes('勉強') || text.includes('学') || text.includes('読')) {
-                return '📚'; // Studying
+                const studyEmojis = ['📚', '✏️', '📝', '🎓', '🤓', '💡', '📖', '✍️'];
+                return studyEmojis[Math.abs(textHash) % studyEmojis.length];
             }
+            
             if (text.includes('仕事') || text.includes('働')) {
-                return '💼'; // Work
-            }
-            if (text.includes('買い物') || text.includes('買')) {
-                return '🛍️'; // Shopping
-            }
-            if (text.includes('電話') || text.includes('話')) {
-                return '📞'; // Phone/talking
-            }
-            if (text.includes('見') || text.includes('観')) {
-                return '👀'; // Watching/looking
-            }
-            if (text.includes('行') || text.includes('来') || text.includes('帰')) {
-                return '🚶'; // Going/coming
+                const workEmojis = ['💼', '💻', '📊', '⚡', '🎯', '📈', '🏢', '⏰'];
+                return workEmojis[Math.abs(textHash) % workEmojis.length];
             }
             
-            // Time expressions
-            if (text.includes('朝') || text.includes('午前')) {
-                return '🌅'; // Morning
-            }
-            if (text.includes('夜') || text.includes('午後')) {
-                return '🌙'; // Evening/night
-            }
-            
-            // Weather/nature
-            if (text.includes('雨') || text.includes('雪')) {
-                return '☔'; // Rain/snow
-            }
-            if (text.includes('天気') || text.includes('晴')) {
-                return '☀️'; // Sunny weather
-            }
-            
-            // Default expressions based on sentence endings
-            if (text.includes('！') || text.includes('!')) {
-                return '😊'; // Excited/energetic
-            }
-            if (text.includes('。') || text.includes('.')) {
-                return '😌'; // Calm/neutral
-            }
-            
-            // Default neutral expression
-            return '😊';
+            // Return emoji from the diverse pool
+            return emojiPool[finalIndex];
         }
 
         // Initialize the app
