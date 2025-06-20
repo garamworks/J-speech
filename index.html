@@ -721,7 +721,7 @@
                 characterAvatar.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
                 characterAvatarBack.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
             } else {
-                const emoji = getEmojiForSentence(card.japanese);
+                const emoji = getEmojiForSentence(card.japanese, index);
                 characterAvatar.textContent = emoji;
                 characterAvatarBack.textContent = emoji;
             }
@@ -888,6 +888,18 @@
                 currentCardIndex--;
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+            } else {
+                // At first card of episode, go to previous episode
+                const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+                const currentIndex = episodes.indexOf(currentEpisode);
+                if (currentIndex > 0) {
+                    const previousEpisode = episodes[currentIndex - 1];
+                    loadEpisode(previousEpisode);
+                    // Go to last card of previous episode
+                    currentCardIndex = currentEpisodeCards.length - 1;
+                    loadCard(currentCardIndex);
+                    updateNavigationButtons();
+                }
             }
         }
 
@@ -896,6 +908,18 @@
                 currentCardIndex++;
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+            } else {
+                // At last card of episode, go to next episode
+                const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+                const currentIndex = episodes.indexOf(currentEpisode);
+                if (currentIndex < episodes.length - 1) {
+                    const nextEpisode = episodes[currentIndex + 1];
+                    loadEpisode(nextEpisode);
+                    // Start from first card of next episode
+                    currentCardIndex = 0;
+                    loadCard(currentCardIndex);
+                    updateNavigationButtons();
+                }
             }
         }
 
