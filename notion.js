@@ -15,7 +15,8 @@ function extractDatabaseIdFromUrl(pageUrl) {
     throw Error("Failed to extract database ID from URL");
 }
 
-const DATABASE_ID = extractDatabaseIdFromUrl(process.env.NOTION_PAGE_URL);
+// Use the correct database ID for the dialogue data
+const DATABASE_ID = "218fe404b3dc8019ba05cd4635a94446";
 
 // Get all child databases from the page
 async function getNotionDatabases() {
@@ -88,23 +89,29 @@ async function getFlashcardsFromNotion() {
                 return prop?.select?.name || "";
             };
 
-            // Map the actual column names from your Notion database
-            const word = getTextContent(properties.단어);  // Title column with Japanese word
-            const example = getTextContent(properties.예문);  // Japanese example sentence
-            const exampleMeaning = getTextContent(properties['예문 해석']);  // Korean translation of example
-            const meaning = getTextContent(properties.뜻);  // Korean meaning
-            const pronunciation = getTextContent(properties.독음);  // Japanese pronunciation
+            // Map the actual column names from the dialogue database
+            const japanese = getTextContent(properties.문장);  // Japanese dialogue
+            const korean = getTextContent(properties.한국어);  // Korean translation
+            const speaker = getTextContent(properties.사람);  // Character name
+            const time = getTextContent(properties.Time);  // Timestamp
+            const episode = properties.ep?.select?.name || "1화";  // Episode number
 
-            // Use example sentence if available, otherwise use the word
-            const japanese = example || word || "텍스트 없음";
-            const korean = exampleMeaning || meaning || "번역 없음";
-            const romanji = pronunciation || "";
+            // Map character names to emojis
+            const characterEmojis = {
+                'ひなた': '🌻',
+                'れい': '🦁', 
+                'あかり': '🌸',
+                'きりやま': '👤',
+                'default': '🎭'
+            };
 
             return {
-                japanese: japanese,
-                korean: korean, 
-                character: "📚",  // Book emoji for vocabulary
-                romanji: romanji
+                japanese: japanese || "대사 없음",
+                korean: korean || "번역 없음", 
+                character: characterEmojis[speaker] || characterEmojis.default,
+                romanji: time || "",
+                speaker: speaker || "unknown",
+                episode: episode
             };
         });
     } catch (error) {
