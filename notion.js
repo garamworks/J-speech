@@ -70,7 +70,14 @@ async function getFlashcardsFromNotion() {
             throw new Error("No data found in the Notion database");
         }
 
-        return response.results.map((page) => {
+        // Sort by time field before mapping
+        const sortedResults = response.results.sort((a, b) => {
+            const timeA = a.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
+            const timeB = b.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
+            return timeA.localeCompare(timeB);
+        });
+
+        return sortedResults.map((page) => {
             const properties = page.properties;
             
             // Extract text content from rich text properties

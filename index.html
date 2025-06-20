@@ -198,13 +198,21 @@
             height: 80px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            margin: 0 auto 1rem auto;
+            margin: 0 auto 0.5rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
             border: 3px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .speaker-name {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
         /* Mobile optimizations */
@@ -264,6 +272,7 @@
             <div class="flashcard" id="flashcard">
                 <div class="card-face card-front">
                     <div class="character-avatar" id="character-avatar"></div>
+                    <div class="speaker-name" id="speaker-name"></div>
                     <div class="japanese-text" id="japanese-text"></div>
                     <button class="speaker-btn" id="speaker-btn" title="Listen to pronunciation">
                         <svg class="speaker-icon" viewBox="0 0 24 24">
@@ -313,6 +322,7 @@
         const japaneseTextBack = document.getElementById('japanese-text-back');
         const koreanText = document.getElementById('korean-text');
         const characterAvatar = document.getElementById('character-avatar');
+        const speakerName = document.getElementById('speaker-name');
         const speakerBtn = document.getElementById('speaker-btn');
         const speakerBtnBack = document.getElementById('speaker-btn-back');
         const prevBtn = document.getElementById('prev-btn');
@@ -375,6 +385,7 @@
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
             characterAvatar.textContent = card.character;
+            speakerName.textContent = card.speaker || "";
             currentCardSpan.textContent = index + 1;
             
             // Reset flip state
