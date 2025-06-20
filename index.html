@@ -274,6 +274,11 @@
                 <div class="card-face card-back">
                     <div class="japanese-text" id="japanese-text-back"></div>
                     <div class="korean-text" id="korean-text"></div>
+                    <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
+                        <svg class="speaker-icon" viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -326,7 +331,9 @@
         const japaneseText = document.getElementById('japanese-text');
         const japaneseTextBack = document.getElementById('japanese-text-back');
         const koreanText = document.getElementById('korean-text');
+        const characterAvatar = document.getElementById('character-avatar');
         const speakerBtn = document.getElementById('speaker-btn');
+        const speakerBtnBack = document.getElementById('speaker-btn-back');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const currentCardSpan = document.getElementById('current-card');
@@ -345,6 +352,7 @@
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
+            characterAvatar.textContent = card.character;
             currentCardSpan.textContent = index + 1;
             
             // Reset flip state
@@ -420,6 +428,10 @@
         // Event listeners
         flashcard.addEventListener('click', flipCard);
         speakerBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card flip when clicking speaker
+            speakJapanese();
+        });
+        speakerBtnBack.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
             speakJapanese();
         });
