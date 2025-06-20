@@ -194,11 +194,11 @@
         }
 
         .character-avatar {
-            width: 80px;
-            height: 80px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            margin: 0 auto 0.5rem auto;
+            margin: 0 auto 1rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -218,7 +218,7 @@
             font-size: 1.35rem;
             color: #666;
             font-weight: 500;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
             text-align: center;
         }
 
@@ -418,31 +418,58 @@
             // Cancel any ongoing speech
             speechSynthesis.cancel();
             
-            const utterance = new SpeechSynthesisUtterance(flashcards[currentCardIndex].japanese);
+            const currentCard = flashcards[currentCardIndex];
+            const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
             
-            // Try to use Japanese voice if available
+            // Try to use Japanese voice based on character gender
             const voices = speechSynthesis.getVoices();
-            const japaneseVoice = voices.find(voice => 
-                voice.lang.startsWith('ja') || voice.name.includes('Japanese')
-            );
+            let selectedVoice = null;
             
-            if (japaneseVoice) {
-                utterance.voice = japaneseVoice;
+            if (currentCard.gender === '여') {
+                // Find female Japanese voice
+                selectedVoice = voices.find(voice => 
+                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese')) &&
+                    (voice.name.includes('Female') || voice.name.includes('female') || 
+                     voice.name.includes('Woman') || voice.name.includes('woman') ||
+                     voice.name.includes('Kyoko') || voice.name.includes('Otoya'))
+                );
+            } else if (currentCard.gender === '남') {
+                // Find male Japanese voice
+                selectedVoice = voices.find(voice => 
+                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese')) &&
+                    (voice.name.includes('Male') || voice.name.includes('male') || 
+                     voice.name.includes('Man') || voice.name.includes('man') ||
+                     voice.name.includes('Kenji') || voice.name.includes('Hattori'))
+                );
+            }
+            
+            // Fallback to any Japanese voice
+            if (!selectedVoice) {
+                selectedVoice = voices.find(voice => 
+                    voice.lang.startsWith('ja') || voice.name.includes('Japanese')
+                );
+            }
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
             }
             
             utterance.lang = 'ja-JP';
             utterance.rate = 0.8;
-            utterance.pitch = 1;
+            utterance.pitch = currentCard.gender === '여' ? 1.1 : 0.9; // Higher pitch for female, lower for male
             
             // Visual feedback for speaking
             speakerBtn.style.background = '#2b6cb0';
+            speakerBtnBack.style.background = '#2b6cb0';
             
             utterance.onend = () => {
                 speakerBtn.style.background = '#4299e1';
+                speakerBtnBack.style.background = '#4299e1';
             };
             
             utterance.onerror = () => {
                 speakerBtn.style.background = '#4299e1';
+                speakerBtnBack.style.background = '#4299e1';
                 console.warn('Speech synthesis error - Japanese voice may not be available');
             };
             

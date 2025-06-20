@@ -71,11 +71,15 @@ async function getCharacterImages() {
         response.results.forEach(page => {
             const name = page.properties.Name?.title?.[0]?.plain_text;
             const imageFile = page.properties['Files & media']?.files?.[0];
+            const gender = page.properties['성별']?.select?.name;
             
             if (name && imageFile) {
                 const imageUrl = imageFile.type === 'external' ? 
                     imageFile.external.url : imageFile.file.url;
-                imageMap[name] = imageUrl;
+                imageMap[name] = {
+                    imageUrl: imageUrl,
+                    gender: gender
+                };
             }
         });
 
@@ -145,7 +149,8 @@ async function getFlashcardsFromNotion() {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
                 character: characterEmojis[speaker] || characterEmojis.default,
-                characterImage: characterImages[speaker] || null,
+                characterImage: characterImages[speaker]?.imageUrl || null,
+                gender: characterImages[speaker]?.gender || null,
                 romanji: time || "",
                 speaker: speaker || "unknown",
                 episode: episode
