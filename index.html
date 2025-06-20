@@ -205,10 +205,17 @@
             font-size: 2rem;
             border: 3px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .character-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .speaker-name {
-            font-size: 0.9rem;
+            font-size: 1.35rem;
             color: #666;
             font-weight: 500;
             margin-bottom: 1rem;
@@ -384,9 +391,15 @@
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
-            characterAvatar.textContent = card.character;
             speakerName.textContent = card.speaker || "";
             currentCardSpan.textContent = index + 1;
+            
+            // Set character avatar - use image if available, otherwise emoji
+            if (card.characterImage) {
+                characterAvatar.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
+            } else {
+                characterAvatar.textContent = card.character;
+            }
             
             // Reset flip state
             if (isFlipped) {

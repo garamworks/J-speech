@@ -17,6 +17,8 @@ function extractDatabaseIdFromUrl(pageUrl) {
 
 // Use the correct database ID for the dialogue data
 const DATABASE_ID = "218fe404b3dc8019ba05cd4635a94446";
+// Character images database ID
+const IMAGES_DATABASE_ID = "218fe404b3dc8059bdf1d40cf85d7e47";
 
 // Get all child databases from the page
 async function getNotionDatabases() {
@@ -58,20 +60,47 @@ async function getNotionDatabases() {
     }
 }
 
+// Get character images from the images database
+async function getCharacterImages() {
+    try {
+        const response = await notion.databases.query({
+            database_id: IMAGES_DATABASE_ID,
+        });
+
+        const imageMap = {};
+        response.results.forEach(page => {
+            const name = page.properties.Name?.title?.[0]?.plain_text;
+            const imageFile = page.properties['Files & media']?.files?.[0];
+            
+            if (name && imageFile) {
+                const imageUrl = imageFile.type === 'external' ? 
+                    imageFile.external.url : imageFile.file.url;
+                imageMap[name] = imageUrl;
+            }
+        });
+
+        return imageMap;
+    } catch (error) {
+        console.error("Error fetching character images:", error);
+        return {};
+    }
+}
+
 // Get flashcard data from Notion database
 async function getFlashcardsFromNotion() {
     try {
-        // Query the database directly using the extracted ID
-        const response = await notion.databases.query({
-            database_id: DATABASE_ID,
-        });
+        // Get both dialogue data and character images
+        const [dialogueResponse, characterImages] = await Promise.all([
+            notion.databases.query({ database_id: DATABASE_ID }),
+            getCharacterImages()
+        ]);
 
-        if (response.results.length === 0) {
+        if (dialogueResponse.results.length === 0) {
             throw new Error("No data found in the Notion database");
         }
 
         // Sort by time field before mapping
-        const sortedResults = response.results.sort((a, b) => {
+        const sortedResults = dialogueResponse.results.sort((a, b) => {
             const timeA = a.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
             const timeB = b.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
             return timeA.localeCompare(timeB);
@@ -116,6 +145,7 @@ async function getFlashcardsFromNotion() {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
                 character: characterEmojis[speaker] || characterEmojis.default,
+                characterImage: characterImages[speaker] || null,
                 romanji: time || "",
                 speaker: speaker || "unknown",
                 episode: episode
