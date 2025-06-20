@@ -32,8 +32,16 @@
             color: white;
             font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .episode-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         .flashcard-container {
@@ -94,15 +102,15 @@
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 0.7rem;
         }
 
         .speaker-btn {
             background: #4299e1;
             border: none;
             border-radius: 50%;
-            width: 48px;
-            height: 48px;
+            width: 58px;
+            height: 58px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -110,7 +118,9 @@
             transition: all 0.2s ease;
             color: white;
             font-size: 1.2rem;
-            margin-top: 1rem;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
             box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
         }
 
@@ -172,9 +182,29 @@
         }
 
         .speaker-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .nav-icon {
             width: 20px;
             height: 20px;
             fill: currentColor;
+        }
+
+        .character-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            margin: 0 auto 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         /* Mobile optimizations */
@@ -227,11 +257,13 @@
 </head>
 <body>
     <div class="app-container">
-        <h1 class="app-title">Japanese Learning Flashcards</h1>
+        <h1 class="app-title">3월의 라이온</h1>
+        <div class="episode-title">1화</div>
         
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
                 <div class="card-face card-front">
+                    <div class="character-avatar" id="character-avatar"></div>
                     <div class="japanese-text" id="japanese-text"></div>
                     <button class="speaker-btn" id="speaker-btn" title="Listen to pronunciation">
                         <svg class="speaker-icon" viewBox="0 0 24 24">
@@ -247,15 +279,19 @@
         </div>
 
         <div class="controls">
-            <button class="nav-btn" id="prev-btn">Previous</button>
+            <button class="nav-btn" id="prev-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+            </button>
             <div class="card-counter">
                 <span id="current-card">1</span> / <span id="total-cards">3</span>
             </div>
-            <button class="nav-btn" id="next-btn">Next</button>
-        </div>
-
-        <div class="flip-instruction">
-            Tap the card to flip and see the translation
+            <button class="nav-btn" id="next-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -265,17 +301,20 @@
             {
                 japanese: "君の名前は何ですか？",
                 korean: "당신의 이름은 무엇입니까?",
-                romanji: "Kimi no namae wa nan desu ka?"
+                romanji: "Kimi no namae wa nan desu ka?",
+                character: "🦁"
             },
             {
                 japanese: "一緒に頑張りましょう！",
                 korean: "함께 힘내자!",
-                romanji: "Issho ni ganbarimashou!"
+                romanji: "Issho ni ganbarimashou!",
+                character: "👤"
             },
             {
                 japanese: "諦めるな、最後まで戦うんだ！",
                 korean: "포기하지 마, 끝까지 싸우는 거야!",
-                romanji: "Akirameru na, saigo made tatakau nda!"
+                romanji: "Akirameru na, saigo made tatakau nda!",
+                character: "🎭"
             }
         ];
 
