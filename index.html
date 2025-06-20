@@ -51,7 +51,7 @@
 
         .flashcard {
             width: 100%;
-            min-height: 400px;
+            aspect-ratio: 3/4;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
@@ -67,12 +67,12 @@
         .card-face {
             position: absolute;
             width: 100%;
-            min-height: 100%;
+            height: 100%;
             backface-visibility: hidden;
             border-radius: 16px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
             padding: 2rem;
             background: white;
@@ -94,8 +94,7 @@
             font-weight: 500;
             color: #2d3748;
             line-height: 1.6;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             text-align: center;
         }
 
@@ -239,7 +238,7 @@
             }
 
             .flashcard {
-                min-height: 380px;
+                aspect-ratio: 3/4;
             }
 
             .card-face {
@@ -297,6 +296,7 @@
                     </button>
                 </div>
                 <div class="card-face card-back">
+                    <div class="character-avatar" id="character-avatar-back"></div>
                     <div class="japanese-text" id="japanese-text-back"></div>
                     <div class="korean-text" id="korean-text"></div>
                     <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
@@ -338,6 +338,7 @@
         const japaneseTextBack = document.getElementById('japanese-text-back');
         const koreanText = document.getElementById('korean-text');
         const characterAvatar = document.getElementById('character-avatar');
+        const characterAvatarBack = document.getElementById('character-avatar-back');
         const speakerName = document.getElementById('speaker-name');
         const speakerBtn = document.getElementById('speaker-btn');
         const speakerBtnBack = document.getElementById('speaker-btn-back');
@@ -403,50 +404,22 @@
             speakerName.textContent = card.speaker || "";
             currentCardSpan.textContent = index + 1;
             
-            // Set character avatar - use image if available, otherwise emoji
+            // Set character avatar for both front and back - use image if available, otherwise emoji
             if (card.characterImage) {
                 characterAvatar.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
+                characterAvatarBack.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
             } else {
                 characterAvatar.textContent = card.character;
+                characterAvatarBack.textContent = card.character;
             }
             
             // Reset flip state
             if (isFlipped) {
                 flipCard();
             }
-            
-            // Adjust card height after content is loaded
-            setTimeout(adjustCardHeight, 10);
         }
         
-        // Adjust card height based on content
-        function adjustCardHeight() {
-            const frontContent = document.querySelector('.card-front');
-            const backContent = document.querySelector('.card-back');
-            
-            // Create temporary elements to measure content height
-            const tempFront = frontContent.cloneNode(true);
-            const tempBack = backContent.cloneNode(true);
-            
-            // Style for measurement
-            tempFront.style.cssText = 'position: absolute; visibility: hidden; height: auto; width: ' + frontContent.offsetWidth + 'px;';
-            tempBack.style.cssText = 'position: absolute; visibility: hidden; height: auto; width: ' + backContent.offsetWidth + 'px;';
-            
-            document.body.appendChild(tempFront);
-            document.body.appendChild(tempBack);
-            
-            // Measure heights
-            const frontHeight = tempFront.offsetHeight;
-            const backHeight = tempBack.offsetHeight;
-            
-            // Clean up
-            document.body.removeChild(tempFront);
-            document.body.removeChild(tempBack);
-            
-            // Set minimum height based on content
-            const requiredHeight = Math.max(frontHeight, backHeight, 400);
-            flashcard.style.height = requiredHeight + 'px';
-        }
+
 
         // Flip the card
         function flipCard() {
