@@ -598,7 +598,7 @@
             // Cancel any ongoing speech
             speechSynthesis.cancel();
             
-            const currentCard = flashcards[currentCardIndex];
+            const currentCard = currentEpisodeCards[currentCardIndex];
             const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
             
             // Wait for voices to load on mobile browsers
@@ -694,7 +694,7 @@
         }
 
         function goToNextCard() {
-            if (currentCardIndex < flashcards.length - 1) {
+            if (currentCardIndex < currentEpisodeCards.length - 1) {
                 currentCardIndex++;
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
@@ -703,7 +703,7 @@
 
         function updateNavigationButtons() {
             prevBtn.disabled = currentCardIndex === 0;
-            nextBtn.disabled = currentCardIndex === flashcards.length - 1;
+            nextBtn.disabled = currentCardIndex === currentEpisodeCards.length - 1;
         }
 
         // Event listeners
@@ -718,6 +718,23 @@
         });
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
+        
+        // Episode navigation event listeners
+        prevEpisodeBtn.addEventListener('click', () => {
+            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+            const currentIndex = episodes.indexOf(currentEpisode);
+            if (currentIndex > 0) {
+                loadEpisode(episodes[currentIndex - 1]);
+            }
+        });
+        
+        nextEpisodeBtn.addEventListener('click', () => {
+            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
+            const currentIndex = episodes.indexOf(currentEpisode);
+            if (currentIndex < episodes.length - 1) {
+                loadEpisode(episodes[currentIndex + 1]);
+            }
+        });
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
