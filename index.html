@@ -488,9 +488,9 @@
 
         // Initialize the app when DOM is loaded
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', loadFlashcardsFromNotion);
         } else {
-            init();
+            loadFlashcardsFromNotion();
         }
 
         // Handle touch gestures for mobile

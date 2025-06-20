@@ -5,16 +5,17 @@ const notion = new Client({
     auth: process.env.NOTION_INTEGRATION_SECRET,
 });
 
-// Extract the page ID from the Notion page URL
-function extractPageIdFromUrl(pageUrl) {
-    const match = pageUrl.match(/([a-f0-9]{32})(?:[?#]|$)/i);
+// Extract the database ID from the Notion URL
+function extractDatabaseIdFromUrl(pageUrl) {
+    // Handle both page URLs and database URLs
+    const match = pageUrl.match(/([a-f0-9]{32})/i);
     if (match && match[1]) {
         return match[1];
     }
-    throw Error("Failed to extract page ID");
+    throw Error("Failed to extract database ID from URL");
 }
 
-const NOTION_PAGE_ID = extractPageIdFromUrl(process.env.NOTION_PAGE_URL);
+const DATABASE_ID = extractDatabaseIdFromUrl(process.env.NOTION_PAGE_URL);
 
 // Get all child databases from the page
 async function getNotionDatabases() {
@@ -59,17 +60,14 @@ async function getNotionDatabases() {
 // Get flashcard data from Notion database
 async function getFlashcardsFromNotion() {
     try {
-        const databases = await getNotionDatabases();
-        
-        // Find the first database (assuming it's the flashcard database)
-        if (databases.length === 0) {
-            throw new Error("No databases found in the Notion page");
-        }
-
-        const database = databases[0];
+        // Query the database directly using the extracted ID
         const response = await notion.databases.query({
-            database_id: database.id,
+            database_id: DATABASE_ID,
         });
+
+        if (response.results.length === 0) {
+            throw new Error("No data found in the Notion database");
+        }
 
         return response.results.map((page) => {
             const properties = page.properties;
@@ -90,11 +88,23 @@ async function getFlashcardsFromNotion() {
                 return prop?.select?.name || "";
             };
 
+            // Map the actual column names from your Notion database
+            const word = getTextContent(properties.단어);  // Title column with Japanese word
+            const example = getTextContent(properties.예문);  // Japanese example sentence
+            const exampleMeaning = getTextContent(properties['예문 해석']);  // Korean translation of example
+            const meaning = getTextContent(properties.뜻);  // Korean meaning
+            const pronunciation = getTextContent(properties.독음);  // Japanese pronunciation
+
+            // Use example sentence if available, otherwise use the word
+            const japanese = example || word || "텍스트 없음";
+            const korean = exampleMeaning || meaning || "번역 없음";
+            const romanji = pronunciation || "";
+
             return {
-                japanese: getTextContent(properties.Japanese || properties.일본어 || properties.jp),
-                korean: getTextContent(properties.Korean || properties.한국어 || properties.kr),
-                character: getSelectContent(properties.Character || properties.캐릭터 || properties.Speaker) || "👤",
-                romanji: getTextContent(properties.Romanji || properties.로마지 || properties.romaji) || ""
+                japanese: japanese,
+                korean: korean, 
+                character: "📚",  // Book emoji for vocabulary
+                romanji: romanji
             };
         });
     } catch (error) {
