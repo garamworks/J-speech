@@ -12,11 +12,29 @@ function extractDatabaseIdFromUrl(pageUrl) {
     throw Error("Failed to extract database ID from URL");
 }
 
-const DATABASE_ID = extractDatabaseIdFromUrl(process.env.NOTION_PAGE_URL);
+// Original URL you provided: https://www.notion.so/doungle/218fe404b3dc8019ba05cd4635a94446?v=218fe404b3dc804ea201000c41003a6d&source=copy_link
+// Current environment URL: process.env.NOTION_PAGE_URL
+const ORIGINAL_DATABASE_ID = "218fe404b3dc8019ba05cd4635a94446";
+const CURRENT_DATABASE_ID = extractDatabaseIdFromUrl(process.env.NOTION_PAGE_URL);
+
+console.log("Original ID from your link:", ORIGINAL_DATABASE_ID);
+console.log("Current environment ID:", CURRENT_DATABASE_ID);
 
 async function debugNotionDatabase() {
     try {
-        console.log("Database ID:", DATABASE_ID);
+        console.log("\n=== Testing Original Database ID ===");
+        await testDatabase(ORIGINAL_DATABASE_ID);
+        
+        console.log("\n=== Testing Current Environment Database ID ===");
+        await testDatabase(CURRENT_DATABASE_ID);
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+async function testDatabase(databaseId) {
+    try {
+        console.log("Testing Database ID:", databaseId);
         
         // First, get the database schema
         const database = await notion.databases.retrieve({
