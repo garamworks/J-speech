@@ -316,18 +316,31 @@
         /* Mobile optimizations */
         @media (max-width: 480px) {
             body {
-                padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+                padding: 0;
+                justify-content: flex-start;
+                align-items: stretch;
+                min-height: 100vh;
+            }
+            
+            .app-container {
+                padding: 0.5rem;
+                margin-top: 0;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
             }
             
             .app-title {
                 font-size: 1.5rem;
                 margin-top: 0;
                 margin-bottom: 0;
+                display: none;
             }
             
             .episode-nav {
                 margin-bottom: 0.5rem;
-                margin-top: 0.25rem;
+                margin-top: 0.5rem;
             }
             
             .episode-title {
