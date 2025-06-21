@@ -19,7 +19,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px 20px 20px 20px;
         }
 
         .app-container {
@@ -316,17 +316,22 @@
         /* Mobile optimizations */
         @media (max-width: 480px) {
             body {
-                padding: 0.5rem;
+                padding: 0.25rem 0.5rem 0.5rem 0.5rem;
             }
             
             .app-title {
                 font-size: 1.5rem;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+            
+            .episode-nav {
+                margin-bottom: 0.5rem;
                 margin-top: 0.25rem;
-                margin-bottom: 0.25rem;
             }
             
             .episode-title {
-                margin-bottom: 0.75rem;
+                margin-bottom: 0;
             }
 
             .flashcard {
@@ -351,19 +356,24 @@
             }
             
             .speaker-btn {
-                width: 2.5rem;
-                height: 2.5rem;
+                width: 3.5rem;
+                height: 3.5rem;
                 bottom: 0.75rem;
                 right: 0.75rem;
-                font-size: 1rem;
+                font-size: 1.2rem;
             }
             
             .word-speaker-btn {
-                width: 2.5rem;
-                height: 2.5rem;
+                width: 3.5rem;
+                height: 3.5rem;
                 bottom: 0.75rem;
                 left: 0.75rem;
-                font-size: 1rem;
+                font-size: 1.2rem;
+            }
+            
+            .speaker-icon {
+                width: 28px;
+                height: 28px;
             }
             
             .character-avatar {
@@ -889,16 +899,24 @@
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
             } else {
-                // At first card of episode, go to previous episode
+                // At first card of episode, try to go to previous episode
                 const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
                 const currentIndex = episodes.indexOf(currentEpisode);
                 if (currentIndex > 0) {
                     const previousEpisode = episodes[currentIndex - 1];
-                    loadEpisode(previousEpisode);
-                    // Go to last card of previous episode
+                    // Load previous episode and go to its last card
+                    currentEpisode = previousEpisode;
+                    currentEpisodeCards = episodeData[previousEpisode] || [];
                     currentCardIndex = currentEpisodeCards.length - 1;
-                    loadCard(currentCardIndex);
-                    updateNavigationButtons();
+                    
+                    episodeTitle.textContent = `ep.${previousEpisode.toString().padStart(2, '0')}`;
+                    
+                    if (currentEpisodeCards.length > 0) {
+                        loadCard(currentCardIndex);
+                        totalCardsSpan.textContent = currentEpisodeCards.length;
+                        updateNavigationButtons();
+                        updateEpisodeButtons();
+                    }
                 }
             }
         }
@@ -909,16 +927,24 @@
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
             } else {
-                // At last card of episode, go to next episode
+                // At last card of episode, try to go to next episode
                 const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
                 const currentIndex = episodes.indexOf(currentEpisode);
                 if (currentIndex < episodes.length - 1) {
                     const nextEpisode = episodes[currentIndex + 1];
-                    loadEpisode(nextEpisode);
-                    // Start from first card of next episode
+                    // Load next episode and go to its first card
+                    currentEpisode = nextEpisode;
+                    currentEpisodeCards = episodeData[nextEpisode] || [];
                     currentCardIndex = 0;
-                    loadCard(currentCardIndex);
-                    updateNavigationButtons();
+                    
+                    episodeTitle.textContent = `ep.${nextEpisode.toString().padStart(2, '0')}`;
+                    
+                    if (currentEpisodeCards.length > 0) {
+                        loadCard(currentCardIndex);
+                        totalCardsSpan.textContent = currentEpisodeCards.length;
+                        updateNavigationButtons();
+                        updateEpisodeButtons();
+                    }
                 }
             }
         }
