@@ -94,18 +94,33 @@ async function getCharacterImages() {
 // Get flashcard data from Notion database
 async function getFlashcardsFromNotion() {
     try {
-        // Get both dialogue data and character images
-        const [dialogueResponse, characterImages] = await Promise.all([
-            notion.databases.query({ database_id: DATABASE_ID }),
+        // Get all dialogue data with pagination
+        let allResults = [];
+        let hasMore = true;
+        let startCursor = undefined;
+
+        while (hasMore) {
+            const response = await notion.databases.query({
+                database_id: DATABASE_ID,
+                start_cursor: startCursor,
+                page_size: 100
+            });
+            
+            allResults = allResults.concat(response.results);
+            hasMore = response.has_more;
+            startCursor = response.next_cursor;
+        }
+
+        const [characterImages] = await Promise.all([
             getCharacterImages()
         ]);
 
-        if (dialogueResponse.results.length === 0) {
+        if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
         }
 
         // Sort by sentence ID to ensure proper episode and sentence order
-        const sortedResults = dialogueResponse.results.sort((a, b) => {
+        const sortedResults = allResults.sort((a, b) => {
             const sentenceIdA = a.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
             const sentenceIdB = b.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
             
