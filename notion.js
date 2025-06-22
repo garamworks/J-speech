@@ -104,11 +104,28 @@ async function getFlashcardsFromNotion() {
             throw new Error("No data found in the Notion database");
         }
 
-        // Sort by time field before mapping
+        // Sort by sentence ID to ensure proper episode and sentence order
         const sortedResults = dialogueResponse.results.sort((a, b) => {
-            const timeA = a.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
-            const timeB = b.properties.Time?.rich_text?.[0]?.plain_text || "00:00:00";
-            return timeA.localeCompare(timeB);
+            const sentenceIdA = a.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
+            const sentenceIdB = b.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
+            
+            // Parse episode and sentence numbers for proper sorting
+            const parseId = (id) => {
+                const match = id.match(/^(\d+)-(\d+)$/);
+                if (match) {
+                    return { episode: parseInt(match[1]), sentence: parseInt(match[2]) };
+                }
+                return { episode: 99, sentence: 999 };
+            };
+            
+            const parsedA = parseId(sentenceIdA);
+            const parsedB = parseId(sentenceIdB);
+            
+            // Sort by episode first, then by sentence number
+            if (parsedA.episode !== parsedB.episode) {
+                return parsedA.episode - parsedB.episode;
+            }
+            return parsedA.sentence - parsedB.sentence;
         });
 
         return sortedResults.map((page) => {
