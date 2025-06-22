@@ -601,10 +601,11 @@
                 episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
             });
             
-            // Set current episode to the first available episode
+            // Set current episode to episode 1 (or first available if 1 doesn't exist)
             const availableEpisodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
             if (availableEpisodes.length > 0) {
-                currentEpisode = availableEpisodes[0];
+                // Try to start with episode 1, fallback to first available
+                currentEpisode = episodeData[1] ? 1 : availableEpisodes[0];
                 loadEpisode(currentEpisode);
             }
         }
