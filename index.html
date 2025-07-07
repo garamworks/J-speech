@@ -346,6 +346,10 @@
             margin-bottom: 30px;
         }
 
+        .word-examples:hover {
+            background: rgba(0,0,0,0.08) !important;
+        }
+
         .word-main-title {
             font-size: 28px;
             font-weight: bold;
@@ -1784,8 +1788,8 @@
                         ${wordData.meaning}
                     </p>
                     ${wordData.example ? `
-                        <div class="word-examples" style="margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left;">
-                            <p class="word-example-ja" onclick="speakJapaneseExample('${wordData.example.replace(/'/g, "\\'")}'); return false;" style="font-size: 16px; color: #333; margin-bottom: 8px; cursor: pointer; line-height: 1.4;">
+                        <div class="word-examples" onclick="speakJapaneseExample('${wordData.example.replace(/'/g, "\\'")}'); return false;" style="margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left; cursor: pointer; transition: background-color 0.2s ease;">
+                            <p class="word-example-ja" style="font-size: 16px; color: #333; margin-bottom: 8px; line-height: 1.4;">
                                 ${wordData.example}
                             </p>
                             <p class="word-example-ko" style="font-size: 14px; color: #666; margin-bottom: 0; line-height: 1.4;">
