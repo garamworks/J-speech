@@ -1202,11 +1202,7 @@
             // Check if card has expression card relations (multiple possible)
             if (card.expressionCardIds && card.expressionCardIds.length > 0) {
                 try {
-                    // Create expression status container
-                    const expressionContainer = document.createElement('div');
-                    expressionContainer.style.display = 'flex';
-                    expressionContainer.style.flexDirection = 'column';
-                    expressionContainer.style.gap = '2px';
+                    console.log('Processing expression cards:', card.expressionCardIds);
                     
                     // Fetch all expression cards
                     const expressionPromises = card.expressionCardIds.map(id => 
@@ -1214,50 +1210,13 @@
                     );
                     
                     const expressionCards = await Promise.all(expressionPromises);
+                    console.log('Fetched expression cards:', expressionCards);
                     
                     expressionCards.forEach((expressionCard, index) => {
                         if (expressionCard && expressionCard.title) {
                             const expressionId = card.expressionCardIds[index];
+                            console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title);
                             
-                            // Create front expression item with exact same styling as original
-                            const frontItem = document.createElement('div');
-                            frontItem.className = 'db-connection-status clickable';
-                            
-                            const frontText = document.createElement('div');
-                            frontText.className = 'db-status-text';
-                            frontText.textContent = expressionCard.title;
-                            frontItem.appendChild(frontText);
-                            
-                            // Add click handler with explicit event handling
-                            const frontClickHandler = function(e) {
-                                console.log('Front expression item clicked:', expressionId);
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
-                                openExpressionModal(expressionId);
-                            };
-                            frontItem.addEventListener('click', frontClickHandler, true);
-                            
-                            // Create back expression item with exact same styling as original
-                            const backItem = document.createElement('div');
-                            backItem.className = 'db-connection-status clickable';
-                            
-                            const backText = document.createElement('div');
-                            backText.className = 'db-status-text';
-                            backText.textContent = expressionCard.title;
-                            backItem.appendChild(backText);
-                            
-                            // Add click handler with explicit event handling
-                            const backClickHandler = function(e) {
-                                console.log('Back expression item clicked:', expressionId);
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
-                                openExpressionModal(expressionId);
-                            };
-                            backItem.addEventListener('click', backClickHandler, true);
-                            
-                            // Add to expression containers - use parent containers
                             if (index === 0) {
                                 // For the first expression, use the main db-status elements
                                 if (dbStatusFront) {
@@ -1285,12 +1244,59 @@
                                     dbStatusBack.addEventListener('click', dbStatusBack.clickHandler);
                                 }
                             } else {
-                                // For additional expressions, add them below the main db-status
+                                // For additional expressions, create new elements
+                                console.log('Creating additional expression element for:', expressionCard.title);
+                                
+                                // Create front expression item with exact same styling as original
+                                const frontItem = document.createElement('div');
+                                frontItem.className = 'db-connection-status clickable';
+                                
+                                const frontDot = document.createElement('div');
+                                frontDot.className = 'db-status-dot';
+                                frontItem.appendChild(frontDot);
+                                
+                                const frontText = document.createElement('span');
+                                frontText.textContent = expressionCard.title;
+                                frontItem.appendChild(frontText);
+                                
+                                // Add click handler
+                                frontItem.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openExpressionModal(expressionId);
+                                });
+                                
+                                // Create back expression item with exact same styling as original
+                                const backItem = document.createElement('div');
+                                backItem.className = 'db-connection-status clickable';
+                                
+                                const backDot = document.createElement('div');
+                                backDot.className = 'db-status-dot';
+                                backItem.appendChild(backDot);
+                                
+                                const backText = document.createElement('span');
+                                backText.textContent = expressionCard.title;
+                                backItem.appendChild(backText);
+                                
+                                // Add click handler
+                                backItem.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openExpressionModal(expressionId);
+                                });
+                                
+                                // Add to expression containers - use parent containers
                                 const frontParent = dbStatusFront?.parentElement;
                                 const backParent = dbStatusBack?.parentElement;
                                 
-                                if (frontParent) frontParent.appendChild(frontItem);
-                                if (backParent) backParent.appendChild(backItem);
+                                if (frontParent) {
+                                    frontParent.appendChild(frontItem);
+                                    console.log('Added front expression item to parent');
+                                }
+                                if (backParent) {
+                                    backParent.appendChild(backItem);
+                                    console.log('Added back expression item to parent');
+                                }
                             }
                         }
                     });
