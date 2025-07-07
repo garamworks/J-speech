@@ -1266,8 +1266,7 @@
             }
             
             utterance.lang = 'ja-JP';
-            utterance.rate = 0.7; // Slower for individual words
-            utterance.pitch = 1.0;
+            // Use default settings for individual words
             
             // Visual feedback for speaking
             wordSpeakerBtn.style.background = '#2d7748';
@@ -1528,7 +1527,7 @@
                 window.speechSynthesis.cancel(); // Cancel any ongoing speech
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ja-JP';
-                utterance.rate = 1.2;
+                // Use default rate
                 window.speechSynthesis.speak(utterance);
             }
         }
