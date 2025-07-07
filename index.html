@@ -835,28 +835,28 @@
         }
         
         // Update database connection status based on card data
-        async function updateDBStatus(card) {
-            try {
-                const response = await fetch('/api/database-info');
-                const dbInfo = await response.json();
+        function updateDBStatus(card) {
+            // Check if card has database-related information
+            const hasDBConnection = card.sentenceId || card.sequenceNumber || card.volume || card.sequence;
+            
+            if (hasDBConnection) {
+                // Create status text based on card's database record info
+                let statusParts = [];
                 
-                // Only show status if we have a valid database title and ID
-                if (dbInfo.title && dbInfo.id) {
-                    const statusText = dbInfo.title;
-                    
-                    if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
-                    if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
-                    
-                    if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                    if (dbStatusBack) dbStatusBack.style.display = 'flex';
-                } else {
-                    // Hide status if no valid database info
-                    if (dbStatusFront) dbStatusFront.style.display = 'none';
-                    if (dbStatusBack) dbStatusBack.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error fetching database info:', error);
-                // Hide status if error
+                if (card.volume) statusParts.push(card.volume);
+                if (card.sequence) statusParts.push(card.sequence);
+                if (card.sentenceId) statusParts.push(`ID: ${card.sentenceId}`);
+                else if (card.sequenceNumber) statusParts.push(`#${card.sequenceNumber}`);
+                
+                const statusText = statusParts.length > 0 ? statusParts.join(' ') : 'DB 연결됨';
+                
+                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
+                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
+                
+                if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                if (dbStatusBack) dbStatusBack.style.display = 'flex';
+            } else {
+                // Hide status if no database connection info
                 if (dbStatusFront) dbStatusFront.style.display = 'none';
                 if (dbStatusBack) dbStatusBack.style.display = 'none';
             }
