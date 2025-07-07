@@ -1903,6 +1903,14 @@
         function renderExpressionCard(data) {
             const modalBody = document.getElementById('expression-modal-body');
             
+            console.log('=== Expression Card Data ===');
+            console.log('Full data:', data);
+            console.log('application1:', data.application1);
+            console.log('application2:', data.application2);
+            console.log('application3:', data.application3);
+            console.log('application4:', data.application4);
+            console.log('application5:', data.application5);
+            
             // Prepare applications array
             const applications = [
                 { japanese: data.application1, korean: data.application1Korean },
@@ -1911,6 +1919,9 @@
                 { japanese: data.application4, korean: data.application4Korean },
                 { japanese: data.application5, korean: data.application5Korean }
             ].filter(app => app.japanese && app.japanese.trim() !== '');
+            
+            console.log('Filtered applications:', applications);
+            console.log('Applications count:', applications.length);
             
             let html = `
                 <div class="expression-main-section">

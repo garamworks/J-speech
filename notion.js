@@ -264,7 +264,7 @@ async function getExpressionCardInfo(expressionCardId) {
         const application5 = getRichTextContent(response.properties['응용5J']);
         const application5Korean = getRichTextContent(response.properties['응용5K']);
         
-        return {
+        const result = {
             title: title,
             meaning: meaning,
             id: id,
@@ -279,6 +279,17 @@ async function getExpressionCardInfo(expressionCardId) {
             application5: application5,
             application5Korean: application5Korean
         };
+        
+        console.log('=== Expression Card Result ===');
+        console.log('Expression Card ID:', expressionCardId);
+        console.log('Title:', title);
+        console.log('Application 1:', application1);
+        console.log('Application 2:', application2);
+        console.log('Application 3:', application3);
+        console.log('Application 4:', application4);
+        console.log('Application 5:', application5);
+        
+        return result;
     } catch (error) {
         console.error('Error fetching expression card info:', error);
         return null;
