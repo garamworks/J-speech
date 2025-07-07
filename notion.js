@@ -20,6 +20,8 @@ const NEW_DATABASE_URL = "https://www.notion.so/doungle/228fe404b3dc80f0a0c0d83a
 const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
 // Character database ID
 const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
+// Expression cards database ID (일본어 표현카드)
+const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8014-a3f2-d401a86e4c41";
 
 // Get database info by ID
 async function getNotionDatabases() {
@@ -191,6 +193,9 @@ async function getFlashcardsFromNotion() {
             const characterName = characterRelations[characterRelation];
             const characterInfo = characterName ? characterData[characterName] : null;
 
+            // Get expression card relation
+            const expressionCardRelation = properties['일본어 표현카드']?.relation?.[0]?.id;
+
             // Map character names to emojis
             const characterEmojis = {
                 'ひなた': '🌻',
@@ -210,7 +215,8 @@ async function getFlashcardsFromNotion() {
                 speaker: characterName || n2Word || "학습자료",
                 episode: episode,
                 volume: volume,
-                sequence: sequence
+                sequence: sequence,
+                expressionCardId: expressionCardRelation
             };
         });
     } catch (error) {
@@ -219,4 +225,26 @@ async function getFlashcardsFromNotion() {
     }
 }
 
-module.exports = { getFlashcardsFromNotion, getNotionDatabases };
+// Get expression card info by ID
+async function getExpressionCardInfo(expressionCardId) {
+    try {
+        const response = await notion.pages.retrieve({
+            page_id: expressionCardId
+        });
+        
+        const title = response.properties['표현(일본어)']?.title?.[0]?.plain_text || '';
+        const meaning = response.properties['뜻(한국어)']?.rich_text?.[0]?.plain_text || '';
+        const id = response.properties['ID']?.unique_id?.number || '';
+        
+        return {
+            title: title,
+            meaning: meaning,
+            id: id
+        };
+    } catch (error) {
+        console.error('Error fetching expression card info:', error);
+        return null;
+    }
+}
+
+module.exports = { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo };

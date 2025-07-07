@@ -835,28 +835,37 @@
         }
         
         // Update database connection status based on card data
-        function updateDBStatus(card) {
-            // Check if card has database-related information
-            const hasDBConnection = card.sentenceId || card.sequenceNumber || card.volume || card.sequence;
-            
-            if (hasDBConnection) {
-                // Create status text based on card's database record info
-                let statusParts = [];
-                
-                if (card.volume) statusParts.push(card.volume);
-                if (card.sequence) statusParts.push(card.sequence);
-                if (card.sentenceId) statusParts.push(`ID: ${card.sentenceId}`);
-                else if (card.sequenceNumber) statusParts.push(`#${card.sequenceNumber}`);
-                
-                const statusText = statusParts.length > 0 ? statusParts.join(' ') : 'DB 연결됨';
-                
-                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
-                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
-                
-                if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                if (dbStatusBack) dbStatusBack.style.display = 'flex';
+        async function updateDBStatus(card) {
+            // Check if card has expression card relation
+            if (card.expressionCardId) {
+                try {
+                    const response = await fetch(`/api/expression-card/${card.expressionCardId}`);
+                    const expressionCard = await response.json();
+                    
+                    if (expressionCard && expressionCard.title) {
+                        // Display expression card title and ID
+                        const statusText = expressionCard.id ? 
+                            `${expressionCard.title} (ID: ${expressionCard.id})` : 
+                            expressionCard.title;
+                        
+                        if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
+                        if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
+                        
+                        if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                        if (dbStatusBack) dbStatusBack.style.display = 'flex';
+                    } else {
+                        // Hide if no valid expression card info
+                        if (dbStatusFront) dbStatusFront.style.display = 'none';
+                        if (dbStatusBack) dbStatusBack.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error fetching expression card info:', error);
+                    // Hide status if error
+                    if (dbStatusFront) dbStatusFront.style.display = 'none';
+                    if (dbStatusBack) dbStatusBack.style.display = 'none';
+                }
             } else {
-                // Hide status if no database connection info
+                // Hide status if no expression card relation
                 if (dbStatusFront) dbStatusFront.style.display = 'none';
                 if (dbStatusBack) dbStatusBack.style.display = 'none';
             }

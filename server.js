@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getFlashcardsFromNotion, getNotionDatabases } = require('./notion.js');
+const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo } = require('./notion.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +46,23 @@ app.get('/api/database-info', async (req, res) => {
     } catch (error) {
         console.error('Error fetching database info:', error);
         res.json({ title: null, id: null });
+    }
+});
+
+// API endpoint to get expression card info
+app.get('/api/expression-card/:id', async (req, res) => {
+    try {
+        const expressionCardId = req.params.id;
+        const cardInfo = await getExpressionCardInfo(expressionCardId);
+        
+        if (cardInfo) {
+            res.json(cardInfo);
+        } else {
+            res.status(404).json({ error: 'Expression card not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching expression card info:', error);
+        res.status(500).json({ error: 'Failed to fetch expression card info' });
     }
 });
 
