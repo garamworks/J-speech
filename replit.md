@@ -82,6 +82,6 @@ This is a web-based Japanese learning flashcard application that integrates with
 
 Preferred communication style: Simple, everyday language.
 TTS Settings: 
-- Male characters (M): Much lower pitch (0.4), male voice preference
+- Male characters (M): Very low pitch (0.2), male voice preference
 - Female characters (F): Slightly higher pitch (1.1), female voice preference  
 - Speech rate: 1.2x speed for faster playback
