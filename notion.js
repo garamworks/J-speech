@@ -242,17 +242,17 @@ async function getExpressionCardInfo(expressionCardId) {
         const meaning = response.properties['뜻(한국어)']?.rich_text?.[0]?.plain_text || '';
         const id = response.properties['ID']?.unique_id?.number || '';
         
-        // Get application expressions
-        const application1 = response.properties['응용표현1']?.rich_text?.[0]?.plain_text || '';
-        const application1Korean = response.properties['응용표현1 한국어']?.rich_text?.[0]?.plain_text || '';
-        const application2 = response.properties['응용표현2']?.rich_text?.[0]?.plain_text || '';
-        const application2Korean = response.properties['응용표현2 한국어']?.rich_text?.[0]?.plain_text || '';
-        const application3 = response.properties['응용표현3']?.rich_text?.[0]?.plain_text || '';
-        const application3Korean = response.properties['응용표현3 한국어']?.rich_text?.[0]?.plain_text || '';
-        const application4 = response.properties['응용표현4']?.rich_text?.[0]?.plain_text || '';
-        const application4Korean = response.properties['응용표현4 한국어']?.rich_text?.[0]?.plain_text || '';
-        const application5 = response.properties['응용표현5']?.rich_text?.[0]?.plain_text || '';
-        const application5Korean = response.properties['응용표현5 한국어']?.rich_text?.[0]?.plain_text || '';
+        // Get application expressions with correct field names
+        const application1 = response.properties['응용1J']?.rich_text?.[0]?.plain_text || '';
+        const application1Korean = response.properties['응용1K']?.rich_text?.[0]?.plain_text || '';
+        const application2 = response.properties['응용2J']?.rich_text?.[0]?.plain_text || '';
+        const application2Korean = response.properties['응용2K']?.rich_text?.[0]?.plain_text || '';
+        const application3 = response.properties['응용3J']?.rich_text?.[0]?.plain_text || '';
+        const application3Korean = response.properties['응용3K']?.rich_text?.[0]?.plain_text || '';
+        const application4 = response.properties['응용4J']?.rich_text?.[0]?.plain_text || '';
+        const application4Korean = response.properties['응용4K']?.rich_text?.[0]?.plain_text || '';
+        const application5 = response.properties['응용5J']?.rich_text?.[0]?.plain_text || '';
+        const application5Korean = response.properties['응용5K']?.rich_text?.[0]?.plain_text || '';
         
         return {
             title: title,
