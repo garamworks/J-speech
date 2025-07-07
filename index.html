@@ -331,19 +331,20 @@
             background: white;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            padding: 20px 16px;
+            padding: 20px 16px 16px 16px;
             max-width: 600px;
             width: 100%;
             max-height: 85vh;
-            overflow-y: auto;
+            overflow-y: visible;
             position: relative;
+            height: fit-content;
         }
 
 
 
         .word-main-section {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 0px;
         }
 
         .word-examples:hover {
@@ -1813,21 +1814,27 @@
             const modalBody = document.getElementById('word-modal-body');
             
             if (modal && modalBody) {
-                // Reset height to auto to calculate natural height
+                // Reset height and overflow first
                 modal.style.height = 'auto';
+                modal.style.overflowY = 'visible';
                 modal.style.maxHeight = '85vh';
                 
-                // Get actual content height
-                const contentHeight = modalBody.scrollHeight + 40; // Add padding
-                const maxHeight = window.innerHeight * 0.85; // 85% of viewport height
+                // Force reflow
+                modal.offsetHeight;
                 
-                // Set appropriate height
-                if (contentHeight <= maxHeight) {
-                    modal.style.height = 'auto';
-                    modal.style.overflowY = 'visible';
-                } else {
-                    modal.style.height = maxHeight + 'px';
+                // Get actual content height including margins
+                const contentHeight = modalBody.scrollHeight;
+                const modalPadding = 40; // 20px top + 20px bottom padding
+                const totalHeight = contentHeight + modalPadding;
+                const maxHeight = window.innerHeight * 0.85;
+                
+                // Only add scroll if content truly exceeds viewport
+                if (totalHeight > maxHeight) {
+                    modal.style.maxHeight = maxHeight + 'px';
                     modal.style.overflowY = 'auto';
+                } else {
+                    modal.style.height = 'fit-content';
+                    modal.style.overflowY = 'visible';
                 }
             }
         }
