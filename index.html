@@ -459,11 +459,6 @@
 <body>
     <div class="app-container">
         <div class="episode-nav">
-            <button class="episode-btn prev-episode" id="prev-episode" style="display: none;">
-                <svg class="episode-icon" viewBox="0 0 24 24">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
-            </button>
             <div class="episode-title" id="episode-title">
                 <span class="volume-text">26권</span>
                 <button class="sequence-nav-btn" id="prev-sequence-btn">
@@ -478,11 +473,6 @@
                     </svg>
                 </button>
             </div>
-            <button class="episode-btn next-episode" id="next-episode" style="display: none;">
-                <svg class="episode-icon" viewBox="0 0 24 24">
-                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-            </button>
         </div>
         
         <div class="flashcard-container">
@@ -561,8 +551,7 @@
         const currentCardSpan = document.getElementById('current-card');
         const totalCardsSpan = document.getElementById('total-cards');
         const episodeTitle = document.getElementById('episode-title');
-        const prevEpisodeBtn = document.getElementById('prev-episode');
-        const nextEpisodeBtn = document.getElementById('next-episode');
+        // Remove unused episode buttons that were deleted from HTML
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
         const nextSequenceBtn = document.getElementById('next-sequence-btn');
 
@@ -688,19 +677,7 @@
                 nextSequenceBtn.disabled = currentIndex >= sequences.length - 1;
             }
             
-            // Show/hide previous episode button
-            if (currentIndex > 0) {
-                prevEpisodeBtn.style.display = 'flex';
-            } else {
-                prevEpisodeBtn.style.display = 'none';
-            }
-            
-            // Show/hide next episode button
-            if (currentIndex < episodes.length - 1) {
-                nextEpisodeBtn.style.display = 'flex';
-            } else {
-                nextEpisodeBtn.style.display = 'none';
-            }
+            // Episode buttons have been removed from HTML
         }
 
         // Get diverse emoji based on sentence index and content
@@ -1036,22 +1013,7 @@
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
         
-        // Sequence navigation event listeners
-        prevEpisodeBtn.addEventListener('click', () => {
-            const sequences = Object.keys(episodeData).sort();
-            const currentIndex = sequences.indexOf(currentEpisode);
-            if (currentIndex > 0) {
-                loadEpisode(sequences[currentIndex - 1]);
-            }
-        });
-        
-        nextEpisodeBtn.addEventListener('click', () => {
-            const sequences = Object.keys(episodeData).sort();
-            const currentIndex = sequences.indexOf(currentEpisode);
-            if (currentIndex < sequences.length - 1) {
-                loadEpisode(sequences[currentIndex + 1]);
-            }
-        });
+        // Old episode navigation buttons removed from HTML
         
         // New sequence navigation button event listeners
         if (prevSequenceBtn) {
