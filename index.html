@@ -1449,10 +1449,15 @@
             }
         }
 
-        // Close modal when clicking outside
-        document.getElementById('expression-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeExpressionModal();
+        // Initialize modal event listener after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const expressionModal = document.getElementById('expression-modal');
+            if (expressionModal) {
+                expressionModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeExpressionModal();
+                    }
+                });
             }
         });
     </script>
