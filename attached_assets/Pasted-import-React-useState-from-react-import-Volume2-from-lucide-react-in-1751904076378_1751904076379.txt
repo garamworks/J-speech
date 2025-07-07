@@ -1,0 +1,410 @@
+import React, { useState } from "react";
+import { Volume2 } from "lucide-react";
+
+// 플래시카드 데이터 타입
+interface Flashcard {
+  id: number;
+  japanese: string;
+  furigana: string;
+  korean: string;
+  sentence: string;
+  sentenceKorean: string;
+  imageUrl: string;
+  audioUrl?: string | null;
+  wordAudioUrl?: string | null;
+  pronunciationAudioUrl?: string | null;
+}
+
+interface FlashcardProps {
+  flashcard: Flashcard;
+  onMarkAsKnown: () => void;
+  onMarkAsUnknown: () => void;
+  level?: string;
+}
+
+// TTS 훅 (useSpeech 대체)
+const useSpeech = () => {
+  const speak = (text: string, lang: string = 'ja-JP') => {
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = 0.8;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
+    } else {
+      console.warn('Speech synthesis not supported in this browser');
+    }
+  };
+
+  const stop = () => {
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
+  };
+
+  return { speak, stop };
+};
+
+export default function FlashcardComponent({ flashcard, onMarkAsKnown, onMarkAsUnknown, level }: FlashcardProps) {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const { speak } = useSpeech();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // 스피커 버튼 클릭 시 카드 뒤집기 방지
+    if ((e.target as HTMLElement).closest('.speaker-btn')) return;
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleWordAudioClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // 모바일 시각적 피드백
+    const button = e.currentTarget as HTMLElement;
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 100);
+    
+    // 히라가나/가타가나인 경우 단어 오디오 재생
+    if (level === "Hiragana/Katakana") {
+      if (flashcard.wordAudioUrl) {
+        const audio = new Audio(flashcard.wordAudioUrl);
+        audio.play().catch(error => {
+          console.error('Error playing word audio:', error);
+          speak(flashcard.sentence || flashcard.japanese, 'ja-JP');
+        });
+      } else {
+        speak(flashcard.sentence || flashcard.japanese, 'ja-JP');
+      }
+    } else {
+      // 일반 플래시카드 동작
+      if (flashcard.wordAudioUrl) {
+        const audio = new Audio(flashcard.wordAudioUrl);
+        audio.play().catch(error => {
+          console.error('Error playing word audio:', error);
+          speak(flashcard.furigana || flashcard.japanese, 'ja-JP');
+        });
+      } else {
+        speak(flashcard.furigana || flashcard.japanese, 'ja-JP');
+      }
+    }
+  };
+
+  const handlePronunciationAudioClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // 모바일 시각적 피드백
+    const button = e.currentTarget as HTMLElement;
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 100);
+    
+    // 발음 오디오 재생
+    if (flashcard.pronunciationAudioUrl) {
+      const audio = new Audio(flashcard.pronunciationAudioUrl);
+      audio.play().catch(error => {
+        console.error('Error playing pronunciation audio:', error);
+        speak(flashcard.sentence, 'ja-JP');
+      });
+    } else {
+      speak(flashcard.sentence, 'ja-JP');
+    }
+  };
+
+  const handleCharacterAudioClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // 모바일 시각적 피드백
+    const button = e.currentTarget as HTMLElement;
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 100);
+    
+    // 문자 오디오 재생
+    speak(flashcard.japanese, 'ja-JP');
+  };
+
+  const handleButtonAction = (action: () => void) => {
+    if (isFlipped) {
+      // 카드가 뒤집힌 상태면 먼저 앞면으로 돌리기
+      setIsTransitioning(true);
+      setIsFlipped(false);
+      
+      // 애니메이션 완료 후 액션 실행
+      setTimeout(() => {
+        setIsTransitioning(false);
+        action();
+      }, 300);
+    } else {
+      // 앞면이면 즉시 액션 실행
+      action();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flashcard-container mb-6" onClick={handleCardClick}>
+        <div className={`flashcard-inner ${isFlipped ? 'flipped' : ''} ${isTransitioning ? 'transitioning' : ''}`}>
+          
+          {/* 카드 앞면 */}
+          <div className="flashcard-face flashcard-front">
+            <div className="bg-white rounded-2xl shadow-lg p-6 relative cursor-pointer">
+              {level === "Hiragana/Katakana" ? (
+                // 히라가나/가타가나 앞면 레이아웃
+                <>
+                  {/* 정사각형 이미지와 스피커 버튼 */}
+                  <div className="relative mb-6">
+                    {flashcard.imageUrl ? (
+                      <img
+                        src={flashcard.imageUrl}
+                        alt={flashcard.japanese}
+                        className="w-full aspect-square object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center">
+                        <span className="text-gray-400 text-lg">이미지 없음</span>
+                      </div>
+                    )}
+                    
+                    {/* 문자 오디오 버튼 - 왼쪽 하단 */}
+                    <button
+                      className="speaker-btn absolute bottom-4 left-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                      onClick={handleCharacterAudioClick}
+                      title="문자 발음"
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      <Volume2 className="text-red-600" size={28} />
+                    </button>
+                    
+                    {/* 단어 오디오 버튼 - 오른쪽 하단 */}
+                    <button
+                      className="speaker-btn absolute bottom-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                      onClick={handleWordAudioClick}
+                      title="단어 발음"
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      <Volume2 className="text-blue-600" size={28} />
+                    </button>
+                  </div>
+
+                  {/* 히라가나/가타가나 문자 */}
+                  <div className="text-center mb-4">
+                    <p className="text-6xl font-bold text-gray-900 leading-tight">
+                      {flashcard.japanese}
+                    </p>
+                  </div>
+
+                  {/* 문자 아래 단어 */}
+                  <div className="text-center">
+                    <p className="text-2xl text-gray-700 leading-relaxed">
+                      {flashcard.sentence}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                // 일반 플래시카드 앞면 레이아웃
+                <>
+                  {/* 정사각형 이미지와 스피커 아이콘 */}
+                  <div className="relative mb-6">
+                    {flashcard.imageUrl ? (
+                      <img
+                        src={flashcard.imageUrl}
+                        alt={flashcard.japanese}
+                        className="w-full aspect-square object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center">
+                        <span className="text-gray-400 text-lg">이미지 없음</span>
+                      </div>
+                    )}
+                    
+                    {/* 스피커 버튼 - 왼쪽과 오른쪽 */}
+                    <button
+                      className="speaker-btn absolute bottom-4 left-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                      onClick={handleWordAudioClick}
+                      title="단어발음"
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      <Volume2 className="text-blue-600" size={28} />
+                    </button>
+                    
+                    <button
+                      className="speaker-btn absolute bottom-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                      onClick={handlePronunciationAudioClick}
+                      title="발음"
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      <Volume2 className="text-green-600" size={28} />
+                    </button>
+                  </div>
+
+                  {/* 일본어 단어 */}
+                  <div className="text-center mb-4">
+                    <p className="text-4xl font-bold text-gray-900 leading-tight">
+                      {flashcard.japanese}
+                    </p>
+                  </div>
+
+                  {/* 예문 */}
+                  <div className="text-center">
+                    <p className="text-2xl text-gray-700 leading-relaxed">
+                      {flashcard.sentence}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 카드 뒷면 */}
+          <div className="flashcard-face flashcard-back">
+            <div className="bg-white rounded-2xl shadow-lg p-6 cursor-pointer h-full flex flex-col justify-center relative">
+              {level === "Hiragana/Katakana" ? (
+                // 히라가나/가타가나 뒷면 레이아웃
+                <>
+                  {/* 스피커 버튼 */}
+                  <button
+                    className="speaker-btn absolute bottom-6 right-6 bg-blue-500 hover:bg-blue-600 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                    onClick={handleWordAudioClick}
+                    title="단어 발음"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <Volume2 className="text-white" size={28} />
+                  </button>
+
+                  {/* 문자 오디오 버튼 - 왼쪽 하단 */}
+                  <button
+                    className="speaker-btn absolute bottom-6 left-6 bg-red-500 hover:bg-red-600 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                    onClick={handleCharacterAudioClick}
+                    title="문자 발음"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <Volume2 className="text-white" size={28} />
+                  </button>
+
+                  {/* 문자 */}
+                  <div className="text-center" style={{ marginBottom: '1.5rem' }}>
+                    <p className="text-6xl font-bold text-gray-900" style={{ lineHeight: '0.7' }}>
+                      {flashcard.japanese}
+                    </p>
+                  </div>
+
+                  {/* 파일명_히라가나 */}
+                  <div className="text-center" style={{ marginBottom: '1.8rem' }}>
+                    <p className="text-2xl font-semibold text-gray-600" style={{ lineHeight: '0.7' }}>
+                      {flashcard.furigana}
+                    </p>
+                  </div>
+
+                  {/* 단어 */}
+                  <div className="text-center" style={{ marginBottom: '1.8rem' }}>
+                    <p className="text-3xl font-semibold text-gray-900" style={{ lineHeight: '0.7' }}>
+                      {flashcard.sentence}
+                    </p>
+                  </div>
+
+                  {/* 단어뜻 */}
+                  <div className="text-center">
+                    <p className="text-3xl font-semibold text-gray-700" style={{ lineHeight: '0.7' }}>
+                      {flashcard.korean}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                // 일반 플래시카드 뒷면 레이아웃
+                <>
+                  {/* 스피커 버튼 - 왼쪽과 오른쪽 */}
+                  <button
+                    className="speaker-btn absolute bottom-6 left-6 bg-blue-500 hover:bg-blue-600 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                    onClick={handleWordAudioClick}
+                    title="단어발음"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <Volume2 className="text-white" size={28} />
+                  </button>
+                  
+                  <button
+                    className="speaker-btn absolute bottom-6 right-6 bg-green-500 hover:bg-green-600 rounded-full shadow-md flex items-center justify-center w-12 h-12"
+                    onClick={handlePronunciationAudioClick}
+                    title="발음"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <Volume2 className="text-white" size={28} />
+                  </button>
+
+                  {/* 일본어 단어 (한자) */}
+                  <div className="text-center" style={{ marginBottom: '1.5rem' }}>
+                    <p className="text-4xl font-bold text-gray-900" style={{ lineHeight: '0.7' }}>
+                      {flashcard.japanese}
+                    </p>
+                  </div>
+
+                  {/* 후리가나 독음 (히라가나) */}
+                  <div className="text-center" style={{ marginBottom: '1.8rem' }}>
+                    <p className="text-2xl font-semibold text-gray-600" style={{ lineHeight: '0.7' }}>
+                      {flashcard.furigana}
+                    </p>
+                  </div>
+
+                  {/* 한국어 번역 */}
+                  <div className="text-center" style={{ marginBottom: '3.0rem' }}>
+                    <p className="text-3xl font-semibold text-gray-900" style={{ lineHeight: '0.7' }}>
+                      {flashcard.korean}
+                    </p>
+                  </div>
+
+                  {/* 일본어 예문 */}
+                  <div className="text-center" style={{ marginBottom: '0.64rem' }}>
+                    <p className="text-2xl text-gray-700 leading-relaxed" style={{ fontSize: '1.65em' }}>
+                      {flashcard.sentence}
+                    </p>
+                  </div>
+
+                  {/* 한국어 예문 번역 */}
+                  <div className="text-center">
+                    <p className="text-2xl text-gray-700 leading-relaxed" style={{ fontSize: '1.46rem' }}>
+                      {flashcard.sentenceKorean}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 액션 버튼 */}
+      <div className="flex gap-6 mb-8">
+        <button
+          onClick={() => handleButtonAction(onMarkAsKnown)}
+          className="action-btn flex-1 text-white font-semibold py-4 px-6 rounded-3xl text-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+          style={{ 
+            backgroundColor: '#4CAF50'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
+          disabled={isTransitioning}
+        >
+          외움
+        </button>
+        
+        <button
+          onClick={() => handleButtonAction(onMarkAsUnknown)}
+          className="action-btn flex-1 text-white font-semibold py-4 px-6 rounded-3xl text-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+          style={{ 
+            backgroundColor: '#f44336'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#da190b'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f44336'}
+          disabled={isTransitioning}
+        >
+          모름
+        </button>
+      </div>
+    </div>
+  );
+}

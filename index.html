@@ -244,6 +244,116 @@
             color: #666;
         }
 
+        /* Word Card Modal Styles */
+        .word-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .word-modal-content {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 20px 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .word-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .word-modal-close:hover {
+            color: #000;
+        }
+
+        .word-main-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .word-main-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .word-main-title:hover {
+            color: #3b82f6;
+        }
+
+        .word-main-reading {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .word-main-meaning {
+            font-size: 16px;
+            color: #888;
+        }
+
+        .word-sentence-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .word-sentence-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .word-sentence-item {
+            border-left: 4px solid #48bb78;
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 8px;
+        }
+
+        .word-sentence-item:hover {
+            background-color: #f0f9ff;
+        }
+
+        .word-sentence-japanese {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .word-sentence-korean {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
         .db-status-dot {
             width: 12px;
             height: 12px;
@@ -1358,11 +1468,11 @@
         });
         wordSpeakerBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakWord();
+            openWordModal();
         });
         wordSpeakerBtnBack.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakWord();
+            openWordModal();
         });
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
@@ -1483,6 +1593,69 @@
             modal.style.display = 'none';
         }
 
+        function openWordModal() {
+            const modal = document.getElementById('word-modal');
+            const modalBody = document.getElementById('word-modal-body');
+            
+            modal.style.display = 'flex';
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
+            
+            // Get current card data
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (!currentCard || !currentCard.speaker) {
+                modalBody.innerHTML = '<div class="expression-loading">No word data available.</div>';
+                return;
+            }
+            
+            // Create word modal content
+            const wordData = {
+                word: currentCard.speaker,
+                reading: currentCard.speakerReading || currentCard.speaker,
+                meaning: currentCard.speakerMeaning || '의미 없음',
+                sentence: currentCard.japanese,
+                sentenceKorean: currentCard.korean
+            };
+            
+            renderWordModal(wordData);
+        }
+
+        function renderWordModal(data) {
+            const modalBody = document.getElementById('word-modal-body');
+            
+            let html = `
+                <div class="word-main-section">
+                    <h2 class="word-main-title" onclick="speakJapaneseText('${data.word}')">
+                        ${data.word}
+                    </h2>
+                    <p class="word-main-reading">
+                        ${data.reading}
+                    </p>
+                    <p class="word-main-meaning">
+                        ${data.meaning}
+                    </p>
+                </div>
+            `;
+            
+            if (data.sentence) {
+                html += `
+                    <div class="word-sentence-section">
+                        <div class="word-sentence-title">예문</div>
+                        <div class="word-sentence-item" onclick="speakJapaneseText('${data.sentence}')">
+                            <div class="word-sentence-japanese">${data.sentence}</div>
+                            <div class="word-sentence-korean">${data.sentenceKorean}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = html;
+        }
+
+        function closeWordModal() {
+            const modal = document.getElementById('word-modal');
+            modal.style.display = 'none';
+        }
+
         function renderExpressionCard(data) {
             const modalBody = document.getElementById('expression-modal-body');
             
@@ -1542,6 +1715,15 @@
                     }
                 });
             }
+            
+            const wordModal = document.getElementById('word-modal');
+            if (wordModal) {
+                wordModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeWordModal();
+                    }
+                });
+            }
         });
     </script>
     
@@ -1550,6 +1732,16 @@
         <div class="expression-modal-content">
             <button class="expression-modal-close" onclick="closeExpressionModal()">&times;</button>
             <div id="expression-modal-body">
+                <div class="expression-loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Modal -->
+    <div id="word-modal" class="word-modal">
+        <div class="word-modal-content">
+            <button class="word-modal-close" onclick="closeWordModal()">&times;</button>
+            <div id="word-modal-body">
                 <div class="expression-loading">Loading...</div>
             </div>
         </div>
