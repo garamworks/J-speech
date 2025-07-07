@@ -650,11 +650,11 @@
             if (sequenceText) sequenceText.textContent = sequenceName;
             
             if (currentEpisodeCards.length > 0) {
-                // Sort cards by sequence number (romanji)
+                // Sort cards by sequence number (romanji) in ascending order
                 currentEpisodeCards.sort((a, b) => {
                     const aNum = parseInt(a.romanji) || 0;
                     const bNum = parseInt(b.romanji) || 0;
-                    return bNum - aNum; // Descending order to match the original data
+                    return aNum - bNum; // Ascending order
                 });
                 
                 loadCard(currentCardIndex);
