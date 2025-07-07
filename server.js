@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo } = require('./notion.js');
+const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo } = require('./notion.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -63,6 +63,23 @@ app.get('/api/expression-card/:id', async (req, res) => {
     } catch (error) {
         console.error('Error fetching expression card info:', error);
         res.status(500).json({ error: 'Failed to fetch expression card info' });
+    }
+});
+
+// API endpoint to get N1 vocabulary info
+app.get('/api/n1-vocabulary/:id', async (req, res) => {
+    try {
+        const n1VocabularyId = req.params.id;
+        const vocabularyInfo = await getN1VocabularyInfo(n1VocabularyId);
+        
+        if (vocabularyInfo) {
+            res.json(vocabularyInfo);
+        } else {
+            res.status(404).json({ error: 'N1 vocabulary not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching N1 vocabulary info:', error);
+        res.status(500).json({ error: 'Failed to fetch N1 vocabulary info' });
     }
 });
 

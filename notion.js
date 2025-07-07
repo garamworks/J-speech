@@ -22,6 +22,8 @@ const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
 const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
 // Expression cards database ID (일본어 표현카드)
 const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8014-a3f2-d401a86e4c41";
+// N1 vocabulary database ID (일본어 단어공부 N1)
+const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd";
 
 // Get database info by ID
 async function getNotionDatabases() {
@@ -196,6 +198,9 @@ async function getFlashcardsFromNotion() {
             // Get expression card relation
             const expressionCardRelation = properties['일본어 표현카드']?.relation?.[0]?.id;
 
+            // Get N1 vocabulary relation
+            const n1VocabularyRelation = properties['일본어 단어공부 N1']?.relation?.[0]?.id;
+
             // Map character names to emojis
             const characterEmojis = {
                 'ひなた': '🌻',
@@ -216,7 +221,8 @@ async function getFlashcardsFromNotion() {
                 episode: episode,
                 volume: volume,
                 sequence: sequence,
-                expressionCardId: expressionCardRelation
+                expressionCardId: expressionCardRelation,
+                n1VocabularyId: n1VocabularyRelation
             };
         });
     } catch (error) {
@@ -247,4 +253,32 @@ async function getExpressionCardInfo(expressionCardId) {
     }
 }
 
-module.exports = { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo };
+// Get N1 vocabulary info by ID
+async function getN1VocabularyInfo(n1VocabularyId) {
+    try {
+        const response = await notion.pages.retrieve({
+            page_id: n1VocabularyId
+        });
+        
+        const word = response.properties['단어']?.title?.[0]?.plain_text || '';
+        const meaning = response.properties['뜻']?.rich_text?.[0]?.plain_text || '';
+        const reading = response.properties['독음']?.rich_text?.[0]?.plain_text || '';
+        const example = response.properties['예문']?.rich_text?.[0]?.plain_text || '';
+        const exampleTranslation = response.properties['예문 해석']?.rich_text?.[0]?.plain_text || '';
+        const id = response.properties['ID']?.unique_id?.number || '';
+        
+        return {
+            word: word,
+            meaning: meaning,
+            reading: reading,
+            example: example,
+            exampleTranslation: exampleTranslation,
+            id: id
+        };
+    } catch (error) {
+        console.error('Error fetching N1 vocabulary info:', error);
+        return null;
+    }
+}
+
+module.exports = { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo };

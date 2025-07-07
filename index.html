@@ -848,6 +848,8 @@
         
         // Update database connection status based on card data
         async function updateDBStatus(card) {
+            let statusItems = [];
+            
             // Check if card has expression card relation
             if (card.expressionCardId) {
                 try {
@@ -855,27 +857,41 @@
                     const expressionCard = await response.json();
                     
                     if (expressionCard && expressionCard.title) {
-                        // Display expression card title only
-                        const statusText = expressionCard.title;
-                        
-                        if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
-                        if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
-                        
-                        if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                        if (dbStatusBack) dbStatusBack.style.display = 'flex';
-                    } else {
-                        // Hide if no valid expression card info
-                        if (dbStatusFront) dbStatusFront.style.display = 'none';
-                        if (dbStatusBack) dbStatusBack.style.display = 'none';
+                        statusItems.push(expressionCard.title);
                     }
                 } catch (error) {
                     console.error('Error fetching expression card info:', error);
-                    // Hide status if error
-                    if (dbStatusFront) dbStatusFront.style.display = 'none';
-                    if (dbStatusBack) dbStatusBack.style.display = 'none';
                 }
+            }
+            
+            // Check if card has N1 vocabulary relation
+            if (card.n1VocabularyId) {
+                try {
+                    const response = await fetch(`/api/n1-vocabulary/${card.n1VocabularyId}`);
+                    const n1Vocabulary = await response.json();
+                    
+                    if (n1Vocabulary && n1Vocabulary.word) {
+                        const n1Text = n1Vocabulary.reading ? 
+                            `${n1Vocabulary.word}(${n1Vocabulary.reading})` : 
+                            n1Vocabulary.word;
+                        statusItems.push(n1Text);
+                    }
+                } catch (error) {
+                    console.error('Error fetching N1 vocabulary info:', error);
+                }
+            }
+            
+            // Display status if we have any items
+            if (statusItems.length > 0) {
+                const statusText = statusItems.join(' | ');
+                
+                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
+                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
+                
+                if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                if (dbStatusBack) dbStatusBack.style.display = 'flex';
             } else {
-                // Hide status if no expression card relation
+                // Hide status if no valid information
                 if (dbStatusFront) dbStatusFront.style.display = 'none';
                 if (dbStatusBack) dbStatusBack.style.display = 'none';
             }
