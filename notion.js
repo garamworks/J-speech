@@ -64,13 +64,15 @@ async function getCharacterData() {
         response.results.forEach(page => {
             const name = page.properties.Name?.title?.[0]?.plain_text;
             const imageFile = page.properties.face?.files?.[0];
+            const gender = page.properties.Gender?.select?.name;
             
             if (name && imageFile) {
                 const imageUrl = imageFile.type === 'external' ? 
                     imageFile.external.url : imageFile.file.url;
                 characterMap[name] = {
                     imageUrl: imageUrl,
-                    emoji: getCharacterEmoji(name)
+                    emoji: getCharacterEmoji(name),
+                    gender: gender
                 };
             }
         });
@@ -215,7 +217,7 @@ async function getFlashcardsFromNotion() {
                 korean: korean || "번역 없음", 
                 character: characterInfo?.emoji || characterEmojis.default,
                 characterImage: characterInfo?.imageUrl || null,
-                gender: null,
+                gender: characterInfo?.gender || null,
                 romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
                 speaker: characterName || n2Word || "학습자료",
                 episode: episode,
