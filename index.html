@@ -1219,32 +1219,86 @@
                         if (expressionCard && expressionCard.title) {
                             const expressionId = card.expressionCardIds[index];
                             
-                            // Create front expression item
+                            // Create front expression item with proper styling
                             const frontItem = document.createElement('div');
                             frontItem.className = 'db-status clickable';
-                            frontItem.style.display = 'flex';
-                            frontItem.style.marginBottom = '2px';
+                            frontItem.style.cssText = `
+                                display: flex;
+                                align-items: center;
+                                background: #F3F9FF;
+                                border: 1px solid #E0E7F7;
+                                border-radius: 6px;
+                                padding: 6px 8px;
+                                margin-bottom: 4px;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                font-size: 11px;
+                                color: #1a365d;
+                                font-weight: 500;
+                            `;
                             
                             const frontText = document.createElement('div');
                             frontText.className = 'db-status-text';
                             frontText.textContent = expressionCard.title;
+                            frontText.style.cssText = `
+                                font-size: 11px;
+                                color: #1a365d;
+                                font-weight: 500;
+                            `;
                             frontItem.appendChild(frontText);
+                            
+                            // Add hover effect
+                            frontItem.addEventListener('mouseenter', () => {
+                                frontItem.style.background = '#E6F3FF';
+                                frontItem.style.borderColor = '#B8D4F0';
+                            });
+                            frontItem.addEventListener('mouseleave', () => {
+                                frontItem.style.background = '#F3F9FF';
+                                frontItem.style.borderColor = '#E0E7F7';
+                            });
                             
                             frontItem.addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 openExpressionModal(expressionId);
                             });
                             
-                            // Create back expression item
+                            // Create back expression item with proper styling
                             const backItem = document.createElement('div');
                             backItem.className = 'db-status clickable';
-                            backItem.style.display = 'flex';
-                            backItem.style.marginBottom = '2px';
+                            backItem.style.cssText = `
+                                display: flex;
+                                align-items: center;
+                                background: #F3F9FF;
+                                border: 1px solid #E0E7F7;
+                                border-radius: 6px;
+                                padding: 6px 8px;
+                                margin-bottom: 4px;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                font-size: 11px;
+                                color: #1a365d;
+                                font-weight: 500;
+                            `;
                             
                             const backText = document.createElement('div');
                             backText.className = 'db-status-text';
                             backText.textContent = expressionCard.title;
+                            backText.style.cssText = `
+                                font-size: 11px;
+                                color: #1a365d;
+                                font-weight: 500;
+                            `;
                             backItem.appendChild(backText);
+                            
+                            // Add hover effect
+                            backItem.addEventListener('mouseenter', () => {
+                                backItem.style.background = '#E6F3FF';
+                                backItem.style.borderColor = '#B8D4F0';
+                            });
+                            backItem.addEventListener('mouseleave', () => {
+                                backItem.style.background = '#F3F9FF';
+                                backItem.style.borderColor = '#E0E7F7';
+                            });
                             
                             backItem.addEventListener('click', (e) => {
                                 e.stopPropagation();
