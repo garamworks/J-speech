@@ -1103,38 +1103,56 @@
 
         // Text-to-speech functionality
         function speakJapanese() {
-            try {
-                console.log('speakJapanese function started');
-                
-                // Cancel any ongoing speech
-                speechSynthesis.cancel();
-                
-                console.log('currentEpisodeCards:', currentEpisodeCards);
-                console.log('currentCardIndex:', currentCardIndex);
-                
-                const currentCard = currentEpisodeCards[currentCardIndex];
-                if (!currentCard || !currentCard.japanese) {
-                    console.warn('No current card or Japanese text to speak');
-                    console.log('Current card:', currentCard);
-                    return;
-                }
-                
-                console.log('Speaking Japanese text:', currentCard.japanese);
-                const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
-                
-                // Wait for voices to load on mobile browsers
-                const voices = speechSynthesis.getVoices();
-                console.log('Available voices count:', voices.length);
-                
-                if (voices.length === 0) {
-                    console.log('No voices available, waiting for voiceschanged event');
-                    // Retry after voices are loaded
-                    speechSynthesis.addEventListener('voiceschanged', () => {
-                        console.log('Voices changed event triggered');
-                        speakJapanese();
-                    }, { once: true });
-                    return;
-                }
+            console.log('=== speakJapanese function started ===');
+            
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            console.log('Speech synthesis cancelled');
+            
+            console.log('currentEpisodeCards:', currentEpisodeCards);
+            console.log('currentCardIndex:', currentCardIndex);
+            console.log('currentEpisodeCards length:', currentEpisodeCards ? currentEpisodeCards.length : 'undefined');
+            
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                console.error('No episode cards available');
+                return;
+            }
+            
+            if (currentCardIndex < 0 || currentCardIndex >= currentEpisodeCards.length) {
+                console.error('Invalid card index:', currentCardIndex);
+                return;
+            }
+            
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            console.log('Current card:', currentCard);
+            
+            if (!currentCard) {
+                console.error('Current card is null or undefined');
+                return;
+            }
+            
+            if (!currentCard.japanese) {
+                console.error('No Japanese text in current card');
+                return;
+            }
+            
+            console.log('Speaking Japanese text:', currentCard.japanese);
+            const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
+            console.log('Utterance created');
+            
+            // Wait for voices to load on mobile browsers
+            const voices = speechSynthesis.getVoices();
+            console.log('Available voices count:', voices.length);
+            
+            if (voices.length === 0) {
+                console.log('No voices available, waiting for voiceschanged event');
+                // Retry after voices are loaded
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    console.log('Voices changed event triggered');
+                    speakJapanese();
+                }, { once: true });
+                return;
+            }
             
             // Try to use Japanese voice based on character gender
             let selectedVoice = null;
@@ -1210,10 +1228,7 @@
             console.log('About to speak with utterance:', utterance);
             speechSynthesis.speak(utterance);
             console.log('speechSynthesis.speak() called');
-            
-            } catch (error) {
-                console.error('Error in speakJapanese function:', error);
-            }
+            console.log('=== speakJapanese function ended ===');
         }
 
         // Text-to-speech for N2 words
