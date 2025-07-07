@@ -31,7 +31,8 @@ app.get('/api/database-info', async (req, res) => {
             const title = db.title && Array.isArray(db.title) && db.title.length > 0 
                 ? db.title[0]?.plain_text || ''
                 : '';
-            return title.includes('일본어') || title.includes('표현') || title.includes('대화');
+            return title.includes('팜시리즈') || title.includes('대사') || title.includes('DB') || 
+                   title.includes('일본어') || title.includes('표현') || title.includes('대화');
         });
         
         if (mainDb) {
@@ -40,11 +41,11 @@ app.get('/api/database-info', async (req, res) => {
                 : 'Untitled Database';
             res.json({ title: title, id: mainDb.id });
         } else {
-            res.json({ title: '일본어 표현카드', id: null });
+            res.json({ title: null, id: null });
         }
     } catch (error) {
         console.error('Error fetching database info:', error);
-        res.json({ title: '일본어 표현카드', id: null });
+        res.json({ title: null, id: null });
     }
 });
 

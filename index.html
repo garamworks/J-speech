@@ -839,13 +839,21 @@
             try {
                 const response = await fetch('/api/database-info');
                 const dbInfo = await response.json();
-                const statusText = dbInfo.title;
                 
-                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
-                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
-                
-                if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                if (dbStatusBack) dbStatusBack.style.display = 'flex';
+                // Only show status if we have a valid database title and ID
+                if (dbInfo.title && dbInfo.id) {
+                    const statusText = dbInfo.title;
+                    
+                    if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
+                    if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
+                    
+                    if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                    if (dbStatusBack) dbStatusBack.style.display = 'flex';
+                } else {
+                    // Hide status if no valid database info
+                    if (dbStatusFront) dbStatusFront.style.display = 'none';
+                    if (dbStatusBack) dbStatusBack.style.display = 'none';
+                }
             } catch (error) {
                 console.error('Error fetching database info:', error);
                 // Hide status if error

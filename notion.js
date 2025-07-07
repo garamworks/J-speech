@@ -21,43 +21,31 @@ const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
 // Character database ID
 const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
 
-// Get all child databases from the page
+// Get database info by ID
 async function getNotionDatabases() {
-    const childDatabases = [];
+    const databases = [];
 
     try {
-        let hasMore = true;
-        let startCursor = undefined;
-
-        while (hasMore) {
-            const response = await notion.blocks.children.list({
-                block_id: NOTION_PAGE_ID,
-                start_cursor: startCursor,
+        // Get the main database info
+        const databaseInfo = await notion.databases.retrieve({
+            database_id: DATABASE_ID,
+        });
+        databases.push(databaseInfo);
+        
+        // Also try to get character database info
+        try {
+            const characterDatabaseInfo = await notion.databases.retrieve({
+                database_id: CHARACTER_DATABASE_ID,
             });
-
-            for (const block of response.results) {
-                if (block.type === "child_database") {
-                    const databaseId = block.id;
-
-                    try {
-                        const databaseInfo = await notion.databases.retrieve({
-                            database_id: databaseId,
-                        });
-                        childDatabases.push(databaseInfo);
-                    } catch (error) {
-                        console.error(`Error retrieving database ${databaseId}:`, error);
-                    }
-                }
-            }
-
-            hasMore = response.has_more;
-            startCursor = response.next_cursor || undefined;
+            databases.push(characterDatabaseInfo);
+        } catch (error) {
+            console.log('Character database not accessible:', error.message);
         }
-
-        return childDatabases;
+        
+        return databases;
     } catch (error) {
-        console.error("Error listing child databases:", error);
-        throw error;
+        console.error('Error retrieving databases:', error);
+        return [];
     }
 }
 
@@ -231,4 +219,4 @@ async function getFlashcardsFromNotion() {
     }
 }
 
-module.exports = { getFlashcardsFromNotion };
+module.exports = { getFlashcardsFromNotion, getNotionDatabases };
