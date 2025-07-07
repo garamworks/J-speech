@@ -241,20 +241,28 @@ async function getExpressionCardInfo(expressionCardId) {
         });
         
         const title = response.properties['표현(일본어)']?.title?.[0]?.plain_text || '';
-        const meaning = response.properties['뜻(한국어)']?.rich_text?.[0]?.plain_text || '';
+        const meaning = getRichTextContent(response.properties['뜻(한국어)']);
         const id = response.properties['ID']?.unique_id?.number || '';
         
+        // Helper function to get all rich text content
+        const getRichTextContent = (richTextProperty) => {
+            if (!richTextProperty?.rich_text || richTextProperty.rich_text.length === 0) {
+                return '';
+            }
+            return richTextProperty.rich_text.map(text => text.plain_text).join('');
+        };
+
         // Get application expressions with correct field names
-        const application1 = response.properties['응용1J']?.rich_text?.[0]?.plain_text || '';
-        const application1Korean = response.properties['응용1K']?.rich_text?.[0]?.plain_text || '';
-        const application2 = response.properties['응용2J']?.rich_text?.[0]?.plain_text || '';
-        const application2Korean = response.properties['응용2K']?.rich_text?.[0]?.plain_text || '';
-        const application3 = response.properties['응용3J']?.rich_text?.[0]?.plain_text || '';
-        const application3Korean = response.properties['응용3K']?.rich_text?.[0]?.plain_text || '';
-        const application4 = response.properties['응용4J']?.rich_text?.[0]?.plain_text || '';
-        const application4Korean = response.properties['응용4K']?.rich_text?.[0]?.plain_text || '';
-        const application5 = response.properties['응용5J']?.rich_text?.[0]?.plain_text || '';
-        const application5Korean = response.properties['응용5K']?.rich_text?.[0]?.plain_text || '';
+        const application1 = getRichTextContent(response.properties['응용1J']);
+        const application1Korean = getRichTextContent(response.properties['응용1K']);
+        const application2 = getRichTextContent(response.properties['응용2J']);
+        const application2Korean = getRichTextContent(response.properties['응용2K']);
+        const application3 = getRichTextContent(response.properties['응용3J']);
+        const application3Korean = getRichTextContent(response.properties['응용3K']);
+        const application4 = getRichTextContent(response.properties['응용4J']);
+        const application4Korean = getRichTextContent(response.properties['응용4K']);
+        const application5 = getRichTextContent(response.properties['응용5J']);
+        const application5Korean = getRichTextContent(response.properties['응용5K']);
         
         return {
             title: title,
@@ -284,11 +292,19 @@ async function getN1VocabularyInfo(n1VocabularyId) {
             page_id: n1VocabularyId
         });
         
+        // Helper function to get all rich text content
+        const getRichTextContent = (richTextProperty) => {
+            if (!richTextProperty?.rich_text || richTextProperty.rich_text.length === 0) {
+                return '';
+            }
+            return richTextProperty.rich_text.map(text => text.plain_text).join('');
+        };
+
         const word = response.properties['단어']?.title?.[0]?.plain_text || '';
-        const meaning = response.properties['뜻']?.rich_text?.[0]?.plain_text || '';
-        const reading = response.properties['독음']?.rich_text?.[0]?.plain_text || '';
-        const example = response.properties['예문']?.rich_text?.[0]?.plain_text || '';
-        const exampleTranslation = response.properties['예문 해석']?.rich_text?.[0]?.plain_text || '';
+        const meaning = getRichTextContent(response.properties['뜻']);
+        const reading = getRichTextContent(response.properties['독음']);
+        const example = getRichTextContent(response.properties['예문']);
+        const exampleTranslation = getRichTextContent(response.properties['예문 해석']);
         const id = response.properties['ID']?.unique_id?.number || '';
         
         // Get image from the img field

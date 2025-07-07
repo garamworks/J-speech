@@ -62,7 +62,8 @@ app.get('/api/expression-card/:id', async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching expression card info:', error);
-        res.status(500).json({ error: 'Failed to fetch expression card info' });
+        console.error('Expression card ID:', req.params.id);
+        res.status(500).json({ error: 'Failed to fetch expression card info', message: error.message });
     }
 });
 
