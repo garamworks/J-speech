@@ -1594,28 +1594,36 @@
         }
 
         function openWordModal() {
+            console.log('=== openWordModal called ===');
             const modal = document.getElementById('word-modal');
             const modalBody = document.getElementById('word-modal-body');
+            
+            console.log('modal element:', modal);
+            console.log('modalBody element:', modalBody);
             
             modal.style.display = 'flex';
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
             // Get current card data
             const currentCard = currentEpisodeCards[currentCardIndex];
-            if (!currentCard || !currentCard.speaker) {
-                modalBody.innerHTML = '<div class="expression-loading">No word data available.</div>';
+            console.log('currentCard:', currentCard);
+            console.log('currentCard.speaker:', currentCard?.speaker);
+            
+            if (!currentCard) {
+                modalBody.innerHTML = '<div class="expression-loading">No current card available.</div>';
                 return;
             }
             
-            // Create word modal content
+            // Create word modal content with available data
             const wordData = {
-                word: currentCard.speaker,
-                reading: currentCard.speakerReading || currentCard.speaker,
-                meaning: currentCard.speakerMeaning || '의미 없음',
-                sentence: currentCard.japanese,
-                sentenceKorean: currentCard.korean
+                word: currentCard.speaker || currentCard.japanese || '단어 없음',
+                reading: currentCard.speakerReading || currentCard.speaker || currentCard.japanese || '',
+                meaning: currentCard.speakerMeaning || '의미 정보 없음',
+                sentence: currentCard.japanese || '',
+                sentenceKorean: currentCard.korean || ''
             };
             
+            console.log('wordData:', wordData);
             renderWordModal(wordData);
         }
 
