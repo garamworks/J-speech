@@ -93,6 +93,37 @@
             transform: none;
         }
 
+        .db-connection-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .db-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         .episode-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1097,5 +1128,11 @@
             }
         }
     </script>
+    
+    <!-- Database Connection Status -->
+    <div class="db-connection-status" id="db-status">
+        <div class="db-status-dot"></div>
+        <span id="db-status-text">일본어 표현카드</span>
+    </div>
 </body>
 </html>
