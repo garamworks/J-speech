@@ -1325,10 +1325,12 @@
             e.stopPropagation(); // Prevent card flip when clicking speaker
             console.log('Speaker button clicked');
             console.log('typeof speakJapanese:', typeof speakJapanese);
-            if (typeof speakJapanese === 'function') {
+            console.log('About to call speakJapanese()');
+            try {
                 speakJapanese();
-            } else {
-                console.error('speakJapanese is not a function');
+                console.log('speakJapanese() call completed');
+            } catch (error) {
+                console.error('Error calling speakJapanese:', error);
             }
         });
         speakerBtnBack.addEventListener('click', (e) => {
