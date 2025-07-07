@@ -1,0 +1,47 @@
+26권#001
+￼
+何があったんです？
+￼
+何があったんです？
+무슨 일이 있었던 겁니까?
+1 / 57
+Clear Hide
+[오후 8:53:23] Speaker button clicked
+[오후 8:53:23] typeof speakJapanese: function
+[오후 8:53:23] About to call speakJapanese()
+[오후 8:53:23] === speakJapanese function started ===
+[오후 8:53:23] Speech synthesis cancelled
+[오후 8:53:23] currentEpisodeCards: [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]
+[오후 8:53:23] currentCardIndex: 0
+[오후 8:53:23] currentEpisodeCards length: 57
+[오후 8:53:23] Current card: [object Object]
+[오후 8:53:23] Speaking Japanese text: 何があったんです？
+[오후 8:53:23] Utterance created
+[오후 8:53:23] Available voices count: 0
+[오후 8:53:23] No voices available, waiting for voiceschanged event
+[오후 8:53:23] speakJapanese() call completed
+[오후 8:53:23] Voices changed event triggered
+[오후 8:53:23] === speakJapanese function started ===
+[오후 8:53:23] Speech synthesis cancelled
+[오후 8:53:23] currentEpisodeCards: [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]
+[오후 8:53:23] currentCardIndex: 0
+[오후 8:53:23] currentEpisodeCards length: 57
+[오후 8:53:23] Current card: [object Object]
+[오후 8:53:23] Speaking Japanese text: 何があったんです？
+[오후 8:53:23] Utterance created
+[오후 8:53:23] Available voices count: 89
+[오후 8:53:23] 🔍 Searching for male Japanese voice...
+[오후 8:53:23] No specific male names found, trying broader search...
+[오후 8:53:23] No explicit male voices found, using fallback...
+[오후 8:53:23] ✓ Selected voice: 일본어 일본 (Gender: M)
+[오후 8:53:23] Voice details - Lang: ja_JP Local: true
+[오후 8:53:23] Setting TTS properties for gender: M
+[오후 8:53:23] Applied male voice settings: pitch 0.6, rate 0.9
+[오후 8:53:23] 📱 Mobile detected - using extra low pitch: 0.5, rate: 0.8
+[오후 8:53:23] 📱 Mobile voice volume set to maximum
+[오후 8:53:23] About to speak with utterance: [object SpeechSynthesisUtterance]
+[오후 8:53:23] speechSynthesis.speak() called
+[오후 8:53:23] === speakJapanese function ended ===
+[오후 8:53:23] 📱 Mobile TTS started successfully
+[오후 8:53:25] Mobile debug console enabled
+HIDE

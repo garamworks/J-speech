@@ -1284,17 +1284,29 @@
                 if (selectedVoice && /Mobi|Android/i.test(navigator.userAgent)) {
                     console.log('📱 Mobile device detected - applying mobile TTS fixes');
                     
-                    // Additional mobile male voice search
+                    // Try to find a better male voice for mobile
                     if (currentCard.gender === 'M') {
-                        const mobileSpecificVoices = voices.filter(v => 
+                        const betterMaleVoices = voices.filter(v => 
                             v.lang.startsWith('ja') && 
                             (v.name.includes('남성') || v.name.includes('Male') || 
-                             v.name.includes('남자') || v.name.includes('man'))
+                             v.name.includes('남자') || v.name.includes('man') ||
+                             v.name.includes('Hattori') || v.name.includes('Kenji'))
                         );
                         
-                        if (mobileSpecificVoices.length > 0) {
-                            selectedVoice = mobileSpecificVoices[0];
-                            console.log('📱 Found mobile-specific male voice:', selectedVoice.name);
+                        if (betterMaleVoices.length > 0) {
+                            selectedVoice = betterMaleVoices[0];
+                            console.log('📱 Found better male voice for mobile:', selectedVoice.name);
+                        } else {
+                            // Try different Japanese voices to find a more natural one
+                            const allJapaneseVoices = voices.filter(v => 
+                                v.lang.startsWith('ja') && v.localService === true
+                            );
+                            
+                            if (allJapaneseVoices.length > 1) {
+                                // Use the second available voice for variety
+                                selectedVoice = allJapaneseVoices[1] || allJapaneseVoices[0];
+                                console.log('📱 Using alternative Japanese voice for mobile:', selectedVoice.name);
+                            }
                         }
                     }
                     
@@ -1342,39 +1354,16 @@
                 utterance.rate = 0.9; // Slower rate for deeper effect
                 console.log('Applied male voice settings: pitch 0.6, rate 0.9');
                 
-                // Additional mobile-specific adjustments for deeper male voice
+                // Mobile-specific adjustments for natural male voice
                 if (/Mobi|Android/i.test(navigator.userAgent)) {
-                    utterance.pitch = 0.3; // Much lower pitch for deeper voice
-                    utterance.rate = 0.7; // Slower rate for more masculine sound
-                    console.log('📱 Mobile detected - using very low pitch: 0.3, rate: 0.7');
+                    utterance.pitch = 0.8; // Moderately low pitch (not too extreme)
+                    utterance.rate = 1.1; // Slightly faster as requested
+                    console.log('📱 Mobile detected - using moderate pitch: 0.8, rate: 1.1');
                     
-                    // Mobile-specific voice properties for masculine sound
-                    utterance.volume = 1.0; // Ensure full volume
+                    // Mobile-specific voice properties
+                    utterance.volume = 1.0; // Full volume
                     
-                    // Try to force a different voice if available
-                    const mobileJapaneseVoices = voices.filter(v => 
-                        (v.lang === 'ja-JP' || v.lang === 'ja') && 
-                        !v.name.toLowerCase().includes('female') &&
-                        !v.name.toLowerCase().includes('woman')
-                    );
-                    
-                    if (mobileJapaneseVoices.length > 1) {
-                        // Try to select a different voice for variety
-                        const alternativeVoice = mobileJapaneseVoices.find(v => 
-                            v.name !== selectedVoice.name && 
-                            (v.name.toLowerCase().includes('male') || 
-                             v.name.toLowerCase().includes('man') ||
-                             v.name.includes('남성'))
-                        );
-                        
-                        if (alternativeVoice) {
-                            selectedVoice = alternativeVoice;
-                            utterance.voice = selectedVoice;
-                            console.log('📱 Mobile: switched to alternative male voice:', selectedVoice.name);
-                        }
-                    }
-                    
-                    console.log('📱 Mobile voice settings applied for masculine sound');
+                    console.log('📱 Mobile voice settings applied for natural male sound');
                 }
             } else {
                 utterance.pitch = 1.0; // Default pitch
