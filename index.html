@@ -725,18 +725,6 @@
         </div>
     </div>
 
-    <!-- Mobile Debug Console -->
-    <div id="mobileConsole" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 200px; background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; font-size: 10px; overflow-y: auto; z-index: 9999; padding: 10px; border-top: 2px solid #00ff00;">
-        <div style="text-align: right; margin-bottom: 5px;">
-            <button onclick="clearMobileConsole()" style="background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;">Clear</button>
-            <button onclick="toggleMobileConsole()" style="background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;">Hide</button>
-        </div>
-        <div id="mobileConsoleOutput"></div>
-    </div>
-    
-    <!-- Mobile Debug Button -->
-    <button id="debugBtn" onclick="toggleMobileConsole()" style="position: fixed; bottom: 20px; right: 20px; background: #333; color: #00ff00; border: 2px solid #00ff00; border-radius: 50%; width: 50px; height: 50px; font-size: 12px; z-index: 9998;">DEBUG</button>
-
     <script>
         // Flashcard data - will be loaded from Notion
         let flashcards = [];
@@ -770,88 +758,6 @@
         const dbStatusTextBack = document.getElementById('db-status-text-back');
         const dbN1StatusContainerFront = document.getElementById('db-n1-status-container-front');
         const dbN1StatusContainerBack = document.getElementById('db-n1-status-container-back');
-
-        // Mobile Debug Console Functions
-        let mobileConsoleEnabled = true;
-        
-        function logToMobile(message, type = 'log') {
-            if (!mobileConsoleEnabled) return;
-            
-            const output = document.getElementById('mobileConsoleOutput');
-            const timestamp = new Date().toLocaleTimeString();
-            const color = type === 'error' ? '#ff0000' : type === 'warn' ? '#ffff00' : '#00ff00';
-            
-            const logEntry = document.createElement('div');
-            logEntry.style.color = color;
-            logEntry.style.marginBottom = '2px';
-            logEntry.innerHTML = `[${timestamp}] ${message}`;
-            
-            output.appendChild(logEntry);
-            output.scrollTop = output.scrollHeight;
-        }
-        
-        function toggleMobileConsole() {
-            const console = document.getElementById('mobileConsole');
-            const debugBtn = document.getElementById('debugBtn');
-            
-            if (console.style.display === 'none') {
-                console.style.display = 'block';
-                debugBtn.textContent = 'HIDE';
-                logToMobile('Mobile debug console enabled');
-            } else {
-                console.style.display = 'none';
-                debugBtn.textContent = 'DEBUG';
-            }
-        }
-        
-        function clearMobileConsole() {
-            document.getElementById('mobileConsoleOutput').innerHTML = '';
-            logToMobile('Console cleared');
-        }
-        
-        // Override console methods for mobile
-        const originalConsoleLog = console.log;
-        const originalConsoleError = console.error;
-        const originalConsoleWarn = console.warn;
-        
-        console.log = function(...args) {
-            originalConsoleLog.apply(console, args);
-            logToMobile(args.join(' '), 'log');
-        };
-        
-        console.error = function(...args) {
-            originalConsoleError.apply(console, args);
-            logToMobile(args.join(' '), 'error');
-        };
-        
-        console.warn = function(...args) {
-            originalConsoleWarn.apply(console, args);
-            logToMobile(args.join(' '), 'warn');
-        };
-
-        // Clean gender-based voice selection function
-        function getVoiceByGender(lang, gender) {
-            const voices = window.speechSynthesis.getVoices();
-            console.log(`🔍 Looking for ${gender} voice in ${lang}`);
-            
-            // Try to find voice by gender property or name
-            const voice = voices.find(voice => 
-                voice.lang.startsWith(lang) && 
-                (voice.gender === gender || 
-                 voice.name.toLowerCase().includes(gender.toLowerCase()) ||
-                 voice.name.toLowerCase().includes(gender === 'male' ? 'man' : 'woman'))
-            );
-            
-            if (voice) {
-                console.log(`✓ Found ${gender} voice:`, voice.name);
-                return voice;
-            }
-            
-            // Fallback: any Japanese voice
-            const fallback = voices.find(voice => voice.lang.startsWith(lang));
-            console.log(`No ${gender} voice found, using fallback:`, fallback?.name || 'none');
-            return fallback;
-        }
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -1248,8 +1154,47 @@
                 return;
             }
             
-            // Use clean gender-based voice selection
-            const selectedVoice = getVoiceByGender('ja', currentCard.gender === 'M' ? 'male' : 'female');
+            // Try to use Japanese voice based on character gender
+            let selectedVoice = null;
+            
+            if (currentCard.gender === 'F') {
+                // Find female Japanese voice - prioritize natural female voices
+                selectedVoice = voices.find(voice => 
+                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
+                    (voice.name.includes('Female') || voice.name.includes('female') || 
+                     voice.name.includes('Woman') || voice.name.includes('woman') ||
+                     voice.name.includes('Kyoko') || voice.name.includes('Otoya') ||
+                     voice.name.includes('女'))
+                ) || voices.find(voice => 
+                    (voice.lang === 'ja-JP' || voice.lang === 'ja') && 
+                    !voice.name.toLowerCase().includes('male') && !voice.name.toLowerCase().includes('man')
+                );
+            } else if (currentCard.gender === 'M') {
+                // For male voices, try different approach - look for specific male voice names
+                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro'];
+                
+                selectedVoice = voices.find(voice => 
+                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
+                    maleVoiceNames.some(name => voice.name.includes(name))
+                );
+                
+                // If no specific male name found, try broader search
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(voice => 
+                        (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
+                        (voice.name.includes('Male') || voice.name.includes('male') || 
+                         voice.name.includes('Man') || voice.name.includes('man') ||
+                         voice.name.includes('男'))
+                    );
+                }
+                
+                // Last resort - use any Japanese voice for male with pitch adjustment
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(voice => 
+                        voice.lang === 'ja-JP' || voice.lang === 'ja'
+                    );
+                }
+            }
             
             // Fallback to any Japanese voice
             if (!selectedVoice) {
@@ -1260,56 +1205,21 @@
             
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
-                console.log('✓ Selected voice:', selectedVoice.name, '(Gender:', currentCard.gender + ')');
-                console.log('Voice details - Lang:', selectedVoice.lang, 'Local:', selectedVoice.localService);
-            } else {
-                console.log('✗ No specific voice found for gender:', currentCard.gender);
-                console.log('Available Japanese voices:');
-                voices.filter(v => v.lang.startsWith('ja')).forEach((v, i) => {
-                    console.log(`  ${i+1}. ${v.name} (${v.lang}) - Local: ${v.localService}`);
-                });
             }
             
             utterance.lang = 'ja-JP';
+            // Rate will be set based on gender below
             
-            // Enhanced gender-based voice adjustment for mobile compatibility
-            console.log('Setting TTS properties for gender:', currentCard.gender);
-            
+            // Adjust pitch and rate based on gender for more natural voices
             if (currentCard.gender === 'F') {
                 utterance.pitch = 1.1; // Slightly higher pitch for female
                 utterance.rate = 1.2; // Normal rate
-                console.log('Applied female voice settings: pitch 1.1, rate 1.2');
             } else if (currentCard.gender === 'M') {
-                // More aggressive settings for mobile male voice
-                utterance.pitch = 0.6; // Much lower pitch for mobile
-                utterance.rate = 0.9; // Slower rate for deeper effect
-                console.log('Applied male voice settings: pitch 0.6, rate 0.9');
-                
-                // Mobile-specific adjustments for natural male voice
-                if (/Mobi|Android/i.test(navigator.userAgent)) {
-                    utterance.pitch = 0.8; // Moderately low pitch
-                    utterance.rate = 1.1; // Slightly faster as requested
-                    console.log('📱 Mobile detected - using moderate pitch: 0.8, rate: 1.1');
-                }
+                utterance.pitch = 0.75; // Lower pitch for male
+                utterance.rate = 1.0; // Slightly slower rate for deeper sound
             } else {
                 utterance.pitch = 1.0; // Default pitch
                 utterance.rate = 1.2; // Default rate
-                console.log('Applied default voice settings: pitch 1.0, rate 1.2');
-            }
-            
-            // Additional mobile TTS debugging
-            if (/Mobi|Android/i.test(navigator.userAgent)) {
-                utterance.onstart = function() {
-                    console.log('📱 Mobile TTS started successfully');
-                };
-                
-                utterance.onend = function() {
-                    console.log('📱 Mobile TTS ended');
-                };
-                
-                utterance.onerror = function(event) {
-                    console.error('📱 Mobile TTS error:', event.error);
-                };
             }
             
             // Visual feedback for speaking
