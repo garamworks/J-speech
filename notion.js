@@ -280,14 +280,9 @@ async function getExpressionCardInfo(expressionCardId) {
             application5Korean: application5Korean
         };
         
-        console.log('=== Expression Card Result ===');
-        console.log('Expression Card ID:', expressionCardId);
-        console.log('Title:', title);
-        console.log('Application 1:', application1);
-        console.log('Application 2:', application2);
-        console.log('Application 3:', application3);
-        console.log('Application 4:', application4);
-        console.log('Application 5:', application5);
+        // console.log('=== Expression Card Result ===');
+        // console.log('Expression Card ID:', expressionCardId);
+        // console.log('Title:', title);
         
         return result;
     } catch (error) {

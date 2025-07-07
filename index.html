@@ -232,9 +232,10 @@
             padding: 20px 16px; /* 좌우 여백을 30px에서 16px로 줄임 */
             max-width: 600px;
             width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
+            max-height: 85vh;
+            overflow-y: visible;
             position: relative;
+            height: fit-content;
         }
 
         .expression-modal-close {
@@ -1903,13 +1904,8 @@
         function renderExpressionCard(data) {
             const modalBody = document.getElementById('expression-modal-body');
             
-            console.log('=== Expression Card Data ===');
-            console.log('Full data:', data);
-            console.log('application1:', data.application1);
-            console.log('application2:', data.application2);
-            console.log('application3:', data.application3);
-            console.log('application4:', data.application4);
-            console.log('application5:', data.application5);
+            // console.log('=== Expression Card Data ===');
+            // console.log('Full data:', data);
             
             // Prepare applications array
             const applications = [
@@ -1920,8 +1916,8 @@
                 { japanese: data.application5, korean: data.application5Korean }
             ].filter(app => app.japanese && app.japanese.trim() !== '');
             
-            console.log('Filtered applications:', applications);
-            console.log('Applications count:', applications.length);
+            // console.log('Filtered applications:', applications);
+            // console.log('Applications count:', applications.length);
             
             let html = `
                 <div class="expression-main-section">
@@ -1937,7 +1933,7 @@
             if (applications.length > 0) {
                 html += '<div class="expression-applications">';
                 applications.forEach((app, index) => {
-                    console.log(`Rendering application ${index + 1}:`, app);
+                    // console.log(`Rendering application ${index + 1}:`, app);
                     html += `
                         <div class="expression-application-item" onclick="speakJapaneseText('${app.japanese}')">
                             <div class="expression-application-japanese">${app.japanese}</div>
@@ -1946,18 +1942,18 @@
                     `;
                 });
                 html += '</div>';
-                console.log('Final HTML length:', html.length);
-                console.log('Final HTML preview:', html.substring(0, 500));
+                // console.log('Final HTML length:', html.length);
+                // console.log('Final HTML preview:', html.substring(0, 500));
             }
             
             modalBody.innerHTML = html;
             
             // Check how many items were actually rendered
-            setTimeout(() => {
-                const renderedItems = document.querySelectorAll('.expression-application-item');
-                console.log('Actually rendered items count:', renderedItems.length);
-                console.log('Modal body HTML:', modalBody.innerHTML);
-            }, 100);
+            // setTimeout(() => {
+            //     const renderedItems = document.querySelectorAll('.expression-application-item');
+            //     console.log('Actually rendered items count:', renderedItems.length);
+            //     console.log('Modal body HTML:', modalBody.innerHTML);
+            // }, 100);
         }
 
         function speakJapaneseText(text) {
