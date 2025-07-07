@@ -725,6 +725,18 @@
         </div>
     </div>
 
+    <!-- Mobile Debug Console -->
+    <div id="mobileConsole" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 200px; background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; font-size: 10px; overflow-y: auto; z-index: 9999; padding: 10px; border-top: 2px solid #00ff00;">
+        <div style="text-align: right; margin-bottom: 5px;">
+            <button onclick="clearMobileConsole()" style="background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;">Clear</button>
+            <button onclick="toggleMobileConsole()" style="background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;">Hide</button>
+        </div>
+        <div id="mobileConsoleOutput"></div>
+    </div>
+    
+    <!-- Mobile Debug Button -->
+    <button id="debugBtn" onclick="toggleMobileConsole()" style="position: fixed; bottom: 20px; right: 20px; background: #333; color: #00ff00; border: 2px solid #00ff00; border-radius: 50%; width: 50px; height: 50px; font-size: 12px; z-index: 9998;">DEBUG</button>
+
     <script>
         // Flashcard data - will be loaded from Notion
         let flashcards = [];
@@ -758,6 +770,64 @@
         const dbStatusTextBack = document.getElementById('db-status-text-back');
         const dbN1StatusContainerFront = document.getElementById('db-n1-status-container-front');
         const dbN1StatusContainerBack = document.getElementById('db-n1-status-container-back');
+
+        // Mobile Debug Console Functions
+        let mobileConsoleEnabled = true;
+        
+        function logToMobile(message, type = 'log') {
+            if (!mobileConsoleEnabled) return;
+            
+            const output = document.getElementById('mobileConsoleOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff0000' : type === 'warn' ? '#ffff00' : '#00ff00';
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = color;
+            logEntry.style.marginBottom = '2px';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            
+            output.appendChild(logEntry);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function toggleMobileConsole() {
+            const console = document.getElementById('mobileConsole');
+            const debugBtn = document.getElementById('debugBtn');
+            
+            if (console.style.display === 'none') {
+                console.style.display = 'block';
+                debugBtn.textContent = 'HIDE';
+                logToMobile('Mobile debug console enabled');
+            } else {
+                console.style.display = 'none';
+                debugBtn.textContent = 'DEBUG';
+            }
+        }
+        
+        function clearMobileConsole() {
+            document.getElementById('mobileConsoleOutput').innerHTML = '';
+            logToMobile('Console cleared');
+        }
+        
+        // Override console methods for mobile
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            logToMobile(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            logToMobile(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            logToMobile(args.join(' '), 'warn');
+        };
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -1209,6 +1279,20 @@
                         }
                     }
                 }
+                
+                // Mobile-specific voice handling
+                if (selectedVoice && /Mobi|Android/i.test(navigator.userAgent)) {
+                    console.log('📱 Mobile device detected - applying mobile TTS fixes');
+                    
+                    // Force voice reload on mobile for better compatibility
+                    setTimeout(() => {
+                        if (selectedVoice) {
+                            utterance.voice = selectedVoice;
+                            console.log('🔄 Voice re-applied for mobile:', selectedVoice.name);
+                        }
+                    }, 100);
+                    }
+                }
             }
             
             // Fallback to any Japanese voice
@@ -1248,12 +1332,32 @@
                 // Additional mobile-specific adjustments
                 if (/Mobi|Android/i.test(navigator.userAgent)) {
                     utterance.pitch = 0.5; // Even lower for mobile
-                    console.log('Mobile detected - using extra low pitch: 0.5');
+                    utterance.rate = 0.8; // Even slower for mobile
+                    console.log('📱 Mobile detected - using extra low pitch: 0.5, rate: 0.8');
+                    
+                    // Mobile-specific voice properties
+                    utterance.volume = 1.0; // Ensure full volume
+                    console.log('📱 Mobile voice volume set to maximum');
                 }
             } else {
                 utterance.pitch = 1.0; // Default pitch
                 utterance.rate = 1.2; // Default rate
                 console.log('Applied default voice settings: pitch 1.0, rate 1.2');
+            }
+            
+            // Additional mobile TTS debugging
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                utterance.onstart = function() {
+                    console.log('📱 Mobile TTS started successfully');
+                };
+                
+                utterance.onend = function() {
+                    console.log('📱 Mobile TTS ended');
+                };
+                
+                utterance.onerror = function(event) {
+                    console.error('📱 Mobile TTS error:', event.error);
+                };
             }
             
             // Visual feedback for speaking
