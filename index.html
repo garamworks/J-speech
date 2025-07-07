@@ -94,28 +94,26 @@
         }
 
         .db-connection-status {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
             color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: flex;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 400;
+            display: none;
             align-items: center;
-            gap: 6px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
+            gap: 4px;
+            z-index: 10;
         }
 
         .db-status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: #10b981;
-            animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
@@ -522,6 +520,10 @@
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                         </svg>
                     </button>
+                    <div class="db-connection-status" id="db-status-front">
+                        <div class="db-status-dot"></div>
+                        <span id="db-status-text-front"></span>
+                    </div>
                 </div>
                 <div class="card-face card-back">
                     <div class="character-avatar" id="character-avatar-back"></div>
@@ -537,6 +539,10 @@
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                         </svg>
                     </button>
+                    <div class="db-connection-status" id="db-status-back">
+                        <div class="db-status-dot"></div>
+                        <span id="db-status-text-back"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -585,6 +591,10 @@
         // Remove unused episode buttons that were deleted from HTML
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
         const nextSequenceBtn = document.getElementById('next-sequence-btn');
+        const dbStatusFront = document.getElementById('db-status-front');
+        const dbStatusBack = document.getElementById('db-status-back');
+        const dbStatusTextFront = document.getElementById('db-status-text-front');
+        const dbStatusTextBack = document.getElementById('db-status-text-back');
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -815,9 +825,33 @@
                 characterAvatarBack.textContent = emoji;
             }
             
+            // Update database connection status
+            updateDBStatus(card);
+            
             // Reset flip state
             if (isFlipped) {
                 flipCard();
+            }
+        }
+        
+        // Update database connection status based on card data
+        function updateDBStatus(card) {
+            // Check if card has related content or expressions
+            const hasRelatedContent = card.expressions || card.relatedContent || card.speaker;
+            
+            if (hasRelatedContent && card.speaker) {
+                // Show database status with speaker name or related content
+                const statusText = `일본어 표현카드 (${card.speaker})`;
+                
+                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
+                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
+                
+                if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                if (dbStatusBack) dbStatusBack.style.display = 'flex';
+            } else {
+                // Hide database status if no related content
+                if (dbStatusFront) dbStatusFront.style.display = 'none';
+                if (dbStatusBack) dbStatusBack.style.display = 'none';
             }
         }
         
@@ -1129,10 +1163,6 @@
         }
     </script>
     
-    <!-- Database Connection Status -->
-    <div class="db-connection-status" id="db-status">
-        <div class="db-status-dot"></div>
-        <span id="db-status-text">일본어 표현카드</span>
-    </div>
+
 </body>
 </html>
