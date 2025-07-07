@@ -16,8 +16,8 @@ function extractDatabaseIdFromUrl(pageUrl) {
 }
 
 // Extract database ID from the new URL
-const NEW_DATABASE_URL = "https://www.notion.so/doungle/218fe404b3dc80eb9941ed534568ead1?v=218fe404b3dc80238171000c9309f545&source=copy_link";
-const DATABASE_ID = extractDatabaseIdFromUrl(NEW_DATABASE_URL);
+const NEW_DATABASE_URL = "https://www.notion.so/doungle/228fe404b3dc80f0a0c0d83aaa28aa9b?v=229fe404b3dc80399a0f000c451a5e3a&source=copy_link";
+const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
 // Character images database ID - will need to be updated based on the new workspace
 const IMAGES_DATABASE_ID = "218fe404b3dc8059bdf1d40cf85d7e47";
 
