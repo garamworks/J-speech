@@ -1280,9 +1280,23 @@
                     }
                 }
                 
-                // Mobile-specific voice handling
+                // Mobile-specific voice handling for masculine sound
                 if (selectedVoice && /Mobi|Android/i.test(navigator.userAgent)) {
                     console.log('📱 Mobile device detected - applying mobile TTS fixes');
+                    
+                    // Additional mobile male voice search
+                    if (currentCard.gender === 'M') {
+                        const mobileSpecificVoices = voices.filter(v => 
+                            v.lang.startsWith('ja') && 
+                            (v.name.includes('남성') || v.name.includes('Male') || 
+                             v.name.includes('남자') || v.name.includes('man'))
+                        );
+                        
+                        if (mobileSpecificVoices.length > 0) {
+                            selectedVoice = mobileSpecificVoices[0];
+                            console.log('📱 Found mobile-specific male voice:', selectedVoice.name);
+                        }
+                    }
                     
                     // Force voice reload on mobile for better compatibility
                     setTimeout(() => {
@@ -1328,15 +1342,39 @@
                 utterance.rate = 0.9; // Slower rate for deeper effect
                 console.log('Applied male voice settings: pitch 0.6, rate 0.9');
                 
-                // Additional mobile-specific adjustments
+                // Additional mobile-specific adjustments for deeper male voice
                 if (/Mobi|Android/i.test(navigator.userAgent)) {
-                    utterance.pitch = 0.5; // Even lower for mobile
-                    utterance.rate = 0.8; // Even slower for mobile
-                    console.log('📱 Mobile detected - using extra low pitch: 0.5, rate: 0.8');
+                    utterance.pitch = 0.3; // Much lower pitch for deeper voice
+                    utterance.rate = 0.7; // Slower rate for more masculine sound
+                    console.log('📱 Mobile detected - using very low pitch: 0.3, rate: 0.7');
                     
-                    // Mobile-specific voice properties
+                    // Mobile-specific voice properties for masculine sound
                     utterance.volume = 1.0; // Ensure full volume
-                    console.log('📱 Mobile voice volume set to maximum');
+                    
+                    // Try to force a different voice if available
+                    const mobileJapaneseVoices = voices.filter(v => 
+                        (v.lang === 'ja-JP' || v.lang === 'ja') && 
+                        !v.name.toLowerCase().includes('female') &&
+                        !v.name.toLowerCase().includes('woman')
+                    );
+                    
+                    if (mobileJapaneseVoices.length > 1) {
+                        // Try to select a different voice for variety
+                        const alternativeVoice = mobileJapaneseVoices.find(v => 
+                            v.name !== selectedVoice.name && 
+                            (v.name.toLowerCase().includes('male') || 
+                             v.name.toLowerCase().includes('man') ||
+                             v.name.includes('남성'))
+                        );
+                        
+                        if (alternativeVoice) {
+                            selectedVoice = alternativeVoice;
+                            utterance.voice = selectedVoice;
+                            console.log('📱 Mobile: switched to alternative male voice:', selectedVoice.name);
+                        }
+                    }
+                    
+                    console.log('📱 Mobile voice settings applied for masculine sound');
                 }
             } else {
                 utterance.pitch = 1.0; // Default pitch
