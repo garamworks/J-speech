@@ -565,22 +565,7 @@
         }
 
         .word-speaker-btn {
-            position: absolute;
-            bottom: 1rem;
-            left: 1rem;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            background: #48bb78;
-            border: none;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 10;
+            display: none;
         }
 
         .speaker-btn:hover {
@@ -628,7 +613,11 @@
         }
 
         .speaker-name {
-            display: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            text-align: center;
         }
 
         /* Mobile optimizations */
@@ -1100,7 +1089,11 @@
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
-            speakerName.textContent = card.speaker || "";
+            if (card.speaker) {
+                speakerName.innerHTML = `<span class="speaker-name-clickable" onclick="openWordModal()" style="cursor: pointer; color: #3b82f6; text-decoration: underline;">${card.speaker}</span>`;
+            } else {
+                speakerName.textContent = "";
+            }
             currentCardSpan.textContent = index + 1;
             
             // Set character avatar for both front and back - use image if available, otherwise emoji based on sentence mood
@@ -1481,28 +1474,7 @@
             e.stopPropagation(); // Prevent card flip when clicking speaker
             speakJapanese();
         });
-        console.log('wordSpeakerBtn element:', wordSpeakerBtn);
-        console.log('wordSpeakerBtnBack element:', wordSpeakerBtnBack);
-        
-        if (wordSpeakerBtn) {
-            wordSpeakerBtn.addEventListener('click', (e) => {
-                console.log('Word speaker button (front) clicked!');
-                e.stopPropagation(); // Prevent card flip when clicking speaker
-                openWordModal();
-            });
-        } else {
-            console.error('wordSpeakerBtn element not found!');
-        }
-        
-        if (wordSpeakerBtnBack) {
-            wordSpeakerBtnBack.addEventListener('click', (e) => {
-                console.log('Word speaker button (back) clicked!');
-                e.stopPropagation(); // Prevent card flip when clicking speaker
-                openWordModal();
-            });
-        } else {
-            console.error('wordSpeakerBtnBack element not found!');
-        }
+        // Word speaker buttons are hidden and not used
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
         
@@ -1659,31 +1631,28 @@
         function renderWordModal(data) {
             const modalBody = document.getElementById('word-modal-body');
             
+            // Get current card for character image
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            const characterImage = currentCard?.characterImage || '';
+            
             let html = `
-                <div class="word-main-section">
-                    <h2 class="word-main-title" onclick="speakJapaneseText('${data.word}')">
+                <div class="word-main-section" style="text-align: center;">
+                    ${characterImage ? `
+                        <div style="margin-bottom: 20px;">
+                            <img src="${characterImage}" alt="캐릭터" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                        </div>
+                    ` : ''}
+                    <h2 class="word-main-title" onclick="speakJapaneseText('${data.word}')" style="font-size: 36px; margin-bottom: 16px;">
                         ${data.word}
                     </h2>
-                    <p class="word-main-reading">
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 12px; color: #666;">
                         ${data.reading}
                     </p>
-                    <p class="word-main-meaning">
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888;">
                         ${data.meaning}
                     </p>
                 </div>
             `;
-            
-            if (data.sentence) {
-                html += `
-                    <div class="word-sentence-section">
-                        <div class="word-sentence-title">예문</div>
-                        <div class="word-sentence-item" onclick="speakJapaneseText('${data.sentence}')">
-                            <div class="word-sentence-japanese">${data.sentence}</div>
-                            <div class="word-sentence-korean">${data.sentenceKorean}</div>
-                        </div>
-                    </div>
-                `;
-            }
             
             modalBody.innerHTML = html;
         }
