@@ -194,6 +194,8 @@ async function getFlashcardsFromNotion() {
             const sentenceId = getTextContent(properties['']);  // Title field (empty name)
             const n2Word = getTextContent(properties['N2 단어']);  // N2 vocabulary word
             const sequenceNumber = properties['순서']?.number || 0;  // Sequence number
+            const volume = properties['권']?.select?.name || '';  // Volume
+            const sequence = properties['시퀀스']?.select?.name || '';  // Sequence
             const episode = "1화";  // Default episode
             
             // Get character info from relation
@@ -218,7 +220,9 @@ async function getFlashcardsFromNotion() {
                 gender: null,
                 romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
                 speaker: characterName || n2Word || "학습자료",
-                episode: episode
+                episode: episode,
+                volume: volume,
+                sequence: sequence
             };
         });
     } catch (error) {

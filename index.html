@@ -424,7 +424,7 @@
                     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                 </svg>
             </button>
-            <div class="episode-title" id="episode-title">ep.01</div>
+            <div class="episode-title" id="episode-title">26권 &lt; #001 &gt;</div>
             <button class="episode-btn next-episode" id="next-episode" style="display: none;">
                 <svg class="episode-icon" viewBox="0 0 24 24">
                     <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
@@ -557,29 +557,20 @@
         let episodeData = {};
         let currentEpisodeCards = [];
 
-        // Parse episode data from flashcards
+        // Parse sequence data from flashcards
         function parseEpisodes() {
             episodeData = {};
             flashcards.forEach((card, index) => {
-                // Handle both old format (01-001) and new format (sequence numbers)
-                const episodeMatch = card.romanji.match(/^(\d+)-(\d+)$/);
-                let episodeNum, sentenceNum;
+                // Group by sequence instead of episode
+                const sequence = card.sequence || '#001';
                 
-                if (episodeMatch) {
-                    // Old format: 01-001
-                    episodeNum = parseInt(episodeMatch[1]);
-                    sentenceNum = parseInt(episodeMatch[2]);
-                } else {
-                    // New format: sequence numbers, group into episodes of 20 cards each
-                    const sequenceNum = parseInt(card.romanji) || (index + 1);
-                    episodeNum = Math.floor((sequenceNum - 1) / 20) + 1;
-                    sentenceNum = ((sequenceNum - 1) % 20) + 1;
+                if (!episodeData[sequence]) {
+                    episodeData[sequence] = [];
                 }
                 
-                if (!episodeData[episodeNum]) {
-                    episodeData[episodeNum] = [];
-                }
-                episodeData[episodeNum].push({...card, sentenceNum});
+                // Sort by romanji (sequence number)
+                const sortOrder = parseInt(card.romanji) || (index + 1);
+                episodeData[sequence].push({...card, sentenceNum: sortOrder});
             });
             
             // Sort sentences within each episode
@@ -587,24 +578,33 @@
                 episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
             });
             
-            // Set current episode to episode 1 (or first available if 1 doesn't exist)
-            const availableEpisodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-            if (availableEpisodes.length > 0) {
-                // Try to start with episode 1, fallback to first available
-                currentEpisode = episodeData[1] ? 1 : availableEpisodes[0];
+            // Set current sequence to first available
+            const availableSequences = Object.keys(episodeData).sort();
+            if (availableSequences.length > 0) {
+                currentEpisode = availableSequences[0]; // Use currentEpisode variable for sequence
                 loadEpisode(currentEpisode);
             }
         }
 
-        // Load cards for specific episode
-        function loadEpisode(episodeNum) {
-            currentEpisode = episodeNum;
-            currentEpisodeCards = episodeData[episodeNum] || [];
+        // Load cards for specific sequence
+        function loadEpisode(sequenceName) {
+            currentEpisode = sequenceName;
+            currentEpisodeCards = episodeData[sequenceName] || [];
             currentCardIndex = 0;
             
-            episodeTitle.textContent = `ep.${episodeNum.toString().padStart(2, '0')}`;
+            // Update title to show volume and sequence
+            const firstCard = currentEpisodeCards[0];
+            const volume = firstCard?.volume || '26권';
+            episodeTitle.textContent = `${volume} < ${sequenceName} >`;
             
             if (currentEpisodeCards.length > 0) {
+                // Sort cards by sequence number (romanji)
+                currentEpisodeCards.sort((a, b) => {
+                    const aNum = parseInt(a.romanji) || 0;
+                    const bNum = parseInt(b.romanji) || 0;
+                    return bNum - aNum; // Descending order to match the original data
+                });
+                
                 loadCard(currentCardIndex);
                 totalCardsSpan.textContent = currentEpisodeCards.length;
                 updateNavigationButtons();
@@ -612,10 +612,10 @@
             }
         }
 
-        // Update episode navigation buttons
+        // Update sequence navigation buttons
         function updateEpisodeButtons() {
-            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-            const currentIndex = episodes.indexOf(currentEpisode);
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
             
             // Show/hide previous episode button
             if (currentIndex > 0) {
@@ -900,22 +900,17 @@
                 updateNavigationButtons();
             } else {
                 // At first card of episode, try to go to previous episode
-                const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-                const currentIndex = episodes.indexOf(currentEpisode);
+                const sequences = Object.keys(episodeData).sort();
+                const currentIndex = sequences.indexOf(currentEpisode);
                 if (currentIndex > 0) {
-                    const previousEpisode = episodes[currentIndex - 1];
-                    // Load previous episode and go to its last card
-                    currentEpisode = previousEpisode;
-                    currentEpisodeCards = episodeData[previousEpisode] || [];
+                    const previousSequence = sequences[currentIndex - 1];
+                    // Load previous sequence and go to its last card
+                    loadEpisode(previousSequence);
                     currentCardIndex = currentEpisodeCards.length - 1;
-                    
-                    episodeTitle.textContent = `ep.${previousEpisode.toString().padStart(2, '0')}`;
                     
                     if (currentEpisodeCards.length > 0) {
                         loadCard(currentCardIndex);
-                        totalCardsSpan.textContent = currentEpisodeCards.length;
                         updateNavigationButtons();
-                        updateEpisodeButtons();
                     }
                 }
             }
@@ -928,22 +923,17 @@
                 updateNavigationButtons();
             } else {
                 // At last card of episode, try to go to next episode
-                const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-                const currentIndex = episodes.indexOf(currentEpisode);
-                if (currentIndex < episodes.length - 1) {
-                    const nextEpisode = episodes[currentIndex + 1];
-                    // Load next episode and go to its first card
-                    currentEpisode = nextEpisode;
-                    currentEpisodeCards = episodeData[nextEpisode] || [];
+                const sequences = Object.keys(episodeData).sort();
+                const currentIndex = sequences.indexOf(currentEpisode);
+                if (currentIndex < sequences.length - 1) {
+                    const nextSequence = sequences[currentIndex + 1];
+                    // Load next sequence and go to its first card
+                    loadEpisode(nextSequence);
                     currentCardIndex = 0;
-                    
-                    episodeTitle.textContent = `ep.${nextEpisode.toString().padStart(2, '0')}`;
                     
                     if (currentEpisodeCards.length > 0) {
                         loadCard(currentCardIndex);
-                        totalCardsSpan.textContent = currentEpisodeCards.length;
                         updateNavigationButtons();
-                        updateEpisodeButtons();
                     }
                 }
             }
@@ -975,20 +965,20 @@
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
         
-        // Episode navigation event listeners
+        // Sequence navigation event listeners
         prevEpisodeBtn.addEventListener('click', () => {
-            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-            const currentIndex = episodes.indexOf(currentEpisode);
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
             if (currentIndex > 0) {
-                loadEpisode(episodes[currentIndex - 1]);
+                loadEpisode(sequences[currentIndex - 1]);
             }
         });
         
         nextEpisodeBtn.addEventListener('click', () => {
-            const episodes = Object.keys(episodeData).map(ep => parseInt(ep)).sort((a, b) => a - b);
-            const currentIndex = episodes.indexOf(currentEpisode);
-            if (currentIndex < episodes.length - 1) {
-                loadEpisode(episodes[currentIndex + 1]);
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
+            if (currentIndex < sequences.length - 1) {
+                loadEpisode(sequences[currentIndex + 1]);
             }
         });
 
