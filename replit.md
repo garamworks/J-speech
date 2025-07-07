@@ -78,6 +78,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 07, 2025. Initial setup
 - July 07, 2025. Added TTS gender-based voice selection and speed adjustment (1.2x)
 - July 07, 2025. Added mobile debug console and enhanced mobile TTS compatibility
+- July 07, 2025. Implemented N1 vocabulary word modals with clickable words and image display
+- July 07, 2025. Added PALM volume navigation header with arrow buttons and improved layout structure
 
 ## User Preferences
 

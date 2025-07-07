@@ -40,10 +40,51 @@
 
         .episode-nav {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+
+        .volume-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 1rem;
+        }
+
+        .volume-nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .volume-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .volume-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            min-width: 120px;
+        }
+
+        .sequence-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .episode-title {
@@ -745,19 +786,21 @@
 <body>
     <div class="app-container">
         <div class="episode-nav">
-            <div class="episode-title" id="episode-title">
-                <span class="volume-text">26권</span>
-                <button class="sequence-nav-btn" id="prev-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <div class="volume-navigation">
+                <button class="volume-nav-btn" onclick="previousVolume()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                     </svg>
                 </button>
-                <span class="sequence-text" id="sequence-text">#001</span>
-                <button class="sequence-nav-btn" id="next-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <span class="volume-title">PALM 26권</span>
+                <button class="volume-nav-btn" onclick="nextVolume()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                     </svg>
                 </button>
+            </div>
+            <div class="sequence-navigation">
+                <span class="sequence-text" id="sequence-text">#001</span>
             </div>
         </div>
         
@@ -1456,6 +1499,16 @@
         function updateNavigationButtons() {
             prevBtn.disabled = currentCardIndex === 0;
             nextBtn.disabled = currentCardIndex === currentEpisodeCards.length - 1;
+        }
+
+        function previousVolume() {
+            // Volume navigation placeholder
+            console.log('Previous volume clicked');
+        }
+
+        function nextVolume() {
+            // Volume navigation placeholder
+            console.log('Next volume clicked');
         }
 
         // Event listeners
