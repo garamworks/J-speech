@@ -339,21 +339,7 @@
             position: relative;
         }
 
-        .word-modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            padding: 5px;
-        }
 
-        .word-modal-close:hover {
-            color: #000;
-        }
 
         .word-main-section {
             text-align: center;
@@ -1771,7 +1757,9 @@
             const wordData = {
                 word: vocabulary.word || '단어 없음',
                 reading: vocabulary.reading || vocabulary.word || '',
-                meaning: vocabulary.meaning || '의미 정보 없음'
+                meaning: vocabulary.meaning || '의미 정보 없음',
+                example: vocabulary.example || '',
+                exampleTranslation: vocabulary.exampleTranslation || ''
             };
             
             let html = `
@@ -1786,15 +1774,25 @@
                             </button>
                         </div>
                     ` : ''}
-                    <h2 class="word-main-title" onclick="speakWordInModal('${wordData.word}')" style="font-size: 36px; margin-bottom: 16px; cursor: pointer;">
+                    <h2 class="word-main-title" onclick="speakWordInModal('${wordData.word}')" style="font-size: 36px; margin-bottom: 8px; cursor: pointer;">
                         ${wordData.word}
                     </h2>
-                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 12px; color: #666;">
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 16px; color: #666;">
                         ${wordData.reading}
                     </p>
-                    <p class="word-main-meaning" style="font-size: 18px; color: #888;">
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888; margin-bottom: 20px;">
                         ${wordData.meaning}
                     </p>
+                    ${wordData.example ? `
+                        <div class="word-examples" style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left;">
+                            <p class="word-example-ja" onclick="speakWordInModal('${wordData.example}')" style="font-size: 16px; color: #333; margin-bottom: 8px; cursor: pointer; line-height: 1.4;">
+                                ${wordData.example}
+                            </p>
+                            <p class="word-example-ko" style="font-size: 14px; color: #666; margin-bottom: 0; line-height: 1.4;">
+                                ${wordData.exampleTranslation}
+                            </p>
+                        </div>
+                    ` : ''}
                 </div>
             `;
             
@@ -1914,7 +1912,6 @@
     <!-- Word Modal -->
     <div id="word-modal" class="word-modal">
         <div class="word-modal-content">
-            <button class="word-modal-close" onclick="closeWordModal()">&times;</button>
             <div id="word-modal-body">
                 <div class="expression-loading">Loading...</div>
             </div>
