@@ -2,7 +2,7 @@ const { Client } = require("@notionhq/client");
 
 // Initialize Notion client
 const notion = new Client({
-    auth: process.env.NOTION_INTEGRATION_SECRET,
+    auth: process.env.GARAM_NOTION_SECRET,
 });
 
 // Extract the database ID from the Notion URL
@@ -111,9 +111,8 @@ async function getFlashcardsFromNotion() {
             startCursor = response.next_cursor;
         }
 
-        const [characterImages] = await Promise.all([
-            getCharacterImages()
-        ]);
+        // Skip character images for now as that database is not available
+        const characterImages = [];
 
         if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
@@ -143,30 +142,32 @@ async function getFlashcardsFromNotion() {
             return parsedA.sentence - parsedB.sentence;
         });
 
-        return sortedResults.map((page) => {
-            const properties = page.properties;
-            
-            // Extract text content from rich text properties
-            const getTextContent = (prop) => {
-                if (prop?.rich_text && prop.rich_text.length > 0) {
-                    return prop.rich_text[0].plain_text || "";
-                }
-                if (prop?.title && prop.title.length > 0) {
-                    return prop.title[0].plain_text || "";
-                }
-                return "";
-            };
+        // Helper functions
+        const getTextContent = (prop) => {
+            if (prop?.rich_text && prop.rich_text.length > 0) {
+                return prop.rich_text[0].plain_text || "";
+            }
+            if (prop?.title && prop.title.length > 0) {
+                return prop.title[0].plain_text || "";
+            }
+            return "";
+        };
 
-            // Extract select content
-            const getSelectContent = (prop) => {
-                return prop?.select?.name || "";
-            };
+        return sortedResults.filter((page) => {
+            // Filter out empty entries
+            const properties = page.properties;
+            const japanese = getTextContent(properties['일본어']);
+            const korean = getTextContent(properties['한국어']);
+            return japanese.trim() !== '' && korean.trim() !== '';
+        }).map((page) => {
+            const properties = page.properties;
 
             // Map the actual column names from the new database
-            const japanese = getTextContent(properties['일본어 문장']);  // Japanese sentence
+            const japanese = getTextContent(properties['일본어']);  // Japanese sentence
             const korean = getTextContent(properties['한국어']);  // Korean translation
-            const sentenceId = getTextContent(properties['문장 ID']);  // Sentence ID
+            const sentenceId = getTextContent(properties['']);  // Title field (empty name)
             const n2Word = getTextContent(properties['N2 단어']);  // N2 vocabulary word
+            const sequenceNumber = properties['순서']?.number || 0;  // Sequence number
             const episode = "1화";  // Default episode
 
             // Map character names to emojis
@@ -184,7 +185,7 @@ async function getFlashcardsFromNotion() {
                 character: characterEmojis.default,
                 characterImage: null, // No character images in this database structure
                 gender: null,
-                romanji: sentenceId || "",
+                romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
                 speaker: n2Word || "학습자료",
                 episode: episode
             };
