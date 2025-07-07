@@ -93,10 +93,18 @@
             transform: none;
         }
 
-        .db-connection-status {
+        .db-status-container {
             position: absolute;
             bottom: 10px;
             left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .db-connection-status {
             background: #F1F8E9;
             color: #555;
             padding: 6px 12px;
@@ -107,9 +115,7 @@
             display: none;
             align-items: center;
             gap: 8px;
-            z-index: 10;
             backdrop-filter: blur(5px);
-            pointer-events: none;
         }
 
         .db-status-dot {
@@ -117,6 +123,13 @@
             height: 12px;
             border-radius: 50%;
             background: #C8E6C9;
+        }
+        
+        .db-n1-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #E1F5FE;
         }
 
         @keyframes pulse {
@@ -530,9 +543,15 @@
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                         </svg>
                     </button>
-                    <div class="db-connection-status" id="db-status-front">
-                        <div class="db-status-dot"></div>
-                        <span id="db-status-text-front"></span>
+                    <div class="db-status-container" id="db-status-container-front">
+                        <div class="db-connection-status" id="db-status-front">
+                            <div class="db-status-dot"></div>
+                            <span id="db-status-text-front"></span>
+                        </div>
+                        <div class="db-connection-status" id="db-n1-status-front" style="display: none;">
+                            <div class="db-n1-status-dot"></div>
+                            <span id="db-n1-status-text-front"></span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-face card-back">
@@ -551,9 +570,15 @@
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                         </svg>
                     </button>
-                    <div class="db-connection-status" id="db-status-back">
-                        <div class="db-status-dot"></div>
-                        <span id="db-status-text-back"></span>
+                    <div class="db-status-container" id="db-status-container-back">
+                        <div class="db-connection-status" id="db-status-back">
+                            <div class="db-status-dot"></div>
+                            <span id="db-status-text-back"></span>
+                        </div>
+                        <div class="db-connection-status" id="db-n1-status-back" style="display: none;">
+                            <div class="db-n1-status-dot"></div>
+                            <span id="db-n1-status-text-back"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -607,6 +632,10 @@
         const dbStatusBack = document.getElementById('db-status-back');
         const dbStatusTextFront = document.getElementById('db-status-text-front');
         const dbStatusTextBack = document.getElementById('db-status-text-back');
+        const dbN1StatusFront = document.getElementById('db-n1-status-front');
+        const dbN1StatusBack = document.getElementById('db-n1-status-back');
+        const dbN1StatusTextFront = document.getElementById('db-n1-status-text-front');
+        const dbN1StatusTextBack = document.getElementById('db-n1-status-text-back');
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -848,7 +877,11 @@
         
         // Update database connection status based on card data
         async function updateDBStatus(card) {
-            let statusItems = [];
+            // Reset all status displays
+            if (dbStatusFront) dbStatusFront.style.display = 'none';
+            if (dbStatusBack) dbStatusBack.style.display = 'none';
+            if (dbN1StatusFront) dbN1StatusFront.style.display = 'none';
+            if (dbN1StatusBack) dbN1StatusBack.style.display = 'none';
             
             // Check if card has expression card relation
             if (card.expressionCardId) {
@@ -857,7 +890,11 @@
                     const expressionCard = await response.json();
                     
                     if (expressionCard && expressionCard.title) {
-                        statusItems.push(expressionCard.title);
+                        if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
+                        if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
+                        
+                        if (dbStatusFront) dbStatusFront.style.display = 'flex';
+                        if (dbStatusBack) dbStatusBack.style.display = 'flex';
                     }
                 } catch (error) {
                     console.error('Error fetching expression card info:', error);
@@ -871,29 +908,18 @@
                     const n1Vocabulary = await response.json();
                     
                     if (n1Vocabulary && n1Vocabulary.word) {
-                        const n1Text = n1Vocabulary.reading ? 
-                            `${n1Vocabulary.word}(${n1Vocabulary.reading})` : 
-                            n1Vocabulary.word;
-                        statusItems.push(n1Text);
+                        // Show only the Japanese word, no reading
+                        const n1Text = n1Vocabulary.word;
+                        
+                        if (dbN1StatusTextFront) dbN1StatusTextFront.textContent = n1Text;
+                        if (dbN1StatusTextBack) dbN1StatusTextBack.textContent = n1Text;
+                        
+                        if (dbN1StatusFront) dbN1StatusFront.style.display = 'flex';
+                        if (dbN1StatusBack) dbN1StatusBack.style.display = 'flex';
                     }
                 } catch (error) {
                     console.error('Error fetching N1 vocabulary info:', error);
                 }
-            }
-            
-            // Display status if we have any items
-            if (statusItems.length > 0) {
-                const statusText = statusItems.join(' | ');
-                
-                if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
-                if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
-                
-                if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                if (dbStatusBack) dbStatusBack.style.display = 'flex';
-            } else {
-                // Hide status if no valid information
-                if (dbStatusFront) dbStatusFront.style.display = 'none';
-                if (dbStatusBack) dbStatusBack.style.display = 'none';
             }
         }
         
