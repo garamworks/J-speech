@@ -1170,29 +1170,44 @@
                     !voice.name.toLowerCase().includes('male') && !voice.name.toLowerCase().includes('man')
                 );
             } else if (currentCard.gender === 'M') {
-                // For male voices, try different approach - look for specific male voice names
-                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro'];
+                // Enhanced male voice search for mobile compatibility
+                console.log('🔍 Searching for male Japanese voice...');
                 
+                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro', 'Otoya', 'Akira'];
+                
+                // First attempt: Look for specific male voice names
                 selectedVoice = voices.find(voice => 
                     (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
                     maleVoiceNames.some(name => voice.name.includes(name))
                 );
                 
-                // If no specific male name found, try broader search
-                if (!selectedVoice) {
+                if (selectedVoice) {
+                    console.log('Found specific male voice by name:', selectedVoice.name);
+                } else {
+                    console.log('No specific male names found, trying broader search...');
+                    
+                    // Second attempt: Look for explicit male indicators
                     selectedVoice = voices.find(voice => 
                         (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
                         (voice.name.includes('Male') || voice.name.includes('male') || 
                          voice.name.includes('Man') || voice.name.includes('man') ||
-                         voice.name.includes('男'))
+                         voice.name.includes('男') || voice.name.includes('紳士'))
                     );
-                }
-                
-                // Last resort - use any Japanese voice for male with pitch adjustment
-                if (!selectedVoice) {
-                    selectedVoice = voices.find(voice => 
-                        voice.lang === 'ja-JP' || voice.lang === 'ja'
-                    );
+                    
+                    if (selectedVoice) {
+                        console.log('Found male voice by keyword:', selectedVoice.name);
+                    } else {
+                        console.log('No explicit male voices found, using fallback...');
+                        
+                        // Third attempt: Any Japanese voice (will rely on pitch adjustment)
+                        selectedVoice = voices.find(voice => 
+                            voice.lang === 'ja-JP' || voice.lang === 'ja'
+                        );
+                        
+                        if (selectedVoice) {
+                            console.log('Using fallback Japanese voice:', selectedVoice.name);
+                        }
+                    }
                 }
             }
             
@@ -1205,6 +1220,14 @@
             
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
+                console.log('✓ Selected voice:', selectedVoice.name, '(Gender:', currentCard.gender + ')');
+                console.log('Voice details - Lang:', selectedVoice.lang, 'Local:', selectedVoice.localService);
+            } else {
+                console.log('✗ No specific voice found for gender:', currentCard.gender);
+                console.log('Available Japanese voices:');
+                voices.filter(v => v.lang.startsWith('ja')).forEach((v, i) => {
+                    console.log(`  ${i+1}. ${v.name} (${v.lang}) - Local: ${v.localService}`);
+                });
             }
             
             utterance.lang = 'ja-JP';
