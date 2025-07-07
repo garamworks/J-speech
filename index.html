@@ -1774,18 +1774,18 @@
                             </button>
                         </div>
                     ` : ''}
-                    <h2 class="word-main-title" onclick="speakWordInModal('${wordData.word}')" style="font-size: 36px; margin-bottom: 4px; cursor: pointer;">
+                    <h2 class="word-main-title" onclick="speakWordInModal('${wordData.word}')" style="font-size: 36px; margin-bottom: 2px; cursor: pointer;">
                         ${wordData.word}
                     </h2>
-                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 8px; color: #666;">
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 4px; color: #666;">
                         ${wordData.reading}
                     </p>
-                    <p class="word-main-meaning" style="font-size: 18px; color: #888; margin-bottom: 16px;">
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888; margin-bottom: 12px;">
                         ${wordData.meaning}
                     </p>
                     ${wordData.example ? `
-                        <div class="word-examples" style="margin-top: 20px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left;">
-                            <p class="word-example-ja" onclick="speakJapaneseExample('${wordData.example}')" style="font-size: 16px; color: #333; margin-bottom: 8px; cursor: pointer; line-height: 1.4;">
+                        <div class="word-examples" style="margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left;">
+                            <p class="word-example-ja" onclick="speakJapaneseExample('${wordData.example.replace(/'/g, "\\'")}'); return false;" style="font-size: 16px; color: #333; margin-bottom: 8px; cursor: pointer; line-height: 1.4;">
                                 ${wordData.example}
                             </p>
                             <p class="word-example-ko" style="font-size: 14px; color: #666; margin-bottom: 0; line-height: 1.4;">
@@ -1834,27 +1834,30 @@
             // Cancel any ongoing speech
             speechSynthesis.cancel();
             
-            const utterance = new SpeechSynthesisUtterance(example);
-            
-            // Wait for voices to load on mobile browsers
-            const voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                speechSynthesis.addEventListener('voiceschanged', () => {
-                    speakJapaneseExample(example);
-                }, { once: true });
-                return;
-            }
-            
-            // Use Japanese voice
-            const japaneseVoice = voices.find(voice => voice.lang.startsWith('ja'));
-            if (japaneseVoice) {
-                utterance.voice = japaneseVoice;
-            }
-            
-            utterance.lang = 'ja-JP';
-            utterance.rate = 1.2;
-            
-            speechSynthesis.speak(utterance);
+            // Small delay to ensure cancellation is complete
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(example);
+                
+                // Wait for voices to load on mobile browsers
+                const voices = speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    speechSynthesis.addEventListener('voiceschanged', () => {
+                        speakJapaneseExample(example);
+                    }, { once: true });
+                    return;
+                }
+                
+                // Use Japanese voice
+                const japaneseVoice = voices.find(voice => voice.lang.startsWith('ja'));
+                if (japaneseVoice) {
+                    utterance.voice = japaneseVoice;
+                }
+                
+                utterance.lang = 'ja-JP';
+                utterance.rate = 1.2;
+                
+                speechSynthesis.speak(utterance);
+            }, 100);
         }
 
         function renderExpressionCard(data) {
