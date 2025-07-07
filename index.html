@@ -51,6 +51,46 @@
             font-size: 1.1rem;
             font-weight: 400;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .volume-text {
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+        
+        .sequence-text {
+            font-size: 1.0rem;
+            font-weight: 300;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .sequence-nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .sequence-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .sequence-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .episode-btn {
@@ -424,7 +464,20 @@
                     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                 </svg>
             </button>
-            <div class="episode-title" id="episode-title">26권 &lt; #001 &gt;</div>
+            <div class="episode-title" id="episode-title">
+                <span class="volume-text">26권</span>
+                <button class="sequence-nav-btn" id="prev-sequence-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+                <span class="sequence-text" id="sequence-text">#001</span>
+                <button class="sequence-nav-btn" id="next-sequence-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
+            </div>
             <button class="episode-btn next-episode" id="next-episode" style="display: none;">
                 <svg class="episode-icon" viewBox="0 0 24 24">
                     <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
@@ -510,6 +563,8 @@
         const episodeTitle = document.getElementById('episode-title');
         const prevEpisodeBtn = document.getElementById('prev-episode');
         const nextEpisodeBtn = document.getElementById('next-episode');
+        const prevSequenceBtn = document.getElementById('prev-sequence-btn');
+        const nextSequenceBtn = document.getElementById('next-sequence-btn');
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -529,7 +584,10 @@
                 init();
             } catch (error) {
                 console.error('Error loading flashcards:', error);
-                showError('노션 데이터베이스 연결에 실패했습니다. 설정을 확인해주세요.');
+                // Only show error if there's actually a fetch problem
+                if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+                    showError('노션 데이터베이스 연결에 실패했습니다. 설정을 확인해주세요.');
+                }
             }
         }
 
@@ -595,7 +653,12 @@
             // Update title to show volume and sequence
             const firstCard = currentEpisodeCards[0];
             const volume = firstCard?.volume || '26권';
-            episodeTitle.textContent = `${volume} < ${sequenceName} >`;
+            
+            // Update volume and sequence text
+            const volumeText = document.querySelector('.volume-text');
+            const sequenceText = document.querySelector('.sequence-text');
+            if (volumeText) volumeText.textContent = volume;
+            if (sequenceText) sequenceText.textContent = sequenceName;
             
             if (currentEpisodeCards.length > 0) {
                 // Sort cards by sequence number (romanji)
@@ -616,6 +679,14 @@
         function updateEpisodeButtons() {
             const sequences = Object.keys(episodeData).sort();
             const currentIndex = sequences.indexOf(currentEpisode);
+            
+            // Update sequence navigation buttons
+            if (prevSequenceBtn) {
+                prevSequenceBtn.disabled = currentIndex <= 0;
+            }
+            if (nextSequenceBtn) {
+                nextSequenceBtn.disabled = currentIndex >= sequences.length - 1;
+            }
             
             // Show/hide previous episode button
             if (currentIndex > 0) {
@@ -981,6 +1052,27 @@
                 loadEpisode(sequences[currentIndex + 1]);
             }
         });
+        
+        // New sequence navigation button event listeners
+        if (prevSequenceBtn) {
+            prevSequenceBtn.addEventListener('click', () => {
+                const sequences = Object.keys(episodeData).sort();
+                const currentIndex = sequences.indexOf(currentEpisode);
+                if (currentIndex > 0) {
+                    loadEpisode(sequences[currentIndex - 1]);
+                }
+            });
+        }
+        
+        if (nextSequenceBtn) {
+            nextSequenceBtn.addEventListener('click', () => {
+                const sequences = Object.keys(episodeData).sort();
+                const currentIndex = sequences.indexOf(currentEpisode);
+                if (currentIndex < sequences.length - 1) {
+                    loadEpisode(sequences[currentIndex + 1]);
+                }
+            });
+        }
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
