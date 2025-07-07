@@ -1,0 +1,24 @@
+[오후 8:48:26] Speech synthesis cancelled
+[오후 8:48:26] currentEpisodeCards: [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]
+[오후 8:48:26] currentCardIndex: 1
+[오후 8:48:26] currentEpisodeCards length: 57
+[오후 8:48:26] Current card: [object Object]
+[오후 8:48:26] Speaking Japanese text: ご家族の方ですか
+[오후 8:48:26] Utterance created
+[오후 8:48:26] Available voices count: 89
+[오후 8:48:26] 🔍 Searching for male Japanese voice...
+[오후 8:48:26] No specific male names found, trying broader search...
+[오후 8:48:26] No explicit male voices found, using fallback...
+[오후 8:48:26] ✓ Selected voice: 일본어 일본 (Gender: M)
+[오후 8:48:26] Voice details - Lang: ja_JP Local: true
+[오후 8:48:26] Setting TTS properties for gender: M
+[오후 8:48:26] Applied male voice settings: pitch 0.6, rate 0.9
+[오후 8:48:26] 📱 Mobile detected - using extra low pitch: 0.5, rate: 0.8
+[오후 8:48:26] 📱 Mobile voice volume set to maximum
+[오후 8:48:26] About to speak with utterance: [object SpeechSynthesisUtterance]
+[오후 8:48:26] speechSynthesis.speak() called
+[오후 8:48:26] === speakJapanese function ended ===
+[오후 8:48:26] speakJapanese() call completed
+[오후 8:48:26] 📱 Mobile TTS started successfully
+[오후 8:48:28] Mobile debug console enabled
+HIDE
