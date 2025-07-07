@@ -1107,6 +1107,12 @@
             speechSynthesis.cancel();
             
             const currentCard = currentEpisodeCards[currentCardIndex];
+            if (!currentCard || !currentCard.japanese) {
+                console.warn('No current card or Japanese text to speak');
+                return;
+            }
+            
+            console.log('Speaking Japanese text:', currentCard.japanese);
             const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
             
             // Wait for voices to load on mobile browsers
@@ -1299,6 +1305,7 @@
         // Remove global click event - now handled by clickable areas only
         speakerBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
+            console.log('Speaker button clicked');
             speakJapanese();
         });
         speakerBtnBack.addEventListener('click', (e) => {
