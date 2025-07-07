@@ -117,6 +117,11 @@
             gap: 8px;
             backdrop-filter: blur(5px);
         }
+        
+        .db-n1-status {
+            background: #E3F2FD;
+            width: fit-content;
+        }
 
         .db-status-dot {
             width: 12px;
@@ -544,13 +549,13 @@
                         </svg>
                     </button>
                     <div class="db-status-container" id="db-status-container-front">
+                        <div class="db-connection-status db-n1-status" id="db-n1-status-front" style="display: none;">
+                            <div class="db-n1-status-dot"></div>
+                            <span id="db-n1-status-text-front"></span>
+                        </div>
                         <div class="db-connection-status" id="db-status-front">
                             <div class="db-status-dot"></div>
                             <span id="db-status-text-front"></span>
-                        </div>
-                        <div class="db-connection-status" id="db-n1-status-front" style="display: none;">
-                            <div class="db-n1-status-dot"></div>
-                            <span id="db-n1-status-text-front"></span>
                         </div>
                     </div>
                 </div>
@@ -571,13 +576,13 @@
                         </svg>
                     </button>
                     <div class="db-status-container" id="db-status-container-back">
+                        <div class="db-connection-status db-n1-status" id="db-n1-status-back" style="display: none;">
+                            <div class="db-n1-status-dot"></div>
+                            <span id="db-n1-status-text-back"></span>
+                        </div>
                         <div class="db-connection-status" id="db-status-back">
                             <div class="db-status-dot"></div>
                             <span id="db-status-text-back"></span>
-                        </div>
-                        <div class="db-connection-status" id="db-n1-status-back" style="display: none;">
-                            <div class="db-n1-status-dot"></div>
-                            <span id="db-n1-status-text-back"></span>
                         </div>
                     </div>
                 </div>
