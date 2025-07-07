@@ -1208,13 +1208,14 @@
             }
             
             utterance.lang = 'ja-JP';
+            // Rate will be set based on gender below
             
             // Adjust pitch and rate based on gender for more natural voices
             if (currentCard.gender === 'F') {
                 utterance.pitch = 1.1; // Slightly higher pitch for female
                 utterance.rate = 1.2; // Normal rate
             } else if (currentCard.gender === 'M') {
-                utterance.pitch = 0.8; // Lower pitch for male (more natural)
+                utterance.pitch = 0.75; // Lower pitch for male
                 utterance.rate = 1.0; // Slightly slower rate for deeper sound
             } else {
                 utterance.pitch = 1.0; // Default pitch
