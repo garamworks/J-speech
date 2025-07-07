@@ -1209,16 +1209,28 @@
             
             utterance.lang = 'ja-JP';
             
-            // Adjust pitch and rate based on gender for more natural voices
+            // Enhanced gender-based voice adjustment for mobile compatibility
+            console.log('Setting TTS properties for gender:', currentCard.gender);
+            
             if (currentCard.gender === 'F') {
                 utterance.pitch = 1.1; // Slightly higher pitch for female
                 utterance.rate = 1.2; // Normal rate
+                console.log('Applied female voice settings: pitch 1.1, rate 1.2');
             } else if (currentCard.gender === 'M') {
-                utterance.pitch = 0.8; // Lower pitch for male (more natural)
-                utterance.rate = 1.0; // Slightly slower rate for deeper sound
+                // More aggressive settings for mobile male voice
+                utterance.pitch = 0.6; // Much lower pitch for mobile
+                utterance.rate = 0.9; // Slower rate for deeper effect
+                console.log('Applied male voice settings: pitch 0.6, rate 0.9');
+                
+                // Additional mobile-specific adjustments
+                if (/Mobi|Android/i.test(navigator.userAgent)) {
+                    utterance.pitch = 0.5; // Even lower for mobile
+                    console.log('Mobile detected - using extra low pitch: 0.5');
+                }
             } else {
                 utterance.pitch = 1.0; // Default pitch
                 utterance.rate = 1.2; // Default rate
+                console.log('Applied default voice settings: pitch 1.0, rate 1.2');
             }
             
             // Visual feedback for speaking
