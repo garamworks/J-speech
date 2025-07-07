@@ -1199,38 +1199,95 @@
             if (dbN1StatusContainerFront) dbN1StatusContainerFront.innerHTML = '';
             if (dbN1StatusContainerBack) dbN1StatusContainerBack.innerHTML = '';
             
-            // Check if card has expression card relation
-            if (card.expressionCardId) {
+            // Check if card has expression card relations (multiple possible)
+            if (card.expressionCardIds && card.expressionCardIds.length > 0) {
                 try {
-                    const response = await fetch(`/api/expression-card/${card.expressionCardId}`);
-                    const expressionCard = await response.json();
+                    // Create expression status container
+                    const expressionContainer = document.createElement('div');
+                    expressionContainer.style.display = 'flex';
+                    expressionContainer.style.flexDirection = 'column';
+                    expressionContainer.style.gap = '2px';
                     
-                    if (expressionCard && expressionCard.title) {
-                        if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
-                        if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
-                        
-                        // Make expression card clickable
-                        if (dbStatusFront) {
-                            dbStatusFront.style.display = 'flex';
-                            dbStatusFront.classList.add('clickable');
-                            dbStatusFront.removeEventListener('click', dbStatusFront.clickHandler);
-                            dbStatusFront.clickHandler = (e) => {
+                    // Fetch all expression cards
+                    const expressionPromises = card.expressionCardIds.map(id => 
+                        fetch(`/api/expression-card/${id}`).then(res => res.json())
+                    );
+                    
+                    const expressionCards = await Promise.all(expressionPromises);
+                    
+                    expressionCards.forEach((expressionCard, index) => {
+                        if (expressionCard && expressionCard.title) {
+                            const expressionId = card.expressionCardIds[index];
+                            
+                            // Create front expression item
+                            const frontItem = document.createElement('div');
+                            frontItem.className = 'db-status clickable';
+                            frontItem.style.display = 'flex';
+                            frontItem.style.marginBottom = '2px';
+                            
+                            const frontText = document.createElement('div');
+                            frontText.className = 'db-status-text';
+                            frontText.textContent = expressionCard.title;
+                            frontItem.appendChild(frontText);
+                            
+                            frontItem.addEventListener('click', (e) => {
                                 e.stopPropagation();
-                                openExpressionModal(card.expressionCardId);
-                            };
-                            dbStatusFront.addEventListener('click', dbStatusFront.clickHandler);
-                        }
-                        if (dbStatusBack) {
-                            dbStatusBack.style.display = 'flex';
-                            dbStatusBack.classList.add('clickable');
-                            dbStatusBack.removeEventListener('click', dbStatusBack.clickHandler);
-                            dbStatusBack.clickHandler = (e) => {
+                                openExpressionModal(expressionId);
+                            });
+                            
+                            // Create back expression item
+                            const backItem = document.createElement('div');
+                            backItem.className = 'db-status clickable';
+                            backItem.style.display = 'flex';
+                            backItem.style.marginBottom = '2px';
+                            
+                            const backText = document.createElement('div');
+                            backText.className = 'db-status-text';
+                            backText.textContent = expressionCard.title;
+                            backItem.appendChild(backText);
+                            
+                            backItem.addEventListener('click', (e) => {
                                 e.stopPropagation();
-                                openExpressionModal(card.expressionCardId);
-                            };
-                            dbStatusBack.addEventListener('click', dbStatusBack.clickHandler);
+                                openExpressionModal(expressionId);
+                            });
+                            
+                            // Add to expression containers - use parent containers
+                            if (index === 0) {
+                                // For the first expression, use the main db-status elements
+                                if (dbStatusFront) {
+                                    dbStatusFront.style.display = 'flex';
+                                    dbStatusFront.classList.add('clickable');
+                                    if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
+                                    
+                                    dbStatusFront.removeEventListener('click', dbStatusFront.clickHandler);
+                                    dbStatusFront.clickHandler = (e) => {
+                                        e.stopPropagation();
+                                        openExpressionModal(expressionId);
+                                    };
+                                    dbStatusFront.addEventListener('click', dbStatusFront.clickHandler);
+                                }
+                                if (dbStatusBack) {
+                                    dbStatusBack.style.display = 'flex';
+                                    dbStatusBack.classList.add('clickable');
+                                    if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
+                                    
+                                    dbStatusBack.removeEventListener('click', dbStatusBack.clickHandler);
+                                    dbStatusBack.clickHandler = (e) => {
+                                        e.stopPropagation();
+                                        openExpressionModal(expressionId);
+                                    };
+                                    dbStatusBack.addEventListener('click', dbStatusBack.clickHandler);
+                                }
+                            } else {
+                                // For additional expressions, add them below the main db-status
+                                const frontParent = dbStatusFront?.parentElement;
+                                const backParent = dbStatusBack?.parentElement;
+                                
+                                if (frontParent) frontParent.appendChild(frontItem);
+                                if (backParent) backParent.appendChild(backItem);
+                            }
                         }
-                    }
+                    });
                 } catch (error) {
                     console.error('Error fetching expression card info:', error);
                 }
