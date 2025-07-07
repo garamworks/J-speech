@@ -613,11 +613,7 @@
         }
 
         .speaker-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.5rem;
-            text-align: center;
+            display: none;
         }
 
         /* Mobile optimizations */
@@ -1089,11 +1085,7 @@
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
-            if (card.speaker) {
-                speakerName.innerHTML = `<span class="speaker-name-clickable" onclick="openWordModal()" style="cursor: pointer; color: #3b82f6; text-decoration: underline;">${card.speaker}</span>`;
-            } else {
-                speakerName.textContent = "";
-            }
+            speakerName.textContent = "";
             currentCardSpan.textContent = index + 1;
             
             // Set character avatar for both front and back - use image if available, otherwise emoji based on sentence mood
@@ -1184,21 +1176,31 @@
                             if (vocabulary && vocabulary.word) {
                                 // Create elements for front
                                 const frontStatusItem = document.createElement('div');
-                                frontStatusItem.className = 'db-connection-status db-n1-status';
+                                frontStatusItem.className = 'db-connection-status db-n1-status clickable';
                                 frontStatusItem.style.display = 'flex';
+                                frontStatusItem.style.cursor = 'pointer';
                                 frontStatusItem.innerHTML = `
                                     <div class="db-n1-status-dot"></div>
                                     <span>${vocabulary.word}</span>
                                 `;
+                                frontStatusItem.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    openWordModalWithN1Data(vocabulary);
+                                });
                                 
                                 // Create elements for back
                                 const backStatusItem = document.createElement('div');
-                                backStatusItem.className = 'db-connection-status db-n1-status';
+                                backStatusItem.className = 'db-connection-status db-n1-status clickable';
                                 backStatusItem.style.display = 'flex';
+                                backStatusItem.style.cursor = 'pointer';
                                 backStatusItem.innerHTML = `
                                     <div class="db-n1-status-dot"></div>
                                     <span>${vocabulary.word}</span>
                                 `;
+                                backStatusItem.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    openWordModalWithN1Data(vocabulary);
+                                });
                                 
                                 if (dbN1StatusContainerFront) dbN1StatusContainerFront.appendChild(frontStatusItem);
                                 if (dbN1StatusContainerBack) dbN1StatusContainerBack.appendChild(backStatusItem);
@@ -1660,6 +1662,49 @@
         function closeWordModal() {
             const modal = document.getElementById('word-modal');
             modal.style.display = 'none';
+        }
+
+        function openWordModalWithN1Data(vocabulary) {
+            console.log('=== openWordModalWithN1Data called ===');
+            console.log('vocabulary data:', vocabulary);
+            
+            const modal = document.getElementById('word-modal');
+            const modalBody = document.getElementById('word-modal-body');
+            
+            modal.style.display = 'flex';
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
+            
+            // Get current card for character image
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            const characterImage = currentCard?.characterImage || '';
+            
+            // Create word modal content with N1 vocabulary data
+            const wordData = {
+                word: vocabulary.word || '단어 없음',
+                reading: vocabulary.reading || vocabulary.word || '',
+                meaning: vocabulary.meaning || '의미 정보 없음'
+            };
+            
+            let html = `
+                <div class="word-main-section" style="text-align: center;">
+                    ${characterImage ? `
+                        <div style="margin-bottom: 20px;">
+                            <img src="${characterImage}" alt="캐릭터" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                        </div>
+                    ` : ''}
+                    <h2 class="word-main-title" onclick="speakJapaneseText('${wordData.word}')" style="font-size: 36px; margin-bottom: 16px;">
+                        ${wordData.word}
+                    </h2>
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 12px; color: #666;">
+                        ${wordData.reading}
+                    </p>
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888;">
+                        ${wordData.meaning}
+                    </p>
+                </div>
+            `;
+            
+            modalBody.innerHTML = html;
         }
 
         function renderExpressionCard(data) {
