@@ -240,10 +240,6 @@ async function getExpressionCardInfo(expressionCardId) {
             page_id: expressionCardId
         });
         
-        const title = response.properties['표현(일본어)']?.title?.[0]?.plain_text || '';
-        const meaning = getRichTextContent(response.properties['뜻(한국어)']);
-        const id = response.properties['ID']?.unique_id?.number || '';
-        
         // Helper function to get all rich text content
         const getRichTextContent = (richTextProperty) => {
             if (!richTextProperty?.rich_text || richTextProperty.rich_text.length === 0) {
@@ -251,6 +247,10 @@ async function getExpressionCardInfo(expressionCardId) {
             }
             return richTextProperty.rich_text.map(text => text.plain_text).join('');
         };
+
+        const title = response.properties['표현(일본어)']?.title?.[0]?.plain_text || '';
+        const meaning = getRichTextContent(response.properties['뜻(한국어)']);
+        const id = response.properties['ID']?.unique_id?.number || '';
 
         // Get application expressions with correct field names
         const application1 = getRichTextContent(response.properties['응용1J']);
