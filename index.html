@@ -1674,9 +1674,8 @@
             modal.style.display = 'flex';
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
-            // Get current card for character image
-            const currentCard = currentEpisodeCards[currentCardIndex];
-            const characterImage = currentCard?.characterImage || '';
+            // Use N1 vocabulary image from img field
+            const vocabularyImage = vocabulary.img || '';
             
             // Create word modal content with N1 vocabulary data
             const wordData = {
@@ -1687,9 +1686,9 @@
             
             let html = `
                 <div class="word-main-section" style="text-align: center;">
-                    ${characterImage ? `
+                    ${vocabularyImage ? `
                         <div style="margin-bottom: 20px;">
-                            <img src="${characterImage}" alt="캐릭터" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                            <img src="${vocabularyImage}" alt="단어 이미지" style="width: 90%; max-width: 300px; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover;" />
                         </div>
                     ` : ''}
                     <h2 class="word-main-title" onclick="speakJapaneseText('${wordData.word}')" style="font-size: 36px; margin-bottom: 16px;">
