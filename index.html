@@ -132,6 +132,108 @@
             width: fit-content;
         }
 
+        /* Expression Card Modal Styles */
+        .expression-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .expression-modal-content {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .expression-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .expression-modal-close:hover {
+            color: #000;
+        }
+
+        .expression-main-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .expression-main-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .expression-main-title:hover {
+            color: #3b82f6;
+        }
+
+        .expression-main-meaning {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .expression-applications {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .expression-application-item {
+            border-left: 4px solid #c084fc;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .expression-application-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .expression-application-japanese {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .expression-application-korean {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .expression-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
         .db-status-dot {
             width: 12px;
             height: 12px;
@@ -903,8 +1005,17 @@
                         if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
                         if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
                         
-                        if (dbStatusFront) dbStatusFront.style.display = 'flex';
-                        if (dbStatusBack) dbStatusBack.style.display = 'flex';
+                        // Make expression card clickable
+                        if (dbStatusFront) {
+                            dbStatusFront.style.display = 'flex';
+                            dbStatusFront.style.cursor = 'pointer';
+                            dbStatusFront.onclick = () => openExpressionModal(card.expressionCardId);
+                        }
+                        if (dbStatusBack) {
+                            dbStatusBack.style.display = 'flex';
+                            dbStatusBack.style.cursor = 'pointer';
+                            dbStatusBack.onclick = () => openExpressionModal(card.expressionCardId);
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching expression card info:', error);
@@ -1256,8 +1367,105 @@
                 }
             }
         }
+
+        // Expression card modal functions
+        function openExpressionModal(expressionCardId) {
+            const modal = document.getElementById('expression-modal');
+            const modalBody = document.getElementById('expression-modal-body');
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Show loading
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
+            
+            // Fetch expression card data
+            fetch(`/api/expression-card/${expressionCardId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        renderExpressionCard(data);
+                    } else {
+                        modalBody.innerHTML = '<div class="expression-loading">Expression card not found.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching expression card:', error);
+                    modalBody.innerHTML = '<div class="expression-loading">Error loading expression card.</div>';
+                });
+        }
+
+        function closeExpressionModal() {
+            const modal = document.getElementById('expression-modal');
+            modal.style.display = 'none';
+        }
+
+        function renderExpressionCard(data) {
+            const modalBody = document.getElementById('expression-modal-body');
+            
+            // Prepare applications array
+            const applications = [
+                { japanese: data.application1, korean: data.application1Korean },
+                { japanese: data.application2, korean: data.application2Korean },
+                { japanese: data.application3, korean: data.application3Korean },
+                { japanese: data.application4, korean: data.application4Korean },
+                { japanese: data.application5, korean: data.application5Korean }
+            ].filter(app => app.japanese && app.japanese.trim() !== '');
+            
+            let html = `
+                <div class="expression-main-section">
+                    <h2 class="expression-main-title" onclick="speakJapanese('${data.title}')">
+                        ${data.title}
+                    </h2>
+                    <p class="expression-main-meaning">
+                        ${data.meaning}
+                    </p>
+                </div>
+            `;
+            
+            if (applications.length > 0) {
+                html += '<div class="expression-applications">';
+                applications.forEach(app => {
+                    html += `
+                        <div class="expression-application-item" onclick="speakJapanese('${app.japanese}')">
+                            <div class="expression-application-japanese">${app.japanese}</div>
+                            <div class="expression-application-korean">${app.korean}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            modalBody.innerHTML = html;
+        }
+
+        function speakJapanese(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Cancel any ongoing speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ja-JP';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('expression-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeExpressionModal();
+            }
+        });
     </script>
     
+    <!-- Expression Card Modal -->
+    <div class="expression-modal" id="expression-modal">
+        <div class="expression-modal-content">
+            <button class="expression-modal-close" onclick="closeExpressionModal()">&times;</button>
+            <div id="expression-modal-body">
+                <div class="expression-loading">Loading...</div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
