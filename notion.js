@@ -18,8 +18,8 @@ function extractDatabaseIdFromUrl(pageUrl) {
 // Extract database ID from the new URL
 const NEW_DATABASE_URL = "https://www.notion.so/doungle/228fe404b3dc80f0a0c0d83aaa28aa9b?v=229fe404b3dc80399a0f000c451a5e3a&source=copy_link";
 const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
-// Character images database ID - will need to be updated based on the new workspace
-const IMAGES_DATABASE_ID = "218fe404b3dc8059bdf1d40cf85d7e47";
+// Character database ID
+const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
 
 // Get all child databases from the page
 async function getNotionDatabases() {
@@ -61,34 +61,45 @@ async function getNotionDatabases() {
     }
 }
 
-// Get character images from the images database
-async function getCharacterImages() {
+// Get character data from the character database
+async function getCharacterData() {
     try {
         const response = await notion.databases.query({
-            database_id: IMAGES_DATABASE_ID,
+            database_id: CHARACTER_DATABASE_ID,
         });
 
-        const imageMap = {};
+        const characterMap = {};
         response.results.forEach(page => {
             const name = page.properties.Name?.title?.[0]?.plain_text;
-            const imageFile = page.properties['Files & media']?.files?.[0];
-            const gender = page.properties['성별']?.select?.name;
+            const imageFile = page.properties.face?.files?.[0];
             
             if (name && imageFile) {
                 const imageUrl = imageFile.type === 'external' ? 
                     imageFile.external.url : imageFile.file.url;
-                imageMap[name] = {
+                characterMap[name] = {
                     imageUrl: imageUrl,
-                    gender: gender
+                    emoji: getCharacterEmoji(name)
                 };
             }
         });
 
-        return imageMap;
+        return characterMap;
     } catch (error) {
-        console.error("Error fetching character images:", error);
+        console.error("Error fetching character data:", error);
         return {};
     }
+}
+
+// Get emoji for character
+function getCharacterEmoji(characterName) {
+    const emojiMap = {
+        '남자1': '👨',
+        '번즈': '🔥',
+        '일라이저': '👩',
+        '허브': '🌿',
+        'default': '🎭'
+    };
+    return emojiMap[characterName] || emojiMap.default;
 }
 
 // Get flashcard data from Notion database
@@ -111,8 +122,23 @@ async function getFlashcardsFromNotion() {
             startCursor = response.next_cursor;
         }
 
-        // Skip character images for now as that database is not available
-        const characterImages = [];
+        // Get character data
+        const characterData = await getCharacterData();
+        
+        // Get all character relations
+        const characterRelations = {};
+        for (const page of allResults) {
+            const characterRelation = page.properties['사람']?.relation?.[0]?.id;
+            if (characterRelation && !characterRelations[characterRelation]) {
+                try {
+                    const characterPage = await notion.pages.retrieve({ page_id: characterRelation });
+                    const characterName = characterPage.properties.Name?.title?.[0]?.plain_text;
+                    characterRelations[characterRelation] = characterName;
+                } catch (error) {
+                    console.log('Could not fetch character relation:', characterRelation);
+                }
+            }
+        }
 
         if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
@@ -169,6 +195,11 @@ async function getFlashcardsFromNotion() {
             const n2Word = getTextContent(properties['N2 단어']);  // N2 vocabulary word
             const sequenceNumber = properties['순서']?.number || 0;  // Sequence number
             const episode = "1화";  // Default episode
+            
+            // Get character info from relation
+            const characterRelation = properties['사람']?.relation?.[0]?.id;
+            const characterName = characterRelations[characterRelation];
+            const characterInfo = characterName ? characterData[characterName] : null;
 
             // Map character names to emojis
             const characterEmojis = {
@@ -182,11 +213,11 @@ async function getFlashcardsFromNotion() {
             return {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
-                character: characterEmojis.default,
-                characterImage: null, // No character images in this database structure
+                character: characterInfo?.emoji || characterEmojis.default,
+                characterImage: characterInfo?.imageUrl || null,
                 gender: null,
                 romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
-                speaker: n2Word || "학습자료",
+                speaker: characterName || n2Word || "학습자료",
                 episode: episode
             };
         });
