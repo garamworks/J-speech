@@ -83,6 +83,32 @@ app.get('/api/n1-vocabulary/:id', async (req, res) => {
     }
 });
 
+// API endpoint to get multiple N1 vocabulary info
+app.get('/api/n1-vocabulary-multiple/:ids', async (req, res) => {
+    try {
+        const n1VocabularyIds = req.params.ids.split(',');
+        const vocabularyInfos = [];
+        
+        for (const id of n1VocabularyIds) {
+            if (id.trim()) {
+                try {
+                    const vocabularyInfo = await getN1VocabularyInfo(id.trim());
+                    if (vocabularyInfo) {
+                        vocabularyInfos.push(vocabularyInfo);
+                    }
+                } catch (error) {
+                    console.log(`Could not fetch N1 vocabulary ${id}:`, error.message);
+                }
+            }
+        }
+        
+        res.json(vocabularyInfos);
+    } catch (error) {
+        console.error('Error fetching multiple N1 vocabulary info:', error);
+        res.status(500).json({ error: 'Failed to fetch N1 vocabulary info' });
+    }
+});
+
 // Serve the main HTML file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

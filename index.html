@@ -118,6 +118,13 @@
             backdrop-filter: blur(5px);
         }
         
+        .db-n1-status-container {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 5px;
+        }
+        
         .db-n1-status {
             background: #F3F9FF;
             width: fit-content;
@@ -549,9 +556,8 @@
                         </svg>
                     </button>
                     <div class="db-status-container" id="db-status-container-front">
-                        <div class="db-connection-status db-n1-status" id="db-n1-status-front" style="display: none;">
-                            <div class="db-n1-status-dot"></div>
-                            <span id="db-n1-status-text-front"></span>
+                        <div class="db-n1-status-container" id="db-n1-status-container-front">
+                            <!-- Multiple N1 vocabulary items will be inserted here -->
                         </div>
                         <div class="db-connection-status" id="db-status-front">
                             <div class="db-status-dot"></div>
@@ -576,9 +582,8 @@
                         </svg>
                     </button>
                     <div class="db-status-container" id="db-status-container-back">
-                        <div class="db-connection-status db-n1-status" id="db-n1-status-back" style="display: none;">
-                            <div class="db-n1-status-dot"></div>
-                            <span id="db-n1-status-text-back"></span>
+                        <div class="db-n1-status-container" id="db-n1-status-container-back">
+                            <!-- Multiple N1 vocabulary items will be inserted here -->
                         </div>
                         <div class="db-connection-status" id="db-status-back">
                             <div class="db-status-dot"></div>
@@ -637,10 +642,8 @@
         const dbStatusBack = document.getElementById('db-status-back');
         const dbStatusTextFront = document.getElementById('db-status-text-front');
         const dbStatusTextBack = document.getElementById('db-status-text-back');
-        const dbN1StatusFront = document.getElementById('db-n1-status-front');
-        const dbN1StatusBack = document.getElementById('db-n1-status-back');
-        const dbN1StatusTextFront = document.getElementById('db-n1-status-text-front');
-        const dbN1StatusTextBack = document.getElementById('db-n1-status-text-back');
+        const dbN1StatusContainerFront = document.getElementById('db-n1-status-container-front');
+        const dbN1StatusContainerBack = document.getElementById('db-n1-status-container-back');
 
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
@@ -885,8 +888,8 @@
             // Reset all status displays
             if (dbStatusFront) dbStatusFront.style.display = 'none';
             if (dbStatusBack) dbStatusBack.style.display = 'none';
-            if (dbN1StatusFront) dbN1StatusFront.style.display = 'none';
-            if (dbN1StatusBack) dbN1StatusBack.style.display = 'none';
+            if (dbN1StatusContainerFront) dbN1StatusContainerFront.innerHTML = '';
+            if (dbN1StatusContainerBack) dbN1StatusContainerBack.innerHTML = '';
             
             // Check if card has expression card relation
             if (card.expressionCardId) {
@@ -906,21 +909,38 @@
                 }
             }
             
-            // Check if card has N1 vocabulary relation
-            if (card.n1VocabularyId) {
+            // Check if card has N1 vocabulary relations (multiple possible)
+            if (card.n1VocabularyIds && card.n1VocabularyIds.length > 0) {
                 try {
-                    const response = await fetch(`/api/n1-vocabulary/${card.n1VocabularyId}`);
-                    const n1Vocabulary = await response.json();
+                    const response = await fetch(`/api/n1-vocabulary-multiple/${card.n1VocabularyIds.join(',')}`);
+                    const n1Vocabularies = await response.json();
                     
-                    if (n1Vocabulary && n1Vocabulary.word) {
-                        // Show only the Japanese word, no reading
-                        const n1Text = n1Vocabulary.word;
-                        
-                        if (dbN1StatusTextFront) dbN1StatusTextFront.textContent = n1Text;
-                        if (dbN1StatusTextBack) dbN1StatusTextBack.textContent = n1Text;
-                        
-                        if (dbN1StatusFront) dbN1StatusFront.style.display = 'flex';
-                        if (dbN1StatusBack) dbN1StatusBack.style.display = 'flex';
+                    if (n1Vocabularies && n1Vocabularies.length > 0) {
+                        // Create N1 vocabulary status items for each word
+                        n1Vocabularies.forEach(vocabulary => {
+                            if (vocabulary && vocabulary.word) {
+                                // Create elements for front
+                                const frontStatusItem = document.createElement('div');
+                                frontStatusItem.className = 'db-connection-status db-n1-status';
+                                frontStatusItem.style.display = 'flex';
+                                frontStatusItem.innerHTML = `
+                                    <div class="db-n1-status-dot"></div>
+                                    <span>${vocabulary.word}</span>
+                                `;
+                                
+                                // Create elements for back
+                                const backStatusItem = document.createElement('div');
+                                backStatusItem.className = 'db-connection-status db-n1-status';
+                                backStatusItem.style.display = 'flex';
+                                backStatusItem.innerHTML = `
+                                    <div class="db-n1-status-dot"></div>
+                                    <span>${vocabulary.word}</span>
+                                `;
+                                
+                                if (dbN1StatusContainerFront) dbN1StatusContainerFront.appendChild(frontStatusItem);
+                                if (dbN1StatusContainerBack) dbN1StatusContainerBack.appendChild(backStatusItem);
+                            }
+                        });
                     }
                 } catch (error) {
                     console.error('Error fetching N1 vocabulary info:', error);

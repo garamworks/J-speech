@@ -198,8 +198,8 @@ async function getFlashcardsFromNotion() {
             // Get expression card relation
             const expressionCardRelation = properties['일본어 표현카드']?.relation?.[0]?.id;
 
-            // Get N1 vocabulary relation
-            const n1VocabularyRelation = properties['일본어 단어공부 N1']?.relation?.[0]?.id;
+            // Get N1 vocabulary relations (multiple possible)
+            const n1VocabularyRelations = properties['일본어 단어공부 N1']?.relation?.map(rel => rel.id) || [];
 
             // Map character names to emojis
             const characterEmojis = {
@@ -222,7 +222,7 @@ async function getFlashcardsFromNotion() {
                 volume: volume,
                 sequence: sequence,
                 expressionCardId: expressionCardRelation,
-                n1VocabularyId: n1VocabularyRelation
+                n1VocabularyIds: n1VocabularyRelations
             };
         });
     } catch (error) {
