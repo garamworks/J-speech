@@ -291,13 +291,18 @@ async function getN1VocabularyInfo(n1VocabularyId) {
         const exampleTranslation = response.properties['예문 해석']?.rich_text?.[0]?.plain_text || '';
         const id = response.properties['ID']?.unique_id?.number || '';
         
+        // Get image from the img field
+        const imageFile = response.properties['img']?.files?.[0];
+        const imageUrl = imageFile ? (imageFile.type === 'external' ? imageFile.external.url : imageFile.file.url) : '';
+        
         return {
             word: word,
             meaning: meaning,
             reading: reading,
             example: example,
             exampleTranslation: exampleTranslation,
-            id: id
+            id: id,
+            img: imageUrl
         };
     } catch (error) {
         console.error('Error fetching N1 vocabulary info:', error);
