@@ -1936,7 +1936,8 @@
             
             if (applications.length > 0) {
                 html += '<div class="expression-applications">';
-                applications.forEach(app => {
+                applications.forEach((app, index) => {
+                    console.log(`Rendering application ${index + 1}:`, app);
                     html += `
                         <div class="expression-application-item" onclick="speakJapaneseText('${app.japanese}')">
                             <div class="expression-application-japanese">${app.japanese}</div>
@@ -1945,9 +1946,18 @@
                     `;
                 });
                 html += '</div>';
+                console.log('Final HTML length:', html.length);
+                console.log('Final HTML preview:', html.substring(0, 500));
             }
             
             modalBody.innerHTML = html;
+            
+            // Check how many items were actually rendered
+            setTimeout(() => {
+                const renderedItems = document.querySelectorAll('.expression-application-item');
+                console.log('Actually rendered items count:', renderedItems.length);
+                console.log('Modal body HTML:', modalBody.innerHTML);
+            }, 100);
         }
 
         function speakJapaneseText(text) {
