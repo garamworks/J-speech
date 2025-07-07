@@ -97,23 +97,25 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: #555;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 1.05rem;
             font-weight: 400;
             display: none;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
             z-index: 10;
+            backdrop-filter: blur(5px);
+            pointer-events: none;
         }
 
         .db-status-dot {
-            width: 6px;
-            height: 6px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: #10b981;
+            background: #C8E6C9;
         }
 
         @keyframes pulse {
@@ -329,6 +331,11 @@
             fill: currentColor;
         }
 
+        .card-clickable-area {
+            height: 80%;
+            cursor: pointer;
+        }
+        
         .character-avatar {
             width: 128px;
             height: 128px;
@@ -507,9 +514,11 @@
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
                 <div class="card-face card-front">
-                    <div class="character-avatar" id="character-avatar"></div>
-                    <div class="speaker-name" id="speaker-name"></div>
-                    <div class="japanese-text" id="japanese-text"></div>
+                    <div class="card-clickable-area" onclick="flipCard()">
+                        <div class="character-avatar" id="character-avatar"></div>
+                        <div class="speaker-name" id="speaker-name"></div>
+                        <div class="japanese-text" id="japanese-text"></div>
+                    </div>
                     <button class="speaker-btn" id="speaker-btn" title="Listen to pronunciation">
                         <svg class="speaker-icon" viewBox="0 0 24 24">
                             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -526,9 +535,11 @@
                     </div>
                 </div>
                 <div class="card-face card-back">
-                    <div class="character-avatar" id="character-avatar-back"></div>
-                    <div class="japanese-text" id="japanese-text-back"></div>
-                    <div class="korean-text" id="korean-text"></div>
+                    <div class="card-clickable-area" onclick="flipCard()">
+                        <div class="character-avatar" id="character-avatar-back"></div>
+                        <div class="japanese-text" id="japanese-text-back"></div>
+                        <div class="korean-text" id="korean-text"></div>
+                    </div>
                     <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
                         <svg class="speaker-icon" viewBox="0 0 24 24">
                             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -843,10 +854,8 @@
                     const expressionCard = await response.json();
                     
                     if (expressionCard && expressionCard.title) {
-                        // Display expression card title and ID
-                        const statusText = expressionCard.id ? 
-                            `${expressionCard.title} (ID: ${expressionCard.id})` : 
-                            expressionCard.title;
+                        // Display expression card title only
+                        const statusText = expressionCard.title;
                         
                         if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
                         if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
@@ -1074,7 +1083,7 @@
         }
 
         // Event listeners
-        flashcard.addEventListener('click', flipCard);
+        // Remove global click event - now handled by clickable areas only
         speakerBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent card flip when clicking speaker
             speakJapanese();
