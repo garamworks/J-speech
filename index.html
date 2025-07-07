@@ -1144,6 +1144,12 @@
             const voices = speechSynthesis.getVoices();
             console.log('Available voices count:', voices.length);
             
+            if (selectedVoice) {
+                console.log('Selected voice:', selectedVoice.name, 'for gender:', currentCard.gender);
+            } else {
+                console.log('No specific voice found for gender:', currentCard.gender);
+            }
+            
             if (voices.length === 0) {
                 console.log('No voices available, waiting for voiceschanged event');
                 // Retry after voices are loaded
@@ -1170,20 +1176,25 @@
                     !voice.name.toLowerCase().includes('male') && !voice.name.toLowerCase().includes('man')
                 );
             } else if (currentCard.gender === 'M') {
-                // Find male Japanese voice - prioritize deep, natural male voices
+                // For male voices, try different approach - look for specific male voice names
+                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro'];
+                
                 selectedVoice = voices.find(voice => 
                     (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                    (voice.name.includes('Male') || voice.name.includes('male') || 
-                     voice.name.includes('Man') || voice.name.includes('man') ||
-                     voice.name.includes('Kenji') || voice.name.includes('Hattori') ||
-                     voice.name.includes('Ichiro') || voice.name.includes('Takeshi') ||
-                     voice.name.includes('男'))
-                ) || voices.find(voice => 
-                    (voice.lang === 'ja-JP' || voice.lang === 'ja') && 
-                    (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('man'))
+                    maleVoiceNames.some(name => voice.name.includes(name))
                 );
                 
-                // If no male voice found, use default Japanese voice with lower pitch
+                // If no specific male name found, try broader search
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(voice => 
+                        (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
+                        (voice.name.includes('Male') || voice.name.includes('male') || 
+                         voice.name.includes('Man') || voice.name.includes('man') ||
+                         voice.name.includes('男'))
+                    );
+                }
+                
+                // Last resort - use any Japanese voice for male with pitch adjustment
                 if (!selectedVoice) {
                     selectedVoice = voices.find(voice => 
                         voice.lang === 'ja-JP' || voice.lang === 'ja'
@@ -1203,15 +1214,18 @@
             }
             
             utterance.lang = 'ja-JP';
-            utterance.rate = 1.2;
+            // Rate will be set based on gender below
             
-            // Adjust pitch based on gender - natural sounding voices
+            // Adjust pitch and rate based on gender for more natural voices
             if (currentCard.gender === 'F') {
                 utterance.pitch = 1.1; // Slightly higher pitch for female
+                utterance.rate = 1.2; // Normal rate
             } else if (currentCard.gender === 'M') {
-                utterance.pitch = 0.8; // Slightly lower pitch for male (natural)
+                utterance.pitch = 0.75; // Lower pitch for male
+                utterance.rate = 1.0; // Slightly slower rate for deeper sound
             } else {
                 utterance.pitch = 1.0; // Default pitch
+                utterance.rate = 1.2; // Default rate
             }
             
             // Visual feedback for speaking
