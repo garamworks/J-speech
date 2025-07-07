@@ -583,17 +583,26 @@
         // Parse episode data from flashcards
         function parseEpisodes() {
             episodeData = {};
-            flashcards.forEach(card => {
+            flashcards.forEach((card, index) => {
+                // Handle both old format (01-001) and new format (sequence numbers)
                 const episodeMatch = card.romanji.match(/^(\d+)-(\d+)$/);
+                let episodeNum, sentenceNum;
+                
                 if (episodeMatch) {
-                    const episodeNum = parseInt(episodeMatch[1]);
-                    const sentenceNum = parseInt(episodeMatch[2]);
-                    
-                    if (!episodeData[episodeNum]) {
-                        episodeData[episodeNum] = [];
-                    }
-                    episodeData[episodeNum].push({...card, sentenceNum});
+                    // Old format: 01-001
+                    episodeNum = parseInt(episodeMatch[1]);
+                    sentenceNum = parseInt(episodeMatch[2]);
+                } else {
+                    // New format: sequence numbers, group into episodes of 20 cards each
+                    const sequenceNum = parseInt(card.romanji) || (index + 1);
+                    episodeNum = Math.floor((sequenceNum - 1) / 20) + 1;
+                    sentenceNum = ((sequenceNum - 1) % 20) + 1;
                 }
+                
+                if (!episodeData[episodeNum]) {
+                    episodeData[episodeNum] = [];
+                }
+                episodeData[episodeNum].push({...card, sentenceNum});
             });
             
             // Sort sentences within each episode
