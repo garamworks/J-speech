@@ -1506,7 +1506,7 @@
                 html += '<div class="expression-applications">';
                 applications.forEach(app => {
                     html += `
-                        <div class="expression-application-item" onclick="speakJapanese('${app.japanese}')">
+                        <div class="expression-application-item" onclick="speakJapaneseText('${app.japanese}')">
                             <div class="expression-application-japanese">${app.japanese}</div>
                             <div class="expression-application-korean">${app.korean}</div>
                         </div>
@@ -1518,7 +1518,7 @@
             modalBody.innerHTML = html;
         }
 
-        function speakJapanese(text) {
+        function speakJapaneseText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); // Cancel any ongoing speech
                 const utterance = new SpeechSynthesisUtterance(text);
