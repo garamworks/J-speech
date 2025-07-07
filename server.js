@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getFlashcardsFromNotion } = require('./notion.js');
+const { getFlashcardsFromNotion, getNotionDatabases } = require('./notion.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +19,32 @@ app.get('/api/flashcards', async (req, res) => {
             error: 'Failed to fetch flashcards from Notion',
             message: error.message 
         });
+    }
+});
+
+// API endpoint to get database info
+app.get('/api/database-info', async (req, res) => {
+    try {
+        const databases = await getNotionDatabases();
+        // Find the main database being used for flashcards
+        const mainDb = databases.find(db => {
+            const title = db.title && Array.isArray(db.title) && db.title.length > 0 
+                ? db.title[0]?.plain_text || ''
+                : '';
+            return title.includes('일본어') || title.includes('표현') || title.includes('대화');
+        });
+        
+        if (mainDb) {
+            const title = mainDb.title && Array.isArray(mainDb.title) && mainDb.title.length > 0 
+                ? mainDb.title[0]?.plain_text || 'Untitled Database'
+                : 'Untitled Database';
+            res.json({ title: title, id: mainDb.id });
+        } else {
+            res.json({ title: '일본어 표현카드', id: null });
+        }
+    } catch (error) {
+        console.error('Error fetching database info:', error);
+        res.json({ title: '일본어 표현카드', id: null });
     }
 });
 

@@ -835,21 +835,20 @@
         }
         
         // Update database connection status based on card data
-        function updateDBStatus(card) {
-            // Check if card has related content or expressions
-            const hasRelatedContent = card.expressions || card.relatedContent || card.speaker;
-            
-            if (hasRelatedContent && card.speaker) {
-                // Show database status with speaker name or related content
-                const statusText = `일본어 표현카드 (${card.speaker})`;
+        async function updateDBStatus(card) {
+            try {
+                const response = await fetch('/api/database-info');
+                const dbInfo = await response.json();
+                const statusText = dbInfo.title;
                 
                 if (dbStatusTextFront) dbStatusTextFront.textContent = statusText;
                 if (dbStatusTextBack) dbStatusTextBack.textContent = statusText;
                 
                 if (dbStatusFront) dbStatusFront.style.display = 'flex';
                 if (dbStatusBack) dbStatusBack.style.display = 'flex';
-            } else {
-                // Hide database status if no related content
+            } catch (error) {
+                console.error('Error fetching database info:', error);
+                // Hide status if error
                 if (dbStatusFront) dbStatusFront.style.display = 'none';
                 if (dbStatusBack) dbStatusBack.style.display = 'none';
             }
