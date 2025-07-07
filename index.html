@@ -565,7 +565,22 @@
         }
 
         .word-speaker-btn {
-            display: none;
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: #48bb78;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
         .speaker-btn:hover {
@@ -1466,14 +1481,28 @@
             e.stopPropagation(); // Prevent card flip when clicking speaker
             speakJapanese();
         });
-        wordSpeakerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            openWordModal();
-        });
-        wordSpeakerBtnBack.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            openWordModal();
-        });
+        console.log('wordSpeakerBtn element:', wordSpeakerBtn);
+        console.log('wordSpeakerBtnBack element:', wordSpeakerBtnBack);
+        
+        if (wordSpeakerBtn) {
+            wordSpeakerBtn.addEventListener('click', (e) => {
+                console.log('Word speaker button (front) clicked!');
+                e.stopPropagation(); // Prevent card flip when clicking speaker
+                openWordModal();
+            });
+        } else {
+            console.error('wordSpeakerBtn element not found!');
+        }
+        
+        if (wordSpeakerBtnBack) {
+            wordSpeakerBtnBack.addEventListener('click', (e) => {
+                console.log('Word speaker button (back) clicked!');
+                e.stopPropagation(); // Prevent card flip when clicking speaker
+                openWordModal();
+            });
+        } else {
+            console.error('wordSpeakerBtnBack element not found!');
+        }
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
         
