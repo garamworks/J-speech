@@ -1026,6 +1026,10 @@
             currentEpisodeCards = episodeData[sequenceName] || [];
             currentCardIndex = 0;
             
+            // Clear previous preloaded audios when switching sequences
+            preloadedAudios = {};
+            console.log('Cleared preloaded audios for new sequence:', sequenceName);
+            
             // Update title to show volume and sequence
             const firstCard = currentEpisodeCards[0];
             const volume = firstCard?.volume || '26권';
@@ -1397,6 +1401,9 @@
             const currentCard = currentEpisodeCards[currentCardIndex];
             console.log('Current card:', currentCard);
             console.log('Current card audioUrl:', currentCard.audioUrl);
+            console.log('Current episode:', currentEpisode);
+            console.log('Current card index:', currentCardIndex);
+            console.log('Current card Japanese text:', currentCard.japanese);
             
             if (!currentCard) {
                 console.error('Current card is null or undefined');
@@ -1408,8 +1415,11 @@
                 console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
                 
                 // Use preloaded audio if available
-                const preloadedKey = `${currentCardIndex}`;
+                const preloadedKey = `${currentEpisode}_${currentCardIndex}`;
+                console.log('Looking for preloaded audio with key:', preloadedKey);
+                console.log('Available preloaded keys:', Object.keys(preloadedAudios));
                 const audio = preloadedAudios[preloadedKey] || new Audio(currentCard.audioUrl);
+                console.log('Audio source URL:', audio.src);
                 window.currentAudio = audio;
                 
                 // Visual feedback for playing
@@ -1431,7 +1441,10 @@
                 
                 // Start loading and play when ready (skip load if preloaded)
                 if (!preloadedAudios[preloadedKey]) {
+                    console.log('Audio not preloaded, loading now');
                     audio.load();
+                } else {
+                    console.log('Using preloaded audio');
                 }
                 audio.play().catch(error => {
                     console.error('Error playing audio:', error);
@@ -1455,9 +1468,9 @@
             // Preload current card audio
             const currentCard = currentEpisodeCards[currentCardIndex];
             if (currentCard && currentCard.audioUrl) {
-                const key = `${currentCardIndex}`;
+                const key = `${currentEpisode}_${currentCardIndex}`;
                 if (!preloadedAudios[key]) {
-                    console.log('Preloading audio for current card:', currentCard.japanese);
+                    console.log('Preloading audio for current card:', currentCard.japanese, 'Key:', key);
                     preloadedAudios[key] = new Audio(currentCard.audioUrl);
                     preloadedAudios[key].preload = 'auto';
                     preloadedAudios[key].load();
@@ -1468,9 +1481,9 @@
             if (currentCardIndex + 1 < currentEpisodeCards.length) {
                 const nextCard = currentEpisodeCards[currentCardIndex + 1];
                 if (nextCard && nextCard.audioUrl) {
-                    const key = `${currentCardIndex + 1}`;
+                    const key = `${currentEpisode}_${currentCardIndex + 1}`;
                     if (!preloadedAudios[key]) {
-                        console.log('Preloading audio for next card:', nextCard.japanese);
+                        console.log('Preloading audio for next card:', nextCard.japanese, 'Key:', key);
                         preloadedAudios[key] = new Audio(nextCard.audioUrl);
                         preloadedAudios[key].preload = 'auto';
                         preloadedAudios[key].load();
