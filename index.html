@@ -1269,13 +1269,26 @@
                 try {
                     console.log('Processing expression cards:', card.expressionCardIds);
                     
-                    // Fetch all expression cards
-                    const expressionPromises = card.expressionCardIds.map(id => 
-                        fetch(`/api/expression-card/${id}`).then(res => res.json())
-                    );
+                    // Check if expression cards are already preloaded
+                    const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+                    const preloadedData = preloadedExpressionCards[currentCardKey];
                     
-                    const expressionCards = await Promise.all(expressionPromises);
-                    console.log('Fetched expression cards:', expressionCards);
+                    let expressionCards;
+                    if (preloadedData && Array.isArray(preloadedData)) {
+                        console.log('Using preloaded expression cards for status display');
+                        expressionCards = preloadedData;
+                    } else {
+                        // Fetch all expression cards immediately if not preloaded
+                        const expressionPromises = card.expressionCardIds.map(id => 
+                            fetch(`/api/expression-card/${id}`).then(res => res.json())
+                        );
+                        
+                        expressionCards = await Promise.all(expressionPromises);
+                        console.log('Fetched expression cards immediately:', expressionCards);
+                        
+                        // Cache the results for future use
+                        preloadedExpressionCards[currentCardKey] = expressionCards;
+                    }
                     
                     expressionCards.forEach((expressionCard, index) => {
                         if (expressionCard && expressionCard.title) {
@@ -1559,10 +1572,28 @@
             const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
             
             if (currentCard) {
-                // Preload expression cards for current card
-                if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                // Preload expression cards for current card (use expressionCardIds if available)
+                if (currentCard.expressionCardIds && currentCard.expressionCardIds.length > 0) {
                     if (!preloadedExpressionCards[currentCardKey]) {
                         console.log('Preloading expression cards for current card:', currentCard.japanese);
+                        preloadedExpressionCards[currentCardKey] = 'loading';
+                        
+                        // Fetch expression cards for current card
+                        Promise.all(currentCard.expressionCardIds.map(id => 
+                            fetch(`/api/expression-card/${id}`)
+                                .then(response => response.json())
+                                .catch(error => {
+                                    console.error('Error preloading expression card:', error);
+                                    return null;
+                                })
+                        )).then(results => {
+                            preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                            console.log('Preloaded expression cards for current card:', preloadedExpressionCards[currentCardKey].length);
+                        });
+                    }
+                } else if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[currentCardKey]) {
+                        console.log('Preloading expression cards for current card (fallback):', currentCard.japanese);
                         preloadedExpressionCards[currentCardKey] = 'loading';
                         
                         // Fetch expression cards for current card
@@ -1575,7 +1606,7 @@
                                 })
                         )).then(results => {
                             preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
-                            console.log('Preloaded expression cards for current card:', preloadedExpressionCards[currentCardKey].length);
+                            console.log('Preloaded expression cards for current card (fallback):', preloadedExpressionCards[currentCardKey].length);
                         });
                     }
                 }
@@ -1605,10 +1636,28 @@
                 const nextCard = currentEpisodeCards[currentCardIndex + 1];
                 const nextCardKey = `${currentEpisode}_${currentCardIndex + 1}`;
                 
-                // Preload expression cards for next card
-                if (nextCard.expressionCards && nextCard.expressionCards.length > 0) {
+                // Preload expression cards for next card (use expressionCardIds if available)
+                if (nextCard.expressionCardIds && nextCard.expressionCardIds.length > 0) {
                     if (!preloadedExpressionCards[nextCardKey]) {
                         console.log('Preloading expression cards for next card:', nextCard.japanese);
+                        preloadedExpressionCards[nextCardKey] = 'loading';
+                        
+                        // Fetch expression cards for next card
+                        Promise.all(nextCard.expressionCardIds.map(id => 
+                            fetch(`/api/expression-card/${id}`)
+                                .then(response => response.json())
+                                .catch(error => {
+                                    console.error('Error preloading expression card:', error);
+                                    return null;
+                                })
+                        )).then(results => {
+                            preloadedExpressionCards[nextCardKey] = results.filter(r => r !== null);
+                            console.log('Preloaded expression cards for next card:', preloadedExpressionCards[nextCardKey].length);
+                        });
+                    }
+                } else if (nextCard.expressionCards && nextCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[nextCardKey]) {
+                        console.log('Preloading expression cards for next card (fallback):', nextCard.japanese);
                         preloadedExpressionCards[nextCardKey] = 'loading';
                         
                         // Fetch expression cards for next card
@@ -1621,7 +1670,7 @@
                                 })
                         )).then(results => {
                             preloadedExpressionCards[nextCardKey] = results.filter(r => r !== null);
-                            console.log('Preloaded expression cards for next card:', preloadedExpressionCards[nextCardKey].length);
+                            console.log('Preloaded expression cards for next card (fallback):', preloadedExpressionCards[nextCardKey].length);
                         });
                     }
                 }
@@ -1655,10 +1704,10 @@
             const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
             console.log('Aggressively preloading current card data:', currentCard.japanese);
             
-            // Load expression cards immediately
-            if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
-                console.log('Loading expression cards immediately:', currentCard.expressionCards.length);
-                Promise.all(currentCard.expressionCards.map(id => 
+            // Load expression cards immediately (use expressionCardIds if available)
+            if (currentCard.expressionCardIds && currentCard.expressionCardIds.length > 0) {
+                console.log('Loading expression cards immediately:', currentCard.expressionCardIds.length);
+                Promise.all(currentCard.expressionCardIds.map(id => 
                     fetch(`/api/expression-card/${id}`)
                         .then(response => response.json())
                         .catch(error => {
@@ -1668,6 +1717,19 @@
                 )).then(results => {
                     preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
                     console.log('Immediately loaded expression cards:', preloadedExpressionCards[currentCardKey].length);
+                });
+            } else if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                console.log('Loading expression cards immediately (fallback):', currentCard.expressionCards.length);
+                Promise.all(currentCard.expressionCards.map(id => 
+                    fetch(`/api/expression-card/${id}`)
+                        .then(response => response.json())
+                        .catch(error => {
+                            console.error('Error loading expression card:', error);
+                            return null;
+                        })
+                )).then(results => {
+                    preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                    console.log('Immediately loaded expression cards (fallback):', preloadedExpressionCards[currentCardKey].length);
                 });
             }
             
