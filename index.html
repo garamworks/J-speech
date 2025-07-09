@@ -989,6 +989,7 @@
         let currentEpisode = 1;
         let episodeData = {};
         let currentEpisodeCards = [];
+        let preloadedAudios = {}; // Store preloaded audio elements
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
@@ -1047,6 +1048,9 @@
                 totalCardsSpan.textContent = currentEpisodeCards.length;
                 updateNavigationButtons();
                 updateEpisodeButtons();
+                
+                // Preload audio for current and next cards
+                preloadAudio();
             }
         }
 
@@ -1403,8 +1407,9 @@
             if (currentCard.audioUrl) {
                 console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
                 
-                // Create audio element
-                const audio = new Audio(currentCard.audioUrl);
+                // Use preloaded audio if available
+                const preloadedKey = `${currentCardIndex}`;
+                const audio = preloadedAudios[preloadedKey] || new Audio(currentCard.audioUrl);
                 window.currentAudio = audio;
                 
                 // Visual feedback for playing
@@ -1424,8 +1429,10 @@
                     console.error('Audio Error:', event);
                 };
                 
-                // Start loading and play when ready
-                audio.load();
+                // Start loading and play when ready (skip load if preloaded)
+                if (!preloadedAudios[preloadedKey]) {
+                    audio.load();
+                }
                 audio.play().catch(error => {
                     console.error('Error playing audio:', error);
                     speakerBtn.style.background = '#4299e1';
@@ -1439,6 +1446,37 @@
             // No audio URL found - no fallback
             console.log('No audio URL found - no audio will be played');
             console.log('=== speakJapanese function ended (no audio) ===');
+        }
+
+        // Preload audio for current and next cards
+        function preloadAudio() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) return;
+            
+            // Preload current card audio
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (currentCard && currentCard.audioUrl) {
+                const key = `${currentCardIndex}`;
+                if (!preloadedAudios[key]) {
+                    console.log('Preloading audio for current card:', currentCard.japanese);
+                    preloadedAudios[key] = new Audio(currentCard.audioUrl);
+                    preloadedAudios[key].preload = 'auto';
+                    preloadedAudios[key].load();
+                }
+            }
+            
+            // Preload next card audio if it exists
+            if (currentCardIndex + 1 < currentEpisodeCards.length) {
+                const nextCard = currentEpisodeCards[currentCardIndex + 1];
+                if (nextCard && nextCard.audioUrl) {
+                    const key = `${currentCardIndex + 1}`;
+                    if (!preloadedAudios[key]) {
+                        console.log('Preloading audio for next card:', nextCard.japanese);
+                        preloadedAudios[key] = new Audio(nextCard.audioUrl);
+                        preloadedAudios[key].preload = 'auto';
+                        preloadedAudios[key].load();
+                    }
+                }
+            }
         }
 
         // Fallback TTS function
@@ -1562,6 +1600,9 @@
                 currentCardIndex--;
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+                
+                // Preload audio after navigation
+                preloadAudio();
             } else {
                 // At first card of episode, try to go to previous episode
                 const sequences = Object.keys(episodeData).sort();
@@ -1585,6 +1626,9 @@
                 currentCardIndex++;
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+                
+                // Preload audio after navigation
+                preloadAudio();
             } else {
                 // At last card of episode, try to go to next episode
                 const sequences = Object.keys(episodeData).sort();
