@@ -1177,11 +1177,61 @@
             
             // Set character avatar for both front and back - use image if available, otherwise emoji based on sentence mood
             if (card.characterImage) {
-                characterAvatar.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
-                characterAvatarBack.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
+                console.log('Character image URL:', card.characterImage);
+                
+                // Create image elements with error handling
+                const frontImg = document.createElement('img');
+                frontImg.src = card.characterImage;
+                frontImg.alt = card.speaker || 'Character';
+                frontImg.style.width = '100%';
+                frontImg.style.height = '100%';
+                frontImg.style.objectFit = 'cover';
+                frontImg.style.borderRadius = '50%';
+                
+                const backImg = document.createElement('img');
+                backImg.src = card.characterImage;
+                backImg.alt = card.speaker || 'Character';
+                backImg.style.width = '100%';
+                backImg.style.height = '100%';
+                backImg.style.objectFit = 'cover';
+                backImg.style.borderRadius = '50%';
+                
+                // Add error handling - fallback to emoji if image fails to load
+                const fallbackEmoji = getEmojiForSentence(card.japanese, index);
+                
+                frontImg.onload = () => {
+                    console.log('Character image loaded successfully');
+                };
+                
+                frontImg.onerror = () => {
+                    console.log('Failed to load character image, using emoji fallback');
+                    characterAvatar.textContent = fallbackEmoji;
+                    characterAvatar.innerHTML = '';
+                };
+                
+                backImg.onload = () => {
+                    console.log('Character image loaded successfully (back)');
+                };
+                
+                backImg.onerror = () => {
+                    console.log('Failed to load character image, using emoji fallback (back)');
+                    characterAvatarBack.textContent = fallbackEmoji;
+                    characterAvatarBack.innerHTML = '';
+                };
+                
+                // Clear previous content and add image
+                characterAvatar.innerHTML = '';
+                characterAvatar.textContent = '';
+                characterAvatar.appendChild(frontImg);
+                
+                characterAvatarBack.innerHTML = '';
+                characterAvatarBack.textContent = '';
+                characterAvatarBack.appendChild(backImg);
             } else {
                 const emoji = getEmojiForSentence(card.japanese, index);
+                characterAvatar.innerHTML = '';
                 characterAvatar.textContent = emoji;
+                characterAvatarBack.innerHTML = '';
                 characterAvatarBack.textContent = emoji;
             }
             
