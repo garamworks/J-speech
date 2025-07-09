@@ -990,6 +990,8 @@
         let episodeData = {};
         let currentEpisodeCards = [];
         let preloadedAudios = {}; // Store preloaded audio elements
+        let preloadedExpressionCards = {}; // Store preloaded expression card data
+        let preloadedN1WordData = {}; // Store preloaded N1 word data
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
@@ -1026,9 +1028,11 @@
             currentEpisodeCards = episodeData[sequenceName] || [];
             currentCardIndex = 0;
             
-            // Clear previous preloaded audios when switching sequences
+            // Clear previous preloaded data when switching sequences
             preloadedAudios = {};
-            console.log('Cleared preloaded audios for new sequence:', sequenceName);
+            preloadedExpressionCards = {};
+            preloadedN1WordData = {};
+            console.log('Cleared preloaded data for new sequence:', sequenceName);
             
             // Update title to show volume and sequence
             const firstCard = currentEpisodeCards[0];
@@ -1461,7 +1465,7 @@
             console.log('=== speakJapanese function ended (no audio) ===');
         }
 
-        // Preload audio for current and next cards
+        // Preload audio and data for current and next cards
         function preloadAudio() {
             if (!currentEpisodeCards || currentEpisodeCards.length === 0) return;
             
@@ -1487,6 +1491,57 @@
                         preloadedAudios[key] = new Audio(nextCard.audioUrl);
                         preloadedAudios[key].preload = 'auto';
                         preloadedAudios[key].load();
+                    }
+                }
+            }
+            
+            // Preload expression card data for next card
+            preloadNextCardData();
+        }
+        
+        // Preload expression cards and N1 word data for next card
+        function preloadNextCardData() {
+            if (currentCardIndex + 1 < currentEpisodeCards.length) {
+                const nextCard = currentEpisodeCards[currentCardIndex + 1];
+                const nextCardKey = `${currentEpisode}_${currentCardIndex + 1}`;
+                
+                // Preload expression cards for next card
+                if (nextCard.expressionCards && nextCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[nextCardKey]) {
+                        console.log('Preloading expression cards for next card:', nextCard.japanese);
+                        preloadedExpressionCards[nextCardKey] = 'loading';
+                        
+                        // Fetch expression cards for next card
+                        Promise.all(nextCard.expressionCards.map(id => 
+                            fetch(`/api/expression-card/${id}`)
+                                .then(response => response.json())
+                                .catch(error => {
+                                    console.error('Error preloading expression card:', error);
+                                    return null;
+                                })
+                        )).then(results => {
+                            preloadedExpressionCards[nextCardKey] = results.filter(r => r !== null);
+                            console.log('Preloaded expression cards for next card:', preloadedExpressionCards[nextCardKey].length);
+                        });
+                    }
+                }
+                
+                // Preload N1 word data for next card
+                if (nextCard.n1VocabularyId) {
+                    if (!preloadedN1WordData[nextCardKey]) {
+                        console.log('Preloading N1 word data for next card:', nextCard.japanese);
+                        preloadedN1WordData[nextCardKey] = 'loading';
+                        
+                        fetch(`/api/n1-vocabulary/${nextCard.n1VocabularyId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                preloadedN1WordData[nextCardKey] = data;
+                                console.log('Preloaded N1 word data for next card:', data?.word);
+                            })
+                            .catch(error => {
+                                console.error('Error preloading N1 word data:', error);
+                                preloadedN1WordData[nextCardKey] = null;
+                            });
                     }
                 }
             }
@@ -1789,7 +1844,20 @@
             // Show modal
             modal.style.display = 'flex';
             
-            // Show loading
+            // Check if expression card data is preloaded
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            const preloadedData = preloadedExpressionCards[currentCardKey];
+            
+            if (preloadedData && Array.isArray(preloadedData)) {
+                console.log('Using preloaded expression card data');
+                const expressionCard = preloadedData.find(card => card.id === expressionCardId);
+                if (expressionCard) {
+                    renderExpressionCard(expressionCard);
+                    return;
+                }
+            }
+            
+            // Show loading if not preloaded
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
             // Fetch expression card data
@@ -1822,11 +1890,23 @@
             console.log('modalBody element:', modalBody);
             
             modal.style.display = 'flex';
-            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
             // Get current card data
             const currentCard = currentEpisodeCards[currentCardIndex];
             console.log('currentCard:', currentCard);
+            
+            // Check if N1 word data is preloaded
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            const preloadedData = preloadedN1WordData[currentCardKey];
+            
+            if (preloadedData && preloadedData !== 'loading') {
+                console.log('Using preloaded N1 word data');
+                renderWordModal(preloadedData);
+                return;
+            }
+            
+            // Show loading if not preloaded
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             console.log('currentCard.speaker:', currentCard?.speaker);
             
             if (!currentCard) {
