@@ -212,9 +212,27 @@ async function getFlashcardsFromNotion() {
                 'default': '🎭'
             };
 
-            // Get audio file URL from files property
-            const audioFiles = properties['음성파일']?.files || [];
-            const audioUrl = audioFiles.length > 0 ? audioFiles[0].file?.url || audioFiles[0].external?.url : null;
+            // Get audio file URL from files property - try multiple possible field names
+            let audioUrl = null;
+            let audioFiles = [];
+            
+            // Try different possible field names for audio files
+            const possibleAudioFields = ['음성파일', '음성', 'audio', 'Audio', 'MP3', 'sound', 'voice'];
+            
+            for (const fieldName of possibleAudioFields) {
+                audioFiles = properties[fieldName]?.files || [];
+                if (audioFiles.length > 0) {
+                    audioUrl = audioFiles[0].file?.url || audioFiles[0].external?.url;
+                    console.log(`Audio file found in field '${fieldName}' for:`, japanese);
+                    console.log('Audio URL:', audioUrl);
+                    break;
+                }
+            }
+            
+            // If no audio found, log available property names for debugging
+            if (!audioUrl && japanese.includes('何があったんです')) {
+                console.log('Available properties for card:', Object.keys(properties));
+            }
 
             return {
                 japanese: japanese || "대사 없음",
