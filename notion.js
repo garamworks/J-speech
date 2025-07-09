@@ -212,12 +212,17 @@ async function getFlashcardsFromNotion() {
                 'default': '🎭'
             };
 
+            // Get audio file URL from files property
+            const audioFiles = properties['음성파일']?.files || [];
+            const audioUrl = audioFiles.length > 0 ? audioFiles[0].file?.url || audioFiles[0].external?.url : null;
+
             return {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
                 character: characterInfo?.emoji || characterEmojis.default,
                 characterImage: characterInfo?.imageUrl || null,
                 gender: characterInfo?.gender || null,
+                audioUrl: audioUrl,
                 romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
                 speaker: characterName || n2Word || "학습자료",
                 episode: episode,

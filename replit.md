@@ -80,6 +80,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 07, 2025. Added mobile debug console and enhanced mobile TTS compatibility
 - July 07, 2025. Implemented N1 vocabulary word modals with clickable words and image display
 - July 07, 2025. Added PALM volume navigation header with arrow buttons and improved layout structure
+- July 09, 2025. Implemented MP3 audio playback from Notion database with TTS fallback
+- July 09, 2025. Fixed multiple expression cards display issue with proper styling and click handlers
 
 ## User Preferences
 

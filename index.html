@@ -1366,9 +1366,15 @@
         function speakJapanese() {
             console.log('=== speakJapanese function started ===');
             
+            // Stop any ongoing audio
+            if (window.currentAudio) {
+                window.currentAudio.pause();
+                window.currentAudio.currentTime = 0;
+            }
+            
             // Cancel any ongoing speech
             speechSynthesis.cancel();
-            console.log('Speech synthesis cancelled');
+            console.log('Previous audio/speech cancelled');
             
             console.log('currentEpisodeCards:', currentEpisodeCards);
             console.log('currentCardIndex:', currentCardIndex);
@@ -1392,14 +1398,67 @@
                 return;
             }
             
+            // Try to play MP3 file from Notion first
+            if (currentCard.audioUrl) {
+                console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
+                
+                // Create audio element
+                const audio = new Audio(currentCard.audioUrl);
+                window.currentAudio = audio;
+                
+                // Visual feedback for playing
+                speakerBtn.style.background = '#2b6cb0';
+                speakerBtnBack.style.background = '#2b6cb0';
+                
+                audio.onended = () => {
+                    speakerBtn.style.background = '#4299e1';
+                    speakerBtnBack.style.background = '#4299e1';
+                    console.log('Audio playback ended');
+                };
+                
+                audio.onerror = (event) => {
+                    speakerBtn.style.background = '#4299e1';
+                    speakerBtnBack.style.background = '#4299e1';
+                    console.warn('Audio playback error - falling back to TTS');
+                    console.error('Audio Error:', event);
+                    
+                    // Fallback to TTS
+                    speakJapaneseWithTTS();
+                };
+                
+                // Start loading and play when ready
+                audio.load();
+                audio.play().catch(error => {
+                    console.error('Error playing audio:', error);
+                    speakerBtn.style.background = '#4299e1';
+                    speakerBtnBack.style.background = '#4299e1';
+                    // Fallback to TTS
+                    speakJapaneseWithTTS();
+                });
+                
+                console.log('=== speakJapanese function ended (MP3 playback) ===');
+                return;
+            }
+            
+            // Fallback to TTS if no audio URL
+            console.log('No audio URL found, falling back to TTS');
+            speakJapaneseWithTTS();
+        }
+
+        // Fallback TTS function
+        function speakJapaneseWithTTS() {
+            console.log('=== speakJapaneseWithTTS function started ===');
+            
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            
             if (!currentCard.japanese) {
                 console.error('No Japanese text in current card');
                 return;
             }
             
-            console.log('Speaking Japanese text:', currentCard.japanese);
+            console.log('Speaking Japanese text with TTS:', currentCard.japanese);
             const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
-            console.log('Utterance created');
+            console.log('TTS Utterance created');
             
             // Wait for voices to load on mobile browsers
             const voices = speechSynthesis.getVoices();
@@ -1410,67 +1469,21 @@
                 // Retry after voices are loaded
                 speechSynthesis.addEventListener('voiceschanged', () => {
                     console.log('Voices changed event triggered');
-                    speakJapanese();
+                    speakJapaneseWithTTS();
                 }, { once: true });
                 return;
             }
             
-            // Try to use Japanese voice based on character gender
-            let selectedVoice = null;
-            
-            if (currentCard.gender === 'F') {
-                // Find female Japanese voice - prioritize natural female voices
-                selectedVoice = voices.find(voice => 
-                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                    (voice.name.includes('Female') || voice.name.includes('female') || 
-                     voice.name.includes('Woman') || voice.name.includes('woman') ||
-                     voice.name.includes('Kyoko') || voice.name.includes('Otoya') ||
-                     voice.name.includes('女'))
-                ) || voices.find(voice => 
-                    (voice.lang === 'ja-JP' || voice.lang === 'ja') && 
-                    !voice.name.toLowerCase().includes('male') && !voice.name.toLowerCase().includes('man')
-                );
-            } else if (currentCard.gender === 'M') {
-                // For male voices, try different approach - look for specific male voice names
-                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro'];
-                
-                selectedVoice = voices.find(voice => 
-                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                    maleVoiceNames.some(name => voice.name.includes(name))
-                );
-                
-                // If no specific male name found, try broader search
-                if (!selectedVoice) {
-                    selectedVoice = voices.find(voice => 
-                        (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                        (voice.name.includes('Male') || voice.name.includes('male') || 
-                         voice.name.includes('Man') || voice.name.includes('man') ||
-                         voice.name.includes('男'))
-                    );
-                }
-                
-                // Last resort - use any Japanese voice for male with pitch adjustment
-                if (!selectedVoice) {
-                    selectedVoice = voices.find(voice => 
-                        voice.lang === 'ja-JP' || voice.lang === 'ja'
-                    );
-                }
-            }
-            
-            // Fallback to any Japanese voice
-            if (!selectedVoice) {
-                selectedVoice = voices.find(voice => 
-                    voice.lang.startsWith('ja') || voice.name.includes('Japanese')
-                );
-            }
+            // Find Japanese voice
+            const selectedVoice = voices.find(voice => 
+                voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')
+            );
             
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
             
             utterance.lang = 'ja-JP';
-            
-            // Use default pitch and rate settings (no gender-based adjustments)
             
             // Visual feedback for speaking
             speakerBtn.style.background = '#2b6cb0';
@@ -1491,10 +1504,10 @@
                 console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
             };
             
-            console.log('About to speak with utterance:', utterance);
+            console.log('About to speak with TTS utterance:', utterance);
             speechSynthesis.speak(utterance);
             console.log('speechSynthesis.speak() called');
-            console.log('=== speakJapanese function ended ===');
+            console.log('=== speakJapaneseWithTTS function ended ===');
         }
 
         // Text-to-speech for N2 words
