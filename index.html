@@ -1420,11 +1420,8 @@
                 audio.onerror = (event) => {
                     speakerBtn.style.background = '#4299e1';
                     speakerBtnBack.style.background = '#4299e1';
-                    console.warn('Audio playback error - falling back to TTS');
+                    console.warn('Audio playback error - no fallback');
                     console.error('Audio Error:', event);
-                    
-                    // Fallback to TTS
-                    speakJapaneseWithTTS();
                 };
                 
                 // Start loading and play when ready
@@ -1433,17 +1430,15 @@
                     console.error('Error playing audio:', error);
                     speakerBtn.style.background = '#4299e1';
                     speakerBtnBack.style.background = '#4299e1';
-                    // Fallback to TTS
-                    speakJapaneseWithTTS();
                 });
                 
                 console.log('=== speakJapanese function ended (MP3 playback) ===');
                 return;
             }
             
-            // Fallback to TTS if no audio URL
-            console.log('No audio URL found, falling back to TTS');
-            speakJapaneseWithTTS();
+            // No audio URL found - no fallback
+            console.log('No audio URL found - no audio will be played');
+            console.log('=== speakJapanese function ended (no audio) ===');
         }
 
         // Fallback TTS function

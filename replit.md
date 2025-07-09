@@ -86,7 +86,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-TTS Settings: 
-- Simple TTS: Default Japanese voice with no pitch/rate adjustments
-- Female characters (F): Slightly higher pitch (1.1), female voice preference  
-- Speech rate: 1.2x speed for faster playback
+Audio Settings: 
+- Only play MP3 files from Notion database
+- No browser TTS fallback when audio files are unavailable
+- Visual feedback for audio playback status
