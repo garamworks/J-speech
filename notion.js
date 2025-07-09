@@ -217,7 +217,7 @@ async function getFlashcardsFromNotion() {
             let audioFiles = [];
             
             // Try different possible field names for audio files
-            const possibleAudioFields = ['음성파일', '음성', 'audio', 'Audio', 'MP3', 'sound', 'voice'];
+            const possibleAudioFields = ['mp3file', '음성파일', '음성', 'audio', 'Audio', 'MP3', 'sound', 'voice'];
             
             for (const fieldName of possibleAudioFields) {
                 audioFiles = properties[fieldName]?.files || [];
