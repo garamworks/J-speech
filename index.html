@@ -1059,6 +1059,9 @@
                 
                 // Preload audio for current and next cards
                 preloadAudio();
+                
+                // Aggressively preload current card data immediately
+                preloadCurrentCardDataImmediately();
             }
         }
 
@@ -1499,8 +1502,55 @@
             preloadNextCardData();
         }
         
-        // Preload expression cards and N1 word data for next card
+        // Preload expression cards and N1 word data for current and next cards
         function preloadNextCardData() {
+            // Preload current card data first
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            
+            if (currentCard) {
+                // Preload expression cards for current card
+                if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[currentCardKey]) {
+                        console.log('Preloading expression cards for current card:', currentCard.japanese);
+                        preloadedExpressionCards[currentCardKey] = 'loading';
+                        
+                        // Fetch expression cards for current card
+                        Promise.all(currentCard.expressionCards.map(id => 
+                            fetch(`/api/expression-card/${id}`)
+                                .then(response => response.json())
+                                .catch(error => {
+                                    console.error('Error preloading expression card:', error);
+                                    return null;
+                                })
+                        )).then(results => {
+                            preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                            console.log('Preloaded expression cards for current card:', preloadedExpressionCards[currentCardKey].length);
+                        });
+                    }
+                }
+                
+                // Preload N1 word data for current card
+                if (currentCard.n1VocabularyId) {
+                    if (!preloadedN1WordData[currentCardKey]) {
+                        console.log('Preloading N1 word data for current card:', currentCard.japanese);
+                        preloadedN1WordData[currentCardKey] = 'loading';
+                        
+                        fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                preloadedN1WordData[currentCardKey] = data;
+                                console.log('Preloaded N1 word data for current card:', data?.word);
+                            })
+                            .catch(error => {
+                                console.error('Error preloading N1 word data:', error);
+                                preloadedN1WordData[currentCardKey] = null;
+                            });
+                    }
+                }
+            }
+            
+            // Then preload next card data
             if (currentCardIndex + 1 < currentEpisodeCards.length) {
                 const nextCard = currentEpisodeCards[currentCardIndex + 1];
                 const nextCardKey = `${currentEpisode}_${currentCardIndex + 1}`;
@@ -1544,6 +1594,46 @@
                             });
                     }
                 }
+            }
+        }
+        
+        // Aggressively preload current card data immediately when card is loaded
+        function preloadCurrentCardDataImmediately() {
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (!currentCard) return;
+            
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            console.log('Aggressively preloading current card data:', currentCard.japanese);
+            
+            // Load expression cards immediately
+            if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                console.log('Loading expression cards immediately:', currentCard.expressionCards.length);
+                Promise.all(currentCard.expressionCards.map(id => 
+                    fetch(`/api/expression-card/${id}`)
+                        .then(response => response.json())
+                        .catch(error => {
+                            console.error('Error loading expression card:', error);
+                            return null;
+                        })
+                )).then(results => {
+                    preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                    console.log('Immediately loaded expression cards:', preloadedExpressionCards[currentCardKey].length);
+                });
+            }
+            
+            // Load N1 word data immediately
+            if (currentCard.n1VocabularyId) {
+                console.log('Loading N1 word data immediately:', currentCard.n1VocabularyId);
+                fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        preloadedN1WordData[currentCardKey] = data;
+                        console.log('Immediately loaded N1 word data:', data?.word);
+                    })
+                    .catch(error => {
+                        console.error('Error loading N1 word data:', error);
+                        preloadedN1WordData[currentCardKey] = null;
+                    });
             }
         }
 
@@ -1671,6 +1761,9 @@
                 
                 // Preload audio after navigation
                 preloadAudio();
+                
+                // Aggressively preload current card data immediately
+                preloadCurrentCardDataImmediately();
             } else {
                 // At first card of episode, try to go to previous episode
                 const sequences = Object.keys(episodeData).sort();
@@ -1697,6 +1790,9 @@
                 
                 // Preload audio after navigation
                 preloadAudio();
+                
+                // Aggressively preload current card data immediately
+                preloadCurrentCardDataImmediately();
             } else {
                 // At last card of episode, try to go to next episode
                 const sequences = Object.keys(episodeData).sort();
@@ -1860,11 +1956,13 @@
             // Show loading if not preloaded
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
-            // Fetch expression card data
+            // Fetch expression card data immediately
+            console.log('Fetching expression card data for ID:', expressionCardId);
             fetch(`/api/expression-card/${expressionCardId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
+                        console.log('Expression card data loaded:', data.title);
                         renderExpressionCard(data);
                     } else {
                         modalBody.innerHTML = '<div class="expression-loading">Expression card not found.</div>';
@@ -1907,24 +2005,43 @@
             
             // Show loading if not preloaded
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
-            console.log('currentCard.speaker:', currentCard?.speaker);
             
             if (!currentCard) {
                 modalBody.innerHTML = '<div class="expression-loading">No current card available.</div>';
                 return;
             }
             
-            // Create word modal content with available data
-            const wordData = {
-                word: currentCard.speaker || currentCard.japanese || '단어 없음',
-                reading: currentCard.speakerReading || currentCard.speaker || currentCard.japanese || '',
-                meaning: currentCard.speakerMeaning || '의미 정보 없음',
-                sentence: currentCard.japanese || '',
-                sentenceKorean: currentCard.korean || ''
-            };
-            
-            console.log('wordData:', wordData);
-            renderWordModal(wordData);
+            if (currentCard.n1VocabularyId) {
+                console.log('N1 vocabulary ID found:', currentCard.n1VocabularyId);
+                
+                // Fetch N1 vocabulary data immediately
+                fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('N1 vocabulary data loaded:', data);
+                        if (data) {
+                            renderWordModal(data);
+                        } else {
+                            modalBody.innerHTML = '<div class="expression-loading">N1 vocabulary not found.</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching N1 vocabulary:', error);
+                        modalBody.innerHTML = '<div class="expression-loading">Error loading N1 vocabulary.</div>';
+                    });
+            } else {
+                // Create word modal content with available data
+                const wordData = {
+                    word: currentCard.speaker || currentCard.japanese || '단어 없음',
+                    reading: currentCard.speakerReading || currentCard.speaker || currentCard.japanese || '',
+                    meaning: currentCard.speakerMeaning || '의미 정보 없음',
+                    sentence: currentCard.japanese || '',
+                    sentenceKorean: currentCard.korean || ''
+                };
+                
+                console.log('Using fallback wordData:', wordData);
+                renderWordModal(wordData);
+            }
         }
 
         function renderWordModal(data) {
