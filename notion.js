@@ -137,20 +137,8 @@ async function getFlashcardsFromNotion() {
             }
         }
 
-        // Get sequence data from connected database
-        const sequenceRelations = {};
-        for (const page of allResults) {
-            const sequenceRelation = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
-            if (sequenceRelation && !sequenceRelations[sequenceRelation]) {
-                try {
-                    const sequencePage = await notion.pages.retrieve({ page_id: sequenceRelation });
-                    const sequenceNumber = sequencePage.properties['시퀀스']?.title?.[0]?.plain_text;
-                    sequenceRelations[sequenceRelation] = sequenceNumber;
-                } catch (error) {
-                    console.log('Could not fetch sequence relation:', sequenceRelation);
-                }
-            }
-        }
+        // Since sequence relations are not working properly, we'll use local sequence properties
+        console.log('Using local sequence properties for grouping');
 
         if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
@@ -181,9 +169,8 @@ async function getFlashcardsFromNotion() {
             const characterRelation = page.properties['사람']?.relation?.[0]?.id;
             const characterName = characterRelations[characterRelation] || 'Unknown';
             
-            // Get sequence from connected database or local property
-            const sequenceRelation = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
-            const sequence = sequenceRelations[sequenceRelation] || page.properties['시퀀스']?.select?.name || '';
+            // Use local sequence property (since connected database relations are not working)
+            const sequence = page.properties['시퀀스']?.select?.name || '';
             const order = page.properties['순서']?.number || 0;
             
             // Get volume
@@ -220,14 +207,21 @@ async function getFlashcardsFromNotion() {
             };
         });
 
-        // Group flashcards by sequence
+        // Filter out empty sequences and group flashcards by sequence
+        const validFlashcards = flashcards.filter(card => card.sequence && card.sequence !== '');
+        
         const episodeData = {};
-        flashcards.forEach(card => {
+        validFlashcards.forEach(card => {
             const sequenceKey = card.sequence;
             if (!episodeData[sequenceKey]) {
                 episodeData[sequenceKey] = [];
             }
             episodeData[sequenceKey].push(card);
+        });
+
+        console.log('Grouped flashcards by sequence:', Object.keys(episodeData));
+        Object.entries(episodeData).forEach(([seq, cards]) => {
+            console.log(`Sequence ${seq}: ${cards.length} cards`);
         });
 
         return episodeData;
