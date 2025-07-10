@@ -105,13 +105,8 @@ async function getFlashcardsFromNotion() {
             const response = await notion.databases.query({
                 database_id: DATABASE_ID,
                 start_cursor: startCursor,
-                page_size: 100,
-                filter: {
-                    property: 'Status',
-                    status: {
-                        equals: 'Done'
-                    }
-                }
+                page_size: 100
+                // Removed status filter to include all entries (Done and Not started)
             });
             
             allResults = allResults.concat(response.results);
@@ -169,9 +164,20 @@ async function getFlashcardsFromNotion() {
             const characterRelation = page.properties['사람']?.relation?.[0]?.id;
             const characterName = characterRelations[characterRelation] || 'Unknown';
             
-            // Use local sequence property (since connected database relations are not working)
-            const sequence = page.properties['시퀀스']?.select?.name || '';
+            // Use local sequence property, with dynamic assignment for empty sequences
+            let sequence = page.properties['시퀀스']?.select?.name || '';
             const order = page.properties['순서']?.number || 0;
+            
+            // Auto-assign sequences for entries without sequence
+            if (!sequence) {
+                if (order >= 1 && order <= 25) {
+                    sequence = '#005';
+                } else if (order >= 26 && order <= 50) {
+                    sequence = '#006';
+                } else {
+                    sequence = '#005'; // Default assignment
+                }
+            }
             
             // Get volume
             const volume = page.properties['권']?.select?.name || '';
