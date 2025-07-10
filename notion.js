@@ -24,6 +24,8 @@ const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
 const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8014-a3f2-d401a86e4c41";
 // N1 vocabulary database ID (일본어 단어공부 N1)
 const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd";
+// Episodes database ID (에피소드 목록)
+const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
 
 // Get database info by ID
 async function getNotionDatabases() {
@@ -355,4 +357,84 @@ async function getN1VocabularyInfo(n1VocabularyId) {
     }
 }
 
-module.exports = { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo };
+// Get episodes data for the main menu
+async function getEpisodesFromNotion() {
+    try {
+        // First, get the database schema to understand the property names
+        const database = await notion.databases.retrieve({
+            database_id: EPISODES_DATABASE_ID
+        });
+        
+        console.log('Episodes database properties:', Object.keys(database.properties));
+        
+        const response = await notion.databases.query({
+            database_id: EPISODES_DATABASE_ID,
+            // Remove sort for now to avoid validation errors
+        });
+
+        const episodes = response.results.map(page => {
+            const properties = page.properties;
+            
+            // Log available properties to debug
+            console.log('Available properties for episode:', Object.keys(properties));
+            
+            // Extract episode data using the actual field names found in the database
+            const sequence = properties.시퀀스?.rich_text?.[0]?.plain_text || '';
+            const sequenceTitle = properties['시퀀스 제목']?.rich_text?.[0]?.plain_text || '';
+            const title = properties.Name?.title?.[0]?.plain_text || 
+                         properties.제목?.title?.[0]?.plain_text || 
+                         'Untitled Episode';
+            const description = sequenceTitle || '';
+            const thumbnail = properties.표지?.files?.[0];
+            const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
+            const status = 'published'; // Default to published since there's no status field
+            
+            // Extract episode number from title if sequence is empty
+            let episodeNumber = sequence;
+            if (!episodeNumber && title) {
+                const match = title.match(/(\d+)(?:-(\d+))?/);
+                if (match) {
+                    episodeNumber = match[2] ? `#${match[2].padStart(3, '0')}` : `#${match[1].padStart(3, '0')}`;
+                }
+            }
+                          
+            const createdAt = properties.created_at?.created_time || 
+                             properties.Created?.created_time || 
+                             page.created_time;
+            
+            return {
+                id: page.id,
+                sequence: episodeNumber,
+                title: title,
+                description: description,
+                thumbnailUrl: thumbnailUrl,
+                status: status,
+                createdAt: createdAt
+            };
+        });
+
+        // Filter only published episodes
+        const publishedEpisodes = episodes.filter(episode => 
+            episode.status === 'published' || 
+            episode.status === 'active' || 
+            episode.status === 'public' ||
+            episode.status === '활성' ||
+            episode.status === '공개' ||
+            !episode.status  // Include episodes without status
+        );
+        
+        console.log(`Found ${publishedEpisodes.length} published episodes out of ${episodes.length} total`);
+        return publishedEpisodes;
+    } catch (error) {
+        console.error("Error fetching episodes from Notion:", error);
+        return [];
+    }
+}
+
+module.exports = { 
+    getFlashcardsFromNotion, 
+    getNotionDatabases, 
+    getExpressionCardInfo, 
+    getN1VocabularyInfo, 
+    getEpisodesFromNotion 
+};

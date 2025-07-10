@@ -1161,6 +1161,16 @@
 
         // Initialize the app
         function init() {
+            // Check if there's a specific episode parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedEpisode = urlParams.get('episode');
+            
+            if (selectedEpisode) {
+                console.log('URL parameter episode:', selectedEpisode);
+                // Set the current episode to the one selected from the episodes page
+                currentEpisode = selectedEpisode;
+            }
+            
             parseEpisodes();
         }
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo } = require('./notion.js');
+const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo, getEpisodesFromNotion } = require('./notion.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -110,8 +110,27 @@ app.get('/api/n1-vocabulary-multiple/:ids', async (req, res) => {
     }
 });
 
-// Serve the main HTML file
+// API endpoint to get episodes for the main menu
+app.get('/api/episodes', async (req, res) => {
+    try {
+        const episodes = await getEpisodesFromNotion();
+        res.json(episodes);
+    } catch (error) {
+        console.error('Error fetching episodes:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch episodes from Notion',
+            message: error.message 
+        });
+    }
+});
+
+// Serve the episodes selection page as the main page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'episodes.html'));
+});
+
+// Serve the flashcard app
+app.get('/flashcards', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
