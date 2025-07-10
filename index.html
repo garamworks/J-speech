@@ -186,7 +186,7 @@
             padding: 6px 10px;
             border-radius: 15px;
             border: 0.25px solid #E0E0E0;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             font-weight: 400;
             display: none;
             align-items: center;
@@ -475,6 +475,13 @@
         .flashcard-container {
             perspective: 1000px;
             margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .flashcard-container {
+                min-height: 600px;
+            }
         }
 
         .flashcard {
@@ -491,6 +498,7 @@
         @media (max-width: 768px) {
             .flashcard {
                 aspect-ratio: 3/5.2;
+                min-height: 600px;
             }
         }
 
