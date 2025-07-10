@@ -15,17 +15,12 @@ function extractDatabaseIdFromUrl(pageUrl) {
     throw Error("Failed to extract database ID from URL");
 }
 
-// Extract database ID from the new URL
-const NEW_DATABASE_URL = "https://www.notion.so/doungle/228fe404b3dc80f0a0c0d83aaa28aa9b?v=229fe404b3dc80399a0f000c451a5e3a&source=copy_link";
-const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b";
-// Character database ID
-const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a";
-// Expression cards database ID (일본어 표현카드)
-const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8014-a3f2-d401a86e4c41";
-// N1 vocabulary database ID (일본어 단어공부 N1)
-const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd";
-// Episodes database ID (에피소드 목록)
-const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
+// Updated database structure - using connected databases
+const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b"; // Main dialogue database
+const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a"; // Character database 
+const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8037-86b5-fea02dcf9913"; // Expression cards database (connected)
+const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd"; // N1 vocabulary database (connected)
+const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21"; // Episodes/Sequence database (connected)
 
 // Get database info by ID
 async function getNotionDatabases() {
@@ -98,10 +93,10 @@ function getCharacterEmoji(characterName) {
     return emojiMap[characterName] || emojiMap.default;
 }
 
-// Get flashcard data from Notion database
+// Get flashcard data from Notion database (updated for connected database structure)
 async function getFlashcardsFromNotion() {
     try {
-        // Get all dialogue data with pagination
+        // Get all dialogue data with pagination, filtering only completed entries
         let allResults = [];
         let hasMore = true;
         let startCursor = undefined;
@@ -110,7 +105,13 @@ async function getFlashcardsFromNotion() {
             const response = await notion.databases.query({
                 database_id: DATABASE_ID,
                 start_cursor: startCursor,
-                page_size: 100
+                page_size: 100,
+                filter: {
+                    property: 'Status',
+                    status: {
+                        equals: 'Done'
+                    }
+                }
             });
             
             allResults = allResults.concat(response.results);
@@ -136,122 +137,100 @@ async function getFlashcardsFromNotion() {
             }
         }
 
+        // Get sequence data from connected database
+        const sequenceRelations = {};
+        for (const page of allResults) {
+            const sequenceRelation = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
+            if (sequenceRelation && !sequenceRelations[sequenceRelation]) {
+                try {
+                    const sequencePage = await notion.pages.retrieve({ page_id: sequenceRelation });
+                    const sequenceNumber = sequencePage.properties['시퀀스']?.title?.[0]?.plain_text;
+                    sequenceRelations[sequenceRelation] = sequenceNumber;
+                } catch (error) {
+                    console.log('Could not fetch sequence relation:', sequenceRelation);
+                }
+            }
+        }
+
         if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
         }
 
-        // Sort by sentence ID to ensure proper episode and sentence order
+        // Sort by sequence and order
         const sortedResults = allResults.sort((a, b) => {
-            const sentenceIdA = a.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
-            const sentenceIdB = b.properties['문장 ID']?.title?.[0]?.plain_text || "99-999";
+            const sequenceA = a.properties['시퀀스']?.select?.name || '';
+            const sequenceB = b.properties['시퀀스']?.select?.name || '';
+            const orderA = a.properties['순서']?.number || 999;
+            const orderB = b.properties['순서']?.number || 999;
             
-            // Parse episode and sentence numbers for proper sorting
-            const parseId = (id) => {
-                const match = id.match(/^(\d+)-(\d+)$/);
-                if (match) {
-                    return { episode: parseInt(match[1]), sentence: parseInt(match[2]) };
-                }
-                return { episode: 99, sentence: 999 };
-            };
-            
-            const parsedA = parseId(sentenceIdA);
-            const parsedB = parseId(sentenceIdB);
-            
-            // Sort by episode first, then by sentence number
-            if (parsedA.episode !== parsedB.episode) {
-                return parsedA.episode - parsedB.episode;
+            // First sort by sequence
+            if (sequenceA !== sequenceB) {
+                return sequenceA.localeCompare(sequenceB);
             }
-            return parsedA.sentence - parsedB.sentence;
+            
+            // Then sort by order
+            return orderA - orderB;
         });
 
-        // Helper functions
-        const getTextContent = (prop) => {
-            if (prop?.rich_text && prop.rich_text.length > 0) {
-                return prop.rich_text[0].plain_text || "";
-            }
-            if (prop?.title && prop.title.length > 0) {
-                return prop.title[0].plain_text || "";
-            }
-            return "";
-        };
-
-        return sortedResults.filter((page) => {
-            // Filter out empty entries
-            const properties = page.properties;
-            const japanese = getTextContent(properties['일본어']);
-            const korean = getTextContent(properties['한국어']);
-            return japanese.trim() !== '' && korean.trim() !== '';
-        }).map((page) => {
-            const properties = page.properties;
-
-            // Map the actual column names from the new database
-            const japanese = getTextContent(properties['일본어']);  // Japanese sentence
-            const korean = getTextContent(properties['한국어']);  // Korean translation
-            const sentenceId = getTextContent(properties['']);  // Title field (empty name)
-            const n2Word = getTextContent(properties['N2 단어']);  // N2 vocabulary word
-            const sequenceNumber = properties['순서']?.number || 0;  // Sequence number
-            const volume = properties['권']?.select?.name || '';  // Volume
-            const sequence = properties['시퀀스']?.select?.name || '';  // Sequence
-            const episode = "1화";  // Default episode
+        // Transform data into flashcard format
+        const flashcards = sortedResults.map(page => {
+            const japanese = page.properties['일본어']?.rich_text?.[0]?.plain_text || '';
+            const korean = page.properties['한국어']?.rich_text?.[0]?.plain_text || '';
             
-            // Get character info from relation
-            const characterRelation = properties['사람']?.relation?.[0]?.id;
-            const characterName = characterRelations[characterRelation];
-            const characterInfo = characterName ? characterData[characterName] : null;
-
-            // Get expression card relations (multiple possible)
-            const expressionCardRelations = properties['일본어 표현카드']?.relation?.map(rel => rel.id) || [];
-
-            // Get N1 vocabulary relations (multiple possible)
-            const n1VocabularyRelations = properties['일본어 단어공부 N1']?.relation?.map(rel => rel.id) || [];
-
-            // Map character names to emojis
-            const characterEmojis = {
-                'ひなた': '🌻',
-                'れい': '🦁', 
-                'あかり': '🌸',
-                'きりやま': '👤',
-                'default': '🎭'
-            };
-
-            // Get audio file URL from files property - try multiple possible field names
+            // Get character relation
+            const characterRelation = page.properties['사람']?.relation?.[0]?.id;
+            const characterName = characterRelations[characterRelation] || 'Unknown';
+            
+            // Get sequence from connected database or local property
+            const sequenceRelation = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
+            const sequence = sequenceRelations[sequenceRelation] || page.properties['시퀀스']?.select?.name || '';
+            const order = page.properties['순서']?.number || 0;
+            
+            // Get volume
+            const volume = page.properties['권']?.select?.name || '';
+            
+            // Get expression cards and N1 vocabulary relations
+            const expressionCards = page.properties['일본어 표현카드']?.relation || [];
+            const n1Vocabulary = page.properties['일본어 단어공부 N1']?.relation || [];
+            
+            // Get MP3 file
+            const mp3Files = page.properties['mp3file']?.files || [];
             let audioUrl = null;
-            let audioFiles = [];
-            
-            // Try different possible field names for audio files
-            const possibleAudioFields = ['mp3file', '음성파일', '음성', 'audio', 'Audio', 'MP3', 'sound', 'voice'];
-            
-            for (const fieldName of possibleAudioFields) {
-                audioFiles = properties[fieldName]?.files || [];
-                if (audioFiles.length > 0) {
-                    audioUrl = audioFiles[0].file?.url || audioFiles[0].external?.url;
-                    console.log(`Audio file found in field '${fieldName}' for:`, japanese);
-                    console.log('Audio URL:', audioUrl);
-                    break;
-                }
-            }
-            
-            // If no audio found, log available property names for debugging
-            if (!audioUrl && japanese.includes('何があったんです')) {
-                console.log('Available properties for card:', Object.keys(properties));
+            if (mp3Files.length > 0) {
+                const audioFile = mp3Files[0];
+                audioUrl = audioFile.type === 'external' ? audioFile.external.url : audioFile.file.url;
+                console.log(`Audio file found in field 'mp3file' for: ${japanese}`);
+                console.log(`Audio URL: ${audioUrl}`);
             }
 
             return {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
-                character: characterInfo?.emoji || characterEmojis.default,
-                characterImage: characterInfo?.imageUrl || null,
-                gender: characterInfo?.gender || null,
+                character: characterData[characterName]?.emoji || '🎭',
+                characterImage: characterData[characterName]?.imageUrl || null,
+                gender: characterData[characterName]?.gender || null,
                 audioUrl: audioUrl,
-                romanji: sentenceId || `${sequenceNumber}` || `${index + 1}`,
-                speaker: characterName || n2Word || "학습자료",
-                episode: episode,
+                romanji: `${sequence}_${order}`,
+                speaker: characterName || "학습자료",
+                episode: "1화",
                 volume: volume,
                 sequence: sequence,
-                expressionCardIds: expressionCardRelations,
-                n1VocabularyIds: n1VocabularyRelations
+                expressionCardIds: expressionCards.map(card => card.id),
+                n1VocabularyIds: n1Vocabulary.map(vocab => vocab.id)
             };
         });
+
+        // Group flashcards by sequence
+        const episodeData = {};
+        flashcards.forEach(card => {
+            const sequenceKey = card.sequence;
+            if (!episodeData[sequenceKey]) {
+                episodeData[sequenceKey] = [];
+            }
+            episodeData[sequenceKey].push(card);
+        });
+
+        return episodeData;
     } catch (error) {
         console.error("Error fetching flashcards from Notion:", error);
         throw error;

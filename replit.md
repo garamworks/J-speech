@@ -85,6 +85,9 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 09, 2025. Added MP3 audio preloading to eliminate speaker button delay
 - July 10, 2025. Reduced header spacing and added homepage navigation from episode view
 - July 10, 2025. Reduced episode card padding and margins for better visual density
+- July 10, 2025. Updated database structure to connected database system centered on sequences
+- July 10, 2025. Enhanced UI elements: larger # symbols, reduced icon padding, circular episode icons
+- July 10, 2025. Improved mobile flashcard sizing and expression card text readability
 
 ## User Preferences
 
