@@ -35,11 +35,6 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
         .episodes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -48,21 +43,22 @@
         }
 
         .episode-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            color: #333;
         }
 
         .episode-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .episode-thumbnail {
@@ -105,34 +101,18 @@
             font-size: 1.4rem;
             font-weight: bold;
             margin-bottom: 10px;
-            color: white;
+            color: #333;
         }
 
         .episode-description {
             font-size: 1rem;
             line-height: 1.4;
-            opacity: 0.9;
+            opacity: 0.7;
             margin-bottom: 15px;
+            color: #666;
         }
 
-        .episode-status {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
 
-        .status-active {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .status-published {
-            background: #2196F3;
-            color: white;
-        }
 
         .loading {
             text-align: center;
@@ -171,17 +151,14 @@
                 font-size: 2rem;
             }
             
-            .header p {
-                font-size: 1rem;
-            }
+
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>PALM 시리즈</h1>
-            <p>에피소드를 선택하여 일본어 학습을 시작하세요</p>
+            <h1>PALM 26 - 오후의 빛 I</h1>
         </div>
 
         <div id="loading" class="loading">
@@ -225,7 +202,14 @@
             if (episodes.length === 0) {
                 container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
             } else {
-                container.innerHTML = episodes.map(episode => createEpisodeCard(episode)).join('');
+                // Sort episodes by sequence in descending order (newest first)
+                const sortedEpisodes = episodes.sort((a, b) => {
+                    const aNum = parseInt(a.sequence.replace('#', ''));
+                    const bNum = parseInt(b.sequence.replace('#', ''));
+                    return bNum - aNum; // descending order
+                });
+                
+                container.innerHTML = sortedEpisodes.map(episode => createEpisodeCard(episode)).join('');
             }
             
             loading.style.display = 'none';
@@ -237,8 +221,6 @@
                 ? `<img src="${episode.thumbnailUrl}" alt="${episode.title}">`
                 : `<div style="font-size: 3rem;">🎬</div>`;
             
-            const statusClass = episode.status === 'active' ? 'status-active' : 'status-published';
-            
             return `
                 <div class="episode-card" onclick="selectEpisode('${episode.sequence}')">
                     <div class="episode-thumbnail">
@@ -247,7 +229,6 @@
                     </div>
                     <div class="episode-title">${episode.title}</div>
                     <div class="episode-description">${episode.description}</div>
-                    <div class="episode-status ${statusClass}">${episode.status}</div>
                 </div>
             `;
         }
