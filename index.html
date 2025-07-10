@@ -976,7 +976,32 @@
                     throw new Error('Failed to fetch flashcards');
                 }
                 const data = await response.json();
-                flashcards = data;
+                
+                // Check if data is grouped by sequence (new structure)
+                if (data && typeof data === 'object' && !Array.isArray(data)) {
+                    console.log('Received grouped data structure:', Object.keys(data));
+                    
+                    // Convert grouped data to flat array for compatibility
+                    flashcards = [];
+                    Object.keys(data).forEach(sequence => {
+                        if (Array.isArray(data[sequence])) {
+                            flashcards.push(...data[sequence]);
+                        }
+                    });
+                    
+                    // Store the grouped data for episode management
+                    episodeData = data;
+                    
+                    console.log('Converted to flat array:', flashcards.length, 'cards');
+                    console.log('Available sequences:', Object.keys(episodeData));
+                } else if (Array.isArray(data)) {
+                    // Legacy flat array structure
+                    flashcards = data;
+                    console.log('Received flat array structure:', flashcards.length, 'cards');
+                } else {
+                    console.error('Unexpected data structure:', data);
+                    throw new Error('Invalid data structure received');
+                }
                 
                 if (flashcards.length === 0) {
                     showError('노션 데이터베이스에서 플래시카드를 찾을 수 없습니다.');
@@ -1022,24 +1047,40 @@
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
-            episodeData = {};
-            flashcards.forEach((card, index) => {
-                // Group by sequence instead of episode
-                const sequence = card.sequence || '#001';
+            // If episodeData is already populated from grouped API response, use it
+            if (Object.keys(episodeData).length > 0) {
+                console.log('Using pre-grouped episode data');
                 
-                if (!episodeData[sequence]) {
-                    episodeData[sequence] = [];
-                }
+                // Sort sentences within each episode by romanji
+                Object.keys(episodeData).forEach(ep => {
+                    episodeData[ep].sort((a, b) => {
+                        const aNum = parseInt(a.romanji) || 0;
+                        const bNum = parseInt(b.romanji) || 0;
+                        return aNum - bNum;
+                    });
+                });
+            } else {
+                // Fallback: group from flat array (legacy mode)
+                console.log('Grouping from flat array');
+                episodeData = {};
+                flashcards.forEach((card, index) => {
+                    // Group by sequence instead of episode
+                    const sequence = card.sequence || '#001';
+                    
+                    if (!episodeData[sequence]) {
+                        episodeData[sequence] = [];
+                    }
+                    
+                    // Sort by romanji (sequence number)
+                    const sortOrder = parseInt(card.romanji) || (index + 1);
+                    episodeData[sequence].push({...card, sentenceNum: sortOrder});
+                });
                 
-                // Sort by romanji (sequence number)
-                const sortOrder = parseInt(card.romanji) || (index + 1);
-                episodeData[sequence].push({...card, sentenceNum: sortOrder});
-            });
-            
-            // Sort sentences within each episode
-            Object.keys(episodeData).forEach(ep => {
-                episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
-            });
+                // Sort sentences within each episode
+                Object.keys(episodeData).forEach(ep => {
+                    episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
+                });
+            }
             
             // Set current sequence to first available or use URL parameter
             const availableSequences = Object.keys(episodeData).sort();
