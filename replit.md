@@ -83,6 +83,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 09, 2025. Implemented MP3 audio playbook from Notion database with TTS fallback
 - July 09, 2025. Fixed multiple expression cards display issue with proper styling and click handlers
 - July 09, 2025. Added MP3 audio preloading to eliminate speaker button delay
+- July 10, 2025. Reduced header spacing and added homepage navigation from episode view
+- July 10, 2025. Reduced episode card padding and margins for better visual density
 
 ## User Preferences
 
