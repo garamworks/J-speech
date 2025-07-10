@@ -1032,9 +1032,29 @@
                 border-radius: 8px;
                 text-align: center;
                 z-index: 1000;
+                max-width: 80%;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             `;
-            errorDiv.textContent = message;
+            errorDiv.innerHTML = `
+                <div style="margin-bottom: 10px;">${message}</div>
+                <button onclick="this.parentElement.remove(); window.location.href = '/';" style="
+                    background: white;
+                    color: #ff6b6b;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">홈으로 돌아가기</button>
+            `;
             document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
         }
 
         // Episode management
@@ -1087,6 +1107,11 @@
             if (availableSequences.length > 0) {
                 // If currentEpisode is not set from URL parameter, use first available
                 if (!currentEpisode || !availableSequences.includes(currentEpisode)) {
+                    // Check if requested sequence exists
+                    if (currentEpisode && !availableSequences.includes(currentEpisode)) {
+                        console.warn(`Requested sequence ${currentEpisode} not found. Available sequences:`, availableSequences);
+                        showError(`시퀀스 ${currentEpisode}는 아직 준비되지 않았습니다. 사용 가능한 시퀀스: ${availableSequences.join(', ')}`);
+                    }
                     currentEpisode = availableSequences[0];
                 }
                 loadEpisode(currentEpisode);
@@ -1098,6 +1123,13 @@
             currentEpisode = sequenceName;
             currentEpisodeCards = episodeData[sequenceName] || [];
             currentCardIndex = 0;
+            
+            // Check if sequence exists
+            if (!episodeData[sequenceName] || episodeData[sequenceName].length === 0) {
+                console.warn(`Sequence ${sequenceName} not found or empty`);
+                showError(`시퀀스 ${sequenceName}는 아직 준비되지 않았습니다.`);
+                return;
+            }
             
             // Clear previous preloaded data when switching sequences
             preloadedAudios = {};
