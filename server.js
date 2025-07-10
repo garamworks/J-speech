@@ -5,9 +5,6 @@ const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Serve static files
-app.use(express.static('.'));
-
 // API endpoint to get flashcards from Notion
 app.get('/api/flashcards', async (req, res) => {
     try {
@@ -133,6 +130,9 @@ app.get('/', (req, res) => {
 app.get('/flashcards', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// Serve static files (after all routes are defined)
+app.use(express.static('.'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
