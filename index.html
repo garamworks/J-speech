@@ -1105,15 +1105,19 @@
             // Set current sequence to first available or use URL parameter
             const availableSequences = Object.keys(episodeData).sort();
             if (availableSequences.length > 0) {
+                // Check if requested sequence exists
+                if (currentEpisode && !availableSequences.includes(currentEpisode)) {
+                    console.warn(`Requested sequence ${currentEpisode} not found. Available sequences:`, availableSequences);
+                    showError(`시퀀스 ${currentEpisode}는 아직 준비되지 않았습니다. 사용 가능한 시퀀스: ${availableSequences.join(', ')}`);
+                    // Don't load any episode - let user choose from available sequences
+                    return;
+                }
+                
                 // If currentEpisode is not set from URL parameter, use first available
-                if (!currentEpisode || !availableSequences.includes(currentEpisode)) {
-                    // Check if requested sequence exists
-                    if (currentEpisode && !availableSequences.includes(currentEpisode)) {
-                        console.warn(`Requested sequence ${currentEpisode} not found. Available sequences:`, availableSequences);
-                        showError(`시퀀스 ${currentEpisode}는 아직 준비되지 않았습니다. 사용 가능한 시퀀스: ${availableSequences.join(', ')}`);
-                    }
+                if (!currentEpisode) {
                     currentEpisode = availableSequences[0];
                 }
+                
                 loadEpisode(currentEpisode);
             }
         }
