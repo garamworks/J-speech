@@ -993,7 +993,7 @@
         }
 
         // Episode management
-        let currentEpisode = 1;
+        let currentEpisode = null;
         let episodeData = {};
         let currentEpisodeCards = [];
         let preloadedAudios = {}; // Store preloaded audio elements
@@ -1021,10 +1021,13 @@
                 episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
             });
             
-            // Set current sequence to first available
+            // Set current sequence to first available or use URL parameter
             const availableSequences = Object.keys(episodeData).sort();
             if (availableSequences.length > 0) {
-                currentEpisode = availableSequences[0]; // Use currentEpisode variable for sequence
+                // If currentEpisode is not set from URL parameter, use first available
+                if (!currentEpisode || !availableSequences.includes(currentEpisode)) {
+                    currentEpisode = availableSequences[0];
+                }
                 loadEpisode(currentEpisode);
             }
         }
