@@ -79,6 +79,13 @@
             font-weight: 600;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             min-width: 120px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .volume-title:hover {
+            color: rgba(255, 255, 255, 1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         .sequence-navigation {
@@ -811,7 +818,7 @@
                         <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                     </svg>
                 </button>
-                <span class="volume-title">PALM 26권</span>
+                <span class="volume-title" onclick="goToHomepage()">PALM 26권</span>
                 <button class="volume-nav-btn" onclick="nextVolume()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
@@ -1936,6 +1943,11 @@
         function updateNavigationButtons() {
             prevBtn.disabled = currentCardIndex === 0;
             nextBtn.disabled = currentCardIndex === currentEpisodeCards.length - 1;
+        }
+
+        function goToHomepage() {
+            // Navigate to the homepage
+            window.location.href = '/';
         }
 
         function previousVolume() {
