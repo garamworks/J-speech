@@ -100,8 +100,12 @@
             font-family: 'Fjalla One', sans-serif;
         }
 
+        .episode-sequence .hash {
+            font-size: 1.3rem;
+        }
+
         .episode-title {
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
@@ -224,11 +228,14 @@
                 ? `<img src="${episode.thumbnailUrl}" alt="${episode.title}">`
                 : `<div style="font-size: 3rem;">🎬</div>`;
             
+            // Format sequence with larger # symbol
+            const formattedSequence = episode.sequence.replace('#', '<span class="hash">#</span>');
+            
             return `
                 <div class="episode-card" onclick="selectEpisode('${episode.sequence}')">
                     <div class="episode-thumbnail">
                         ${thumbnailContent}
-                        <div class="episode-sequence">${episode.sequence}</div>
+                        <div class="episode-sequence">${formattedSequence}</div>
                     </div>
                     <div class="episode-description">${episode.description}</div>
                 </div>
