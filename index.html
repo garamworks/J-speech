@@ -1468,6 +1468,7 @@
                                 // Create front expression item with exact same styling as original
                                 const frontItem = document.createElement('div');
                                 frontItem.className = 'db-connection-status clickable';
+                                frontItem.style.display = 'flex'; // Ensure it's visible
                                 
                                 const frontDot = document.createElement('div');
                                 frontDot.className = 'db-status-dot';
@@ -1487,6 +1488,7 @@
                                 // Create back expression item with exact same styling as original
                                 const backItem = document.createElement('div');
                                 backItem.className = 'db-connection-status clickable';
+                                backItem.style.display = 'flex'; // Ensure it's visible
                                 
                                 const backDot = document.createElement('div');
                                 backDot.className = 'db-status-dot';
