@@ -181,6 +181,14 @@
             max-width: 70%; /* 전체 컨테이너 폭 제한 */
         }
         
+        .db-expression-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 5px;
+            width: 100%;
+        }
+        
         .db-connection-status {
             background: #F1F8E9;
             color: #555;
@@ -1397,11 +1405,17 @@
                 // Remove all dynamically created expression cards (keep original elements)
                 const dynamicElements = frontContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-front)');
                 dynamicElements.forEach(element => element.remove());
+                // Remove expression container if it exists
+                const expressionContainer = frontContainer.querySelector('.db-expression-container');
+                if (expressionContainer) expressionContainer.remove();
             }
             if (backContainer) {
                 // Remove all dynamically created expression cards (keep original elements)
                 const dynamicElements = backContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-back)');
                 dynamicElements.forEach(element => element.remove());
+                // Remove expression container if it exists
+                const expressionContainer = backContainer.querySelector('.db-expression-container');
+                if (expressionContainer) expressionContainer.remove();
             }
             
             // Check if card has expression card relations (multiple possible)
@@ -1430,96 +1444,76 @@
                         preloadedExpressionCards[currentCardKey] = expressionCards;
                     }
                     
+                    // Create expression containers for horizontal layout
+                    const frontContainer = document.getElementById('db-status-container-front');
+                    const backContainer = document.getElementById('db-status-container-back');
+                    
+                    const frontExpressionContainer = document.createElement('div');
+                    frontExpressionContainer.className = 'db-expression-container';
+                    
+                    const backExpressionContainer = document.createElement('div');
+                    backExpressionContainer.className = 'db-expression-container';
+                    
                     expressionCards.forEach((expressionCard, index) => {
                         if (expressionCard && expressionCard.title) {
                             const expressionId = card.expressionCardIds[index];
                             console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title);
                             
-                            if (index === 0) {
-                                // For the first expression, use the main db-status elements
-                                if (dbStatusFront) {
-                                    dbStatusFront.style.display = 'flex';
-                                    dbStatusFront.classList.add('clickable');
-                                    if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
-                                    
-                                    dbStatusFront.removeEventListener('click', dbStatusFront.clickHandler);
-                                    dbStatusFront.clickHandler = (e) => {
-                                        e.stopPropagation();
-                                        openExpressionModal(expressionId);
-                                    };
-                                    dbStatusFront.addEventListener('click', dbStatusFront.clickHandler);
-                                }
-                                if (dbStatusBack) {
-                                    dbStatusBack.style.display = 'flex';
-                                    dbStatusBack.classList.add('clickable');
-                                    if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
-                                    
-                                    dbStatusBack.removeEventListener('click', dbStatusBack.clickHandler);
-                                    dbStatusBack.clickHandler = (e) => {
-                                        e.stopPropagation();
-                                        openExpressionModal(expressionId);
-                                    };
-                                    dbStatusBack.addEventListener('click', dbStatusBack.clickHandler);
-                                }
-                            } else {
-                                // For additional expressions, create new elements
-                                console.log('Creating additional expression element for:', expressionCard.title);
-                                
-                                // Create front expression item with exact same styling as original
-                                const frontItem = document.createElement('div');
-                                frontItem.className = 'db-connection-status clickable';
-                                frontItem.style.display = 'flex'; // Ensure it's visible
-                                
-                                const frontDot = document.createElement('div');
-                                frontDot.className = 'db-status-dot';
-                                frontItem.appendChild(frontDot);
-                                
-                                const frontText = document.createElement('span');
-                                frontText.textContent = expressionCard.title;
-                                frontItem.appendChild(frontText);
-                                
-                                // Add click handler
-                                frontItem.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openExpressionModal(expressionId);
-                                });
-                                
-                                // Create back expression item with exact same styling as original
-                                const backItem = document.createElement('div');
-                                backItem.className = 'db-connection-status clickable';
-                                backItem.style.display = 'flex'; // Ensure it's visible
-                                
-                                const backDot = document.createElement('div');
-                                backDot.className = 'db-status-dot';
-                                backItem.appendChild(backDot);
-                                
-                                const backText = document.createElement('span');
-                                backText.textContent = expressionCard.title;
-                                backItem.appendChild(backText);
-                                
-                                // Add click handler
-                                backItem.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openExpressionModal(expressionId);
-                                });
-                                
-                                // Add to expression containers - use the status containers directly
-                                const frontContainer = document.getElementById('db-status-container-front');
-                                const backContainer = document.getElementById('db-status-container-back');
-                                
-                                if (frontContainer) {
-                                    frontContainer.appendChild(frontItem);
-                                    console.log('Added front expression item to container');
-                                }
-                                if (backContainer) {
-                                    backContainer.appendChild(backItem);
-                                    console.log('Added back expression item to container');
-                                }
-                            }
+                            // Create front expression item
+                            const frontItem = document.createElement('div');
+                            frontItem.className = 'db-connection-status clickable';
+                            frontItem.style.display = 'flex';
+                            
+                            const frontDot = document.createElement('div');
+                            frontDot.className = 'db-status-dot';
+                            frontItem.appendChild(frontDot);
+                            
+                            const frontText = document.createElement('span');
+                            frontText.textContent = expressionCard.title;
+                            frontItem.appendChild(frontText);
+                            
+                            // Add click handler
+                            frontItem.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openExpressionModal(expressionId);
+                            });
+                            
+                            // Create back expression item
+                            const backItem = document.createElement('div');
+                            backItem.className = 'db-connection-status clickable';
+                            backItem.style.display = 'flex';
+                            
+                            const backDot = document.createElement('div');
+                            backDot.className = 'db-status-dot';
+                            backItem.appendChild(backDot);
+                            
+                            const backText = document.createElement('span');
+                            backText.textContent = expressionCard.title;
+                            backItem.appendChild(backText);
+                            
+                            // Add click handler
+                            backItem.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openExpressionModal(expressionId);
+                            });
+                            
+                            // Add to expression containers
+                            frontExpressionContainer.appendChild(frontItem);
+                            backExpressionContainer.appendChild(backItem);
                         }
                     });
+                    
+                    // Add expression containers to main containers
+                    if (frontContainer && expressionCards.length > 0) {
+                        frontContainer.appendChild(frontExpressionContainer);
+                        console.log('Added front expression container with', expressionCards.length, 'items');
+                    }
+                    if (backContainer && expressionCards.length > 0) {
+                        backContainer.appendChild(backExpressionContainer);
+                        console.log('Added back expression container with', expressionCards.length, 'items');
+                    }
                 } catch (error) {
                     console.error('Error fetching expression card info:', error);
                 }
