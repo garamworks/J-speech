@@ -168,14 +168,25 @@ async function getFlashcardsFromNotion() {
             let sequence = page.properties['시퀀스']?.select?.name || '';
             const order = page.properties['순서']?.number || 0;
             
-            // Auto-assign sequences for entries without sequence
-            if (!sequence) {
-                if (order >= 1 && order <= 25) {
+            // Keep original sequence if it exists, otherwise assign based on order
+            if (!sequence || sequence.trim() === '') {
+                // Use order-based assignment for entries without sequence
+                if (order >= 1 && order <= 56) {
+                    if (order >= 1 && order <= 35) {
+                        sequence = '#001';
+                    } else if (order >= 36 && order <= 56) {
+                        sequence = '#002';
+                    }
+                } else if (order >= 57 && order <= 112) {
+                    sequence = '#003';
+                } else if (order >= 113 && order <= 137) {
+                    sequence = '#004';
+                } else if (order >= 138 && order <= 182) {
                     sequence = '#005';
-                } else if (order >= 26 && order <= 50) {
+                } else if (order >= 183 && order <= 240) {
                     sequence = '#006';
                 } else {
-                    sequence = '#005'; // Default assignment
+                    sequence = '#001'; // Default fallback
                 }
             }
             
