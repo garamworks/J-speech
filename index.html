@@ -201,6 +201,13 @@
             text-overflow: ellipsis;
         }
         
+        .db-connection-status span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        
         .db-connection-status.clickable {
             cursor: pointer;
             transition: background-color 0.2s;
@@ -1382,6 +1389,21 @@
             if (dbN1StatusContainerFront) dbN1StatusContainerFront.innerHTML = '';
             if (dbN1StatusContainerBack) dbN1StatusContainerBack.innerHTML = '';
             
+            // Clear all additional expression cards created previously
+            const frontContainer = document.getElementById('db-status-container-front');
+            const backContainer = document.getElementById('db-status-container-back');
+            
+            if (frontContainer) {
+                // Remove all dynamically created expression cards (keep original elements)
+                const dynamicElements = frontContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-front)');
+                dynamicElements.forEach(element => element.remove());
+            }
+            if (backContainer) {
+                // Remove all dynamically created expression cards (keep original elements)
+                const dynamicElements = backContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-back)');
+                dynamicElements.forEach(element => element.remove());
+            }
+            
             // Check if card has expression card relations (multiple possible)
             if (card.expressionCardIds && card.expressionCardIds.length > 0) {
                 try {
@@ -1481,17 +1503,17 @@
                                     openExpressionModal(expressionId);
                                 });
                                 
-                                // Add to expression containers - use parent containers
-                                const frontParent = dbStatusFront?.parentElement;
-                                const backParent = dbStatusBack?.parentElement;
+                                // Add to expression containers - use the status containers directly
+                                const frontContainer = document.getElementById('db-status-container-front');
+                                const backContainer = document.getElementById('db-status-container-back');
                                 
-                                if (frontParent) {
-                                    frontParent.appendChild(frontItem);
-                                    console.log('Added front expression item to parent');
+                                if (frontContainer) {
+                                    frontContainer.appendChild(frontItem);
+                                    console.log('Added front expression item to container');
                                 }
-                                if (backParent) {
-                                    backParent.appendChild(backItem);
-                                    console.log('Added back expression item to parent');
+                                if (backContainer) {
+                                    backContainer.appendChild(backItem);
+                                    console.log('Added back expression item to container');
                                 }
                             }
                         }
