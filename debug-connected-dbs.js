@@ -24,12 +24,25 @@ async function debugConnectedDatabases() {
         
         const sequences = {};
         for (const seq of sequenceResponse.results) {
-            const sequenceNumber = seq.properties['시퀀스']?.title?.[0]?.plain_text;
+            console.log(`\n=== Processing Sequence Entry ===`);
+            console.log(`Sequence ID: ${seq.id}`);
+            console.log(`All properties:`, Object.keys(seq.properties));
+            
+            // Try different property names
+            const sequenceNumber = seq.properties['시퀀스']?.title?.[0]?.plain_text || 
+                                  seq.properties['Name']?.title?.[0]?.plain_text ||
+                                  seq.properties['시퀀스 제목']?.rich_text?.[0]?.plain_text;
+            
+            console.log(`Found sequence number: ${sequenceNumber}`);
+            
             if (sequenceNumber) {
                 sequences[seq.id] = sequenceNumber;
-                console.log(`- Sequence: ${sequenceNumber}, ID: ${seq.id}`);
+                console.log(`✓ Mapped: ${sequenceNumber} -> ${seq.id}`);
             }
         }
+        
+        console.log("\n=== Sequence Database Structure ===");
+        console.log("Available properties:", Object.keys(sequenceResponse.results[0]?.properties || {}));
         
         // Now check the dialogue database and see how it connects
         console.log("\n2. Checking Dialogue Database:");
@@ -46,11 +59,20 @@ async function debugConnectedDatabases() {
         
         console.log(`Found ${dialogueResponse.results.length} completed dialogues`);
         
+        console.log("\n=== Dialogue Database Structure ===");
+        if (dialogueResponse.results.length > 0) {
+            console.log("Available properties:", Object.keys(dialogueResponse.results[0]?.properties || {}));
+        }
+        
         // Group by sequence connection
         const sequenceGroups = {};
         for (const dialogue of dialogueResponse.results) {
             const sequenceRelationId = dialogue.properties['PALM Sequence DB']?.relation?.[0]?.id;
             const sequenceNumber = sequences[sequenceRelationId] || 'Unknown';
+            
+            console.log(`Dialogue: ${dialogue.properties['일본어']?.rich_text?.[0]?.plain_text || 'N/A'}`);
+            console.log(`  - Sequence Relation ID: ${sequenceRelationId || 'None'}`);
+            console.log(`  - Mapped to sequence: ${sequenceNumber}`);
             
             if (!sequenceGroups[sequenceNumber]) {
                 sequenceGroups[sequenceNumber] = [];

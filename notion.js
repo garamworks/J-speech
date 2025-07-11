@@ -132,8 +132,29 @@ async function getFlashcardsFromNotion() {
             }
         }
 
-        // Since sequence relations are not working properly, we'll use local sequence properties
-        console.log('Using local sequence properties for grouping');
+        // Get sequence relations from PALM Sequence DB
+        const sequenceRelations = {};
+        const SEQUENCE_DB_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
+        
+        // First, get all sequences from the sequence database
+        const sequenceResponse = await notion.databases.query({
+            database_id: SEQUENCE_DB_ID
+        });
+        
+        // Map sequence IDs to their names (use Name property which contains the sequence title)
+        for (const seq of sequenceResponse.results) {
+            const sequenceNumber = seq.properties['Name']?.title?.[0]?.plain_text;
+            if (sequenceNumber) {
+                // Convert "PALM 26-002" to "#002" format
+                const sequenceMatch = sequenceNumber.match(/PALM 26-(\d+)/);
+                if (sequenceMatch) {
+                    const formattedSequence = '#' + sequenceMatch[1].padStart(3, '0');
+                    sequenceRelations[seq.id] = formattedSequence;
+                }
+            }
+        }
+        
+        console.log('Sequence relations loaded:', Object.keys(sequenceRelations).length, 'sequences');
 
         if (allResults.length === 0) {
             throw new Error("No data found in the Notion database");
@@ -164,13 +185,18 @@ async function getFlashcardsFromNotion() {
             const characterRelation = page.properties['사람']?.relation?.[0]?.id;
             const characterName = characterRelations[characterRelation] || 'Unknown';
             
-            // Use local sequence property, with dynamic assignment for empty sequences
-            let sequence = page.properties['시퀀스']?.select?.name || '';
+            // Get sequence from PALM Sequence DB relation
+            const sequenceRelationId = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
+            let sequence = sequenceRelations[sequenceRelationId] || '';
             const order = page.properties['순서']?.number || 0;
             
-            // Keep original sequence if it exists, otherwise assign based on order
+            // If no sequence relation exists, use the local sequence property as fallback
             if (!sequence || sequence.trim() === '') {
-                // Use order-based assignment for entries without sequence
+                sequence = page.properties['시퀀스']?.select?.name || '';
+            }
+            
+            // Final fallback: assign based on order if still no sequence
+            if (!sequence || sequence.trim() === '') {
                 if (order >= 1 && order <= 56) {
                     if (order >= 1 && order <= 35) {
                         sequence = '#001';
