@@ -41,11 +41,12 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             padding: 10px 20px;
             padding-top: 20px;
             padding-bottom: 20px;
+            min-height: 0;
         }
         
         .main-content {
@@ -54,6 +55,7 @@
             align-items: center;
             flex: 1;
             justify-content: flex-start;
+            margin-bottom: 80px;
         }
 
         .card-display {
@@ -145,7 +147,8 @@
         .mode-selector {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-top: auto;
+            margin-bottom: 0;
         }
 
         .mode-btn {
@@ -219,6 +222,10 @@
                 font-size: 25px;
                 background: rgba(255, 255, 255, 0.3);
                 font-family: Arial, sans-serif;
+            }
+            
+            .play-btn.playing {
+                background: rgba(255, 100, 100, 0.5);
             }
         }
     </style>
