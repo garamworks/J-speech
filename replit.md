@@ -105,6 +105,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Added auto-advancement to next sequence when current sequence playback completes
 - July 12, 2025. Enhanced player autoplay: works from homepage speaker buttons and sequence transitions
 - July 12, 2025. Optimized loading performance: immediate first card playback with background loading of remaining cards
+- July 12, 2025. Removed card top padding (0px) for cleaner, more compact flashcard display
 
 ## User Preferences
 
