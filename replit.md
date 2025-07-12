@@ -109,6 +109,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Enhanced player UI: removed back button, improved mobile button styling, moved mode selector to bottom
 - July 12, 2025. Fixed player screen height to 80vh for better fit, reduced main content margins to 20px
 - July 12, 2025. Reverted player control buttons back to simple Unicode symbols for clean white icon appearance
+- July 12, 2025. Increased player screen height to 88vh (110% of original) for better fit
+- July 12, 2025. Changed player control buttons to HTML entities for consistent mobile/PC icon display
 - July 12, 2025. Separated thumbnail click area from speaker buttons on homepage to prevent accidental navigation
 
 ## User Preferences
