@@ -313,7 +313,7 @@
                     <div class="episode-thumbnail">
                         ${thumbnailContent}
                         <div class="episode-sequence">${formattedSequence}</div>
-                        <div class="episode-speaker-left" onclick="event.stopPropagation(); playEpisodeAudio('${episode.sequence}', this)">
+                        <div class="episode-speaker-left" onclick="event.stopPropagation(); playEpisodeAudioWithExpressions('${episode.sequence}', this)">
                             <svg viewBox="0 0 24 24">
                                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
                             </svg>
@@ -671,6 +671,200 @@
                 
             } catch (error) {
                 console.error('Error in autoAdvanceToNextSequence:', error);
+            }
+        }
+
+        // New function for left speaker button with expressions
+        async function playEpisodeAudioWithExpressions(sequence, speakerButton) {
+            try {
+                console.log(`Starting expression playback for sequence: ${sequence}`);
+                
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
+                // Clear any existing timeout
+                if (sequenceTimeout) {
+                    clearTimeout(sequenceTimeout);
+                    sequenceTimeout = null;
+                }
+
+                // Reset all speaker buttons
+                document.querySelectorAll('.episode-speaker, .episode-speaker-left').forEach(btn => {
+                    btn.classList.remove('playing');
+                });
+
+                // If already playing this sequence, stop it
+                if (isPlayingSequence && currentSpeakerButton === speakerButton) {
+                    console.log('Stopping current playback');
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                    return;
+                }
+
+                // Set button to playing state
+                speakerButton.classList.add('playing');
+                currentSpeakerButton = speakerButton;
+                isPlayingSequence = true;
+
+                // Fetch all cards for the episode
+                console.log(`Fetching cards for episode: ${sequence}`);
+                const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch episode data: ${response.status}`);
+                }
+
+                const episodeData = await response.json();
+                console.log('Episode data received:', episodeData);
+                
+                // Handle different response formats
+                let flashcards;
+                if (episodeData && typeof episodeData === 'object') {
+                    if (Array.isArray(episodeData)) {
+                        flashcards = episodeData;
+                    } else {
+                        // If it's an object with sequence keys, get the cards for this sequence
+                        flashcards = episodeData[sequence] || [];
+                    }
+                } else {
+                    throw new Error('Invalid episode data format');
+                }
+
+                if (!flashcards || flashcards.length === 0) {
+                    console.log('No flashcards found for this sequence');
+                    speakerButton.classList.remove('playing');
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                    return;
+                }
+
+                console.log(`Playing expression sequence ${sequence} with ${flashcards.length} cards`);
+                await playCardSequenceWithExpressions(flashcards, 0, speakerButton);
+
+            } catch (error) {
+                console.error('Error playing episode audio with expressions:', error);
+                speakerButton.classList.remove('playing');
+                isPlayingSequence = false;
+                currentSpeakerButton = null;
+            }
+        }
+
+        async function playCardSequenceWithExpressions(cards, cardIndex, speakerButton) {
+            try {
+                // Check if we should stop
+                if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                    console.log('Playback stopped - sequence flag or speaker button changed');
+                    return;
+                }
+
+                if (cardIndex >= cards.length) {
+                    console.log('Expression sequence playback completed');
+                    speakerButton.classList.remove('playing');
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                    return;
+                }
+
+                const card = cards[cardIndex];
+                console.log(`Playing card ${cardIndex + 1}/${cards.length}: ${card.japanese}`);
+
+                // 1. Play Japanese dialogue
+                console.log('Card has audioUrl:', !!card.audioUrl);
+                if (card.audioUrl) {
+                    console.log('Starting Japanese audio playback for card', cardIndex + 1);
+                    await playAudioFile(card.audioUrl);
+                    console.log('Japanese audio completed for card', cardIndex + 1);
+                }
+
+                // 2. Wait 3 seconds
+                console.log('Waiting 3 seconds...');
+                await sleep(3000);
+                console.log('3 second wait completed');
+
+                // 3. Play Korean dialogue
+                if (card.koreanAudioUrl) {
+                    console.log(`Starting Korean MP3 playback for card ${cardIndex + 1}: ${card.korean}`);
+                    await playAudioFile(card.koreanAudioUrl);
+                    console.log(`Korean MP3 completed for card ${cardIndex + 1}`);
+                }
+
+                // 4. Check for expressions and play them
+                if (card.expressions && card.expressions.length > 0) {
+                    console.log(`Found ${card.expressions.length} expressions for card ${cardIndex + 1}`);
+                    
+                    for (let i = 0; i < card.expressions.length; i++) {
+                        const expr = card.expressions[i];
+                        console.log(`Playing expression ${i + 1}/${card.expressions.length}: ${expr.mainExpression}`);
+                        
+                        // Play expression without delay
+                        if (expr.audioUrl) {
+                            console.log('Playing expression audio');
+                            await playAudioFile(expr.audioUrl);
+                            console.log('Expression audio completed');
+                        }
+                        
+                        // Play all examples for this expression
+                        if (expr.examples && expr.examples.length > 0) {
+                            console.log(`Playing ${expr.examples.length} examples for expression`);
+                            
+                            for (let j = 0; j < expr.examples.length; j++) {
+                                const example = expr.examples[j];
+                                console.log(`Playing example ${j + 1}/${expr.examples.length}: ${example.japanese}`);
+                                
+                                // Play Japanese example
+                                if (example.audioUrl) {
+                                    console.log('Playing Japanese example audio');
+                                    await playAudioFile(example.audioUrl);
+                                    console.log('Japanese example audio completed');
+                                }
+                                
+                                // Wait 3 seconds
+                                console.log('Waiting 3 seconds after Japanese example...');
+                                await sleep(3000);
+                                
+                                // Play Korean meaning
+                                if (example.koreanAudioUrl) {
+                                    console.log(`Playing Korean example audio: ${example.korean}`);
+                                    await playAudioFile(example.koreanAudioUrl);
+                                    console.log('Korean example audio completed');
+                                }
+                                
+                                // Small delay before next example
+                                if (j < expr.examples.length - 1) {
+                                    await sleep(1000);
+                                }
+                            }
+                        }
+                        
+                        // Small delay before next expression
+                        if (i < card.expressions.length - 1) {
+                            await sleep(1000);
+                        }
+                    }
+                }
+
+                // 5. Wait before next card
+                console.log('Waiting 1 second before next card...');
+                await sleep(1000);
+
+                // 6. Move to next card
+                await playCardSequenceWithExpressions(cards, cardIndex + 1, speakerButton);
+
+            } catch (error) {
+                console.error('Error playing card:', error);
+                console.log('Error occurred, moving to next card:', cardIndex + 2, '/', cards.length);
+                
+                // Try to continue with next card
+                if (cardIndex + 1 < cards.length) {
+                    await playCardSequenceWithExpressions(cards, cardIndex + 1, speakerButton);
+                } else {
+                    console.log('Expression sequence playback completed due to error');
+                    speakerButton.classList.remove('playing');
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                }
             }
         }
 
