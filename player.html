@@ -373,9 +373,9 @@
                 characterImg.style.display = 'none';
             }
             
-            // Only auto-start playback if manually navigated (not during auto-advance)
+            // Auto-start playback for manually navigated cards when playing
             if (isPlaying && !isAutoAdvancing) {
-                console.log('Auto-starting playback for new card');
+                console.log('Auto-starting playback for manually navigated card');
                 setTimeout(() => {
                     if (currentMode === 'basic') {
                         playBasicMode();
@@ -660,17 +660,31 @@
 
         function previousCard() {
             if (currentIndex > 0) {
+                const wasPlaying = isPlaying;
                 // Stop current playback when changing cards
                 stopPlayback();
                 displayCard(currentIndex - 1);
+                // If it was playing, restart playback for new card
+                if (wasPlaying) {
+                    setTimeout(() => {
+                        togglePlayPause();
+                    }, 100);
+                }
             }
         }
 
         function nextCard() {
             if (currentIndex < currentCards.length - 1) {
+                const wasPlaying = isPlaying;
                 // Stop current playback when changing cards
                 stopPlayback();
                 displayCard(currentIndex + 1);
+                // If it was playing, restart playback for new card
+                if (wasPlaying) {
+                    setTimeout(() => {
+                        togglePlayPause();
+                    }, 100);
+                }
             }
         }
 
