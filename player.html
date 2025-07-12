@@ -250,6 +250,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sequence = urlParams.get('sequence');
         const mode = urlParams.get('mode') || 'basic';
+        const autoplay = urlParams.get('autoplay') === 'true';
 
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
@@ -275,19 +276,31 @@
                 document.getElementById('basic-mode').classList.remove('active');
             }
 
-            // Load flashcards
-            await loadFlashcards();
+            // Load flashcards with fast loading
+            await loadFlashcardsQuick();
             
             // Set up event listeners
             setupEventListeners();
             
             // Display first card
             displayCard(0);
+            
+            // Start playback automatically if autoplay is enabled
+            if (autoplay) {
+                console.log('Auto-starting playback due to autoplay flag');
+                setTimeout(() => {
+                    startPlayback();
+                }, 1000); // Small delay to ensure everything is loaded
+            }
         });
 
-        async function loadFlashcards() {
+        async function loadFlashcardsQuick() {
             try {
-                console.log('Loading flashcards for sequence:', currentSequence);
+                console.log('Quick loading flashcards for sequence:', currentSequence);
+                
+                // Show loading indicator
+                document.getElementById('japanese-text').textContent = '로딩 중...';
+                document.getElementById('korean-text').textContent = 'Loading...';
                 
                 // Try to get specific episode data first
                 let response = await fetch(`/api/flashcards?episode=${encodeURIComponent(currentSequence)}`);
@@ -327,11 +340,57 @@
                 if (currentCards.length === 0) {
                     alert(`시퀀스 ${currentSequence}에 카드가 없습니다.`);
                     goBack();
+                    return;
                 }
+                
+                // Preload first few cards for immediate playback
+                await preloadFirstCards();
+                
             } catch (error) {
                 console.error('Error loading flashcards:', error);
                 alert('카드를 불러오는 중 오류가 발생했습니다: ' + error.message);
                 goBack();
+            }
+        }
+
+        async function preloadFirstCards() {
+            // Preload first 3 cards for immediate playback
+            const cardsToPreload = Math.min(3, currentCards.length);
+            
+            for (let i = 0; i < cardsToPreload; i++) {
+                const card = currentCards[i];
+                if (card.audioUrl) {
+                    try {
+                        const audio = new Audio(card.audioUrl);
+                        audio.preload = 'auto';
+                        preloadedAudio[card.audioUrl] = audio;
+                    } catch (error) {
+                        console.log('Error preloading audio:', card.audioUrl);
+                    }
+                }
+            }
+            
+            // Continue preloading remaining cards in background
+            setTimeout(() => {
+                preloadRemainingCards();
+            }, 100);
+        }
+
+        async function preloadRemainingCards() {
+            for (let i = 3; i < currentCards.length; i++) {
+                const card = currentCards[i];
+                if (card.audioUrl && !preloadedAudio[card.audioUrl]) {
+                    try {
+                        const audio = new Audio(card.audioUrl);
+                        audio.preload = 'auto';
+                        preloadedAudio[card.audioUrl] = audio;
+                        
+                        // Small delay to prevent overwhelming the network
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    } catch (error) {
+                        console.log('Error preloading audio:', card.audioUrl);
+                    }
+                }
             }
         }
 
@@ -602,7 +661,15 @@
                     return;
                 }
                 
-                const audio = new Audio(url);
+                // Use preloaded audio if available
+                let audio = preloadedAudio[url];
+                if (!audio) {
+                    audio = new Audio(url);
+                    preloadedAudio[url] = audio;
+                }
+                
+                // Reset audio to beginning
+                audio.currentTime = 0;
                 currentAudio = audio;
                 
                 audio.onended = () => {
@@ -725,9 +792,9 @@
                 }
                 
                 if (hasNextSequence) {
-                    // Navigate to next sequence
+                    // Navigate to next sequence with autoplay flag
                     console.log(`Navigating to next sequence: ${nextSequence}`);
-                    window.location.href = `player.html?sequence=${encodeURIComponent(nextSequence)}&mode=${currentMode}`;
+                    window.location.href = `player.html?sequence=${encodeURIComponent(nextSequence)}&mode=${currentMode}&autoplay=true`;
                 } else {
                     console.log('No more sequences available');
                     // Could add a completion message or navigate back to home
