@@ -767,6 +767,30 @@
                     speakerButton.classList.remove('playing');
                     isPlayingSequence = false;
                     currentSpeakerButton = null;
+                    
+                    // Check if this was sequence #001 and auto-advance to #002
+                    const sequenceElement = speakerButton.closest('[data-sequence]');
+                    if (sequenceElement) {
+                        const sequence = sequenceElement.dataset.sequence;
+                        if (sequence === '#001') {
+                            console.log('Sequence #001 completed, auto-advancing to #002');
+                            // Find the #002 episode and start playing it
+                            const episode002 = currentEpisodes.find(ep => ep.sequence === '#002');
+                            if (episode002) {
+                                console.log('Found #002 episode, starting playback');
+                                setTimeout(() => {
+                                    const episode002Element = document.querySelector(`[data-sequence="#002"]`);
+                                    if (episode002Element) {
+                                        const leftSpeaker = episode002Element.querySelector('.speaker-left');
+                                        if (leftSpeaker) {
+                                            leftSpeaker.click();
+                                            console.log('Auto-clicked left speaker for #002');
+                                        }
+                                    }
+                                }, 1000); // Wait 1 second before auto-advancing
+                            }
+                        }
+                    }
                     return;
                 }
 
@@ -815,6 +839,30 @@
                     speakerButton.classList.remove('playing');
                     isPlayingSequence = false;
                     currentSpeakerButton = null;
+                    
+                    // Check if this was sequence #001 and auto-advance to #002
+                    const sequenceElement = speakerButton.closest('[data-sequence]');
+                    if (sequenceElement) {
+                        const sequence = sequenceElement.dataset.sequence;
+                        if (sequence === '#001') {
+                            console.log('Sequence #001 completed, auto-advancing to #002');
+                            // Find the #002 episode and start playing it
+                            const episode002 = currentEpisodes.find(ep => ep.sequence === '#002');
+                            if (episode002) {
+                                console.log('Found #002 episode, starting playback');
+                                setTimeout(() => {
+                                    const episode002Element = document.querySelector(`[data-sequence="#002"]`);
+                                    if (episode002Element) {
+                                        const leftSpeaker = episode002Element.querySelector('.speaker-left');
+                                        if (leftSpeaker) {
+                                            leftSpeaker.click();
+                                            console.log('Auto-clicked left speaker for #002');
+                                        }
+                                    }
+                                }, 1000); // Wait 1 second before auto-advancing
+                            }
+                        }
+                    }
                 }
             }
         }

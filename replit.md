@@ -99,6 +99,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Implemented advanced expression learning mode for left speaker button: plays dialogue + expressions + 5 example sentences with audio
 - July 12, 2025. Optimized expression learning: removed expression title reading, reduced example delay to 2 seconds
 - July 12, 2025. Improved loading performance: expressions load in background during playback instead of blocking start
+- July 12, 2025. Added auto-advancement from sequence #001 to #002 for enhanced expression learning mode
 
 ## User Preferences
 
