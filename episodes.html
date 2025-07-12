@@ -565,13 +565,13 @@
                     return;
                 }
                 
-                const currentSequenceTitle = currentSequenceCard.querySelector('.episode-title');
-                if (!currentSequenceTitle) {
-                    console.log('Could not find episode title element');
+                const currentSequenceElement = currentSequenceCard.querySelector('.episode-sequence');
+                if (!currentSequenceElement) {
+                    console.log('Could not find episode sequence element');
                     return;
                 }
                 
-                const currentSequenceText = currentSequenceTitle.textContent;
+                const currentSequenceText = currentSequenceElement.textContent;
                 const currentSequenceMatch = currentSequenceText.match(/#(\d+)/);
                 
                 if (!currentSequenceMatch) {
@@ -591,11 +591,11 @@
                 
                 let nextSequenceCard = null;
                 for (const card of allEpisodeCards) {
-                    const titleElement = card.querySelector('.episode-title');
-                    if (titleElement) {
-                        const titleText = titleElement.textContent;
-                        console.log(`Checking card title: ${titleText}`);
-                        if (titleText.includes(nextSequenceId)) {
+                    const sequenceElement = card.querySelector('.episode-sequence');
+                    if (sequenceElement) {
+                        const sequenceText = sequenceElement.textContent;
+                        console.log(`Checking card sequence: ${sequenceText}`);
+                        if (sequenceText.includes(nextSequenceId)) {
                             nextSequenceCard = card;
                             break;
                         }
@@ -612,7 +612,7 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 // Start the next sequence
-                const nextSpeakerButton = nextSequenceCard.querySelector('.speaker-btn');
+                const nextSpeakerButton = nextSequenceCard.querySelector('.episode-speaker');
                 if (nextSpeakerButton) {
                     console.log(`Starting next sequence: ${nextSequenceId}`);
                     nextSpeakerButton.click();
