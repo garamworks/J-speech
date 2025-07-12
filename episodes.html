@@ -341,11 +341,28 @@
                 const episodeData = await response.json();
                 console.log('Episode data received:', episodeData);
                 
-                if (!episodeData || !episodeData.flashcards || episodeData.flashcards.length === 0) {
+                // Handle different response formats
+                let flashcards;
+                if (episodeData.flashcards) {
+                    // Standard format
+                    flashcards = episodeData.flashcards;
+                } else if (episodeData[sequence]) {
+                    // Grouped format
+                    flashcards = episodeData[sequence];
+                } else {
+                    // Try to find the sequence in the grouped data
+                    const keys = Object.keys(episodeData);
+                    const matchingKey = keys.find(key => key === sequence);
+                    if (matchingKey) {
+                        flashcards = episodeData[matchingKey];
+                    } else {
+                        throw new Error('No flashcards found for this episode');
+                    }
+                }
+                
+                if (!flashcards || flashcards.length === 0) {
                     throw new Error('No flashcards found for this episode');
                 }
-
-                const flashcards = episodeData.flashcards;
                 console.log(`Playing full sequence ${sequence} with ${flashcards.length} cards`);
 
                 // Play all cards in sequence
