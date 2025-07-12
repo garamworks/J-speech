@@ -382,6 +382,7 @@
         async function playCardSequence(flashcards, cardIndex, speakerButton) {
             // Check if we should stop
             if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                console.log('Playback stopped - sequence flag or speaker button changed');
                 return;
             }
 
@@ -396,38 +397,56 @@
 
             const card = flashcards[cardIndex];
             console.log(`Playing card ${cardIndex + 1}/${flashcards.length}: ${card.japanese}`);
+            console.log(`Card has audioUrl: ${!!card.audioUrl}`);
 
             try {
                 // Play Japanese audio (recorded file)
                 if (card.audioUrl) {
+                    console.log(`Starting Japanese audio playback for card ${cardIndex + 1}`);
                     await playAudioFile(card.audioUrl);
+                    console.log(`Japanese audio completed for card ${cardIndex + 1}`);
                     
                     // Wait 3 seconds after Japanese audio
+                    console.log('Waiting 3 seconds...');
                     await sleep(3000);
+                    console.log('3 second wait completed');
                     
                     // Check if we should continue
                     if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                        console.log('Playback stopped during wait period');
                         return;
                     }
+                } else {
+                    console.log(`No audio URL for card ${cardIndex + 1}, skipping Japanese audio`);
                 }
 
                 // Play Korean TTS
-                await playKoreanTTS(card.korean);
+                if (card.korean) {
+                    console.log(`Starting Korean TTS for card ${cardIndex + 1}: ${card.korean}`);
+                    await playKoreanTTS(card.korean);
+                    console.log(`Korean TTS completed for card ${cardIndex + 1}`);
+                } else {
+                    console.log(`No Korean text for card ${cardIndex + 1}, skipping TTS`);
+                }
 
                 // Check if we should continue
                 if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                    console.log('Playback stopped after Korean TTS');
                     return;
                 }
 
                 // Short pause before next card
+                console.log('Waiting 1 second before next card...');
                 await sleep(1000);
 
                 // Continue to next card
+                console.log(`Moving to next card: ${cardIndex + 2}/${flashcards.length}`);
                 await playCardSequence(flashcards, cardIndex + 1, speakerButton);
 
             } catch (error) {
                 console.error('Error playing card:', error);
                 // Continue to next card even if this one fails
+                console.log(`Error occurred, moving to next card: ${cardIndex + 2}/${flashcards.length}`);
                 await playCardSequence(flashcards, cardIndex + 1, speakerButton);
             }
         }
@@ -518,10 +537,14 @@
 
         function sleep(ms) {
             return new Promise(resolve => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+                console.log(`Sleep starting for ${ms}ms`);
                 sequenceTimeout = setTimeout(() => {
-                    if (isPlayingSequence) {
-                        resolve();
-                    }
+                    console.log(`Sleep completed after ${ms}ms`);
+                    resolve();
                 }, ms);
             });
         }

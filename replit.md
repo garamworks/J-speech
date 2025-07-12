@@ -92,6 +92,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Added speaker buttons to episode thumbnails on homepage for sequence audio playback
 - July 12, 2025. Implemented full sequence audio playback: Japanese MP3 → 3sec pause → Korean TTS
 - July 12, 2025. Enhanced expression card layout to display horizontally with automatic line wrapping
+- July 12, 2025. Fixed homepage sequence playback functionality with proper API response handling
 
 ## User Preferences
 
