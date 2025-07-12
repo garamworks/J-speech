@@ -844,12 +844,8 @@
                         const expr = card.expressions[i];
                         console.log(`Playing expression ${i + 1}/${card.expressions.length}: ${expr.mainExpression}`);
                         
-                        // Play expression using TTS since we don't have audio files for expressions
-                        if (expr.mainExpression) {
-                            console.log(`Playing expression via TTS: ${expr.mainExpression}`);
-                            await playTTSAudio(expr.mainExpression, 'ja');
-                            console.log('Expression TTS completed');
-                        }
+                        // Skip playing expression title, go directly to examples
+                        console.log(`Skipping expression title, going directly to examples for: ${expr.mainExpression}`);
                         
                         // Play all examples for this expression
                         if (expr.examples && expr.examples.length > 0) {
@@ -866,9 +862,9 @@
                                     console.log('Japanese example TTS completed');
                                 }
                                 
-                                // Wait 3 seconds
-                                console.log('Waiting 3 seconds after Japanese example...');
-                                await sleep(3000);
+                                // Wait 2 seconds
+                                console.log('Waiting 2 seconds after Japanese example...');
+                                await sleep(2000);
                                 
                                 // Play Korean meaning using TTS since we don't have Korean audio files for examples
                                 if (example.korean) {
