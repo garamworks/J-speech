@@ -741,6 +741,52 @@
                 }
 
                 console.log(`Playing expression sequence ${sequence} with ${flashcards.length} cards`);
+                
+                // Fetch expression data for each card
+                for (let i = 0; i < flashcards.length; i++) {
+                    const card = flashcards[i];
+                    if (card.expressionCardIds && card.expressionCardIds.length > 0) {
+                        console.log(`Fetching ${card.expressionCardIds.length} expressions for card ${i + 1}`);
+                        card.expressions = [];
+                        
+                        for (const expressionId of card.expressionCardIds) {
+                            try {
+                                const response = await fetch(`/api/expression/${expressionId}`);
+                                if (response.ok) {
+                                    const expressionData = await response.json();
+                                    console.log(`Expression data fetched for ID ${expressionId}:`, expressionData);
+                                    
+                                    // Transform the expression data to match expected format
+                                    const transformedExpression = {
+                                        mainExpression: expressionData.title,
+                                        audioUrl: null, // No audio for main expression yet
+                                        examples: []
+                                    };
+                                    
+                                    // Add examples
+                                    for (let j = 1; j <= 5; j++) {
+                                        const japaneseExample = expressionData[`application${j}`];
+                                        const koreanExample = expressionData[`application${j}Korean`];
+                                        
+                                        if (japaneseExample && koreanExample) {
+                                            transformedExpression.examples.push({
+                                                japanese: japaneseExample,
+                                                korean: koreanExample,
+                                                audioUrl: null, // No audio for examples yet
+                                                koreanAudioUrl: null
+                                            });
+                                        }
+                                    }
+                                    
+                                    card.expressions.push(transformedExpression);
+                                }
+                            } catch (error) {
+                                console.error(`Error fetching expression ${expressionId}:`, error);
+                            }
+                        }
+                    }
+                }
+                
                 await playCardSequenceWithExpressions(flashcards, 0, speakerButton);
 
             } catch (error) {
@@ -798,11 +844,11 @@
                         const expr = card.expressions[i];
                         console.log(`Playing expression ${i + 1}/${card.expressions.length}: ${expr.mainExpression}`);
                         
-                        // Play expression without delay
-                        if (expr.audioUrl) {
-                            console.log('Playing expression audio');
-                            await playAudioFile(expr.audioUrl);
-                            console.log('Expression audio completed');
+                        // Play expression using TTS since we don't have audio files for expressions
+                        if (expr.mainExpression) {
+                            console.log(`Playing expression via TTS: ${expr.mainExpression}`);
+                            await playTTSAudio(expr.mainExpression, 'ja');
+                            console.log('Expression TTS completed');
                         }
                         
                         // Play all examples for this expression
@@ -813,22 +859,22 @@
                                 const example = expr.examples[j];
                                 console.log(`Playing example ${j + 1}/${expr.examples.length}: ${example.japanese}`);
                                 
-                                // Play Japanese example
-                                if (example.audioUrl) {
-                                    console.log('Playing Japanese example audio');
-                                    await playAudioFile(example.audioUrl);
-                                    console.log('Japanese example audio completed');
+                                // Play Japanese example using TTS since we don't have Japanese audio files for examples
+                                if (example.japanese) {
+                                    console.log(`Playing Japanese example via TTS: ${example.japanese}`);
+                                    await playTTSAudio(example.japanese, 'ja');
+                                    console.log('Japanese example TTS completed');
                                 }
                                 
                                 // Wait 3 seconds
                                 console.log('Waiting 3 seconds after Japanese example...');
                                 await sleep(3000);
                                 
-                                // Play Korean meaning
-                                if (example.koreanAudioUrl) {
-                                    console.log(`Playing Korean example audio: ${example.korean}`);
-                                    await playAudioFile(example.koreanAudioUrl);
-                                    console.log('Korean example audio completed');
+                                // Play Korean meaning using TTS since we don't have Korean audio files for examples
+                                if (example.korean) {
+                                    console.log(`Playing Korean example via TTS: ${example.korean}`);
+                                    await playTTSAudio(example.korean, 'ko');
+                                    console.log('Korean example TTS completed');
                                 }
                                 
                                 // Small delay before next example
@@ -866,6 +912,40 @@
                     currentSpeakerButton = null;
                 }
             }
+        }
+
+        // Add TTS function
+        function playTTSAudio(text, language) {
+            return new Promise((resolve, reject) => {
+                if (!window.speechSynthesis) {
+                    console.log('Speech synthesis not supported');
+                    resolve();
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = language === 'ko' ? 'ko-KR' : 'ja-JP';
+                utterance.rate = 1.2;
+                
+                // Select voice based on language and gender
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    const targetVoice = voices.find(voice => 
+                        voice.lang.startsWith(language === 'ko' ? 'ko' : 'ja')
+                    );
+                    if (targetVoice) {
+                        utterance.voice = targetVoice;
+                    }
+                }
+                
+                utterance.onend = () => resolve();
+                utterance.onerror = (error) => {
+                    console.error('TTS error:', error);
+                    resolve(); // Continue even if TTS fails
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            });
         }
 
         // Load episodes when page loads

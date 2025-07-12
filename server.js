@@ -47,7 +47,7 @@ app.get('/api/database-info', async (req, res) => {
 });
 
 // API endpoint to get expression card info
-app.get('/api/expression-card/:id', async (req, res) => {
+app.get('/api/expression/:id', async (req, res) => {
     try {
         const expressionCardId = req.params.id;
         const cardInfo = await getExpressionCardInfo(expressionCardId);
