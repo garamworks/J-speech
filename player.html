@@ -206,7 +206,7 @@
     <button class="back-btn" onclick="goBack()">←</button>
     
     <div class="header">
-        <h1 id="sequence-title">PALM 재생</h1>
+        <h1 id="sequence-title" style="cursor: pointer;" onclick="goHome()">PALM 재생</h1>
         <p id="sequence-description">일본어 학습</p>
     </div>
 
@@ -269,7 +269,7 @@
             
             // Update UI
             document.getElementById('sequence-title').textContent = `PALM ${sequence}`;
-            document.getElementById('sequence-description').textContent = `${mode === 'expression' ? '표현 학습' : '기본 학습'} 모드`;
+            document.getElementById('sequence-description').textContent = `${mode === 'expression' ? '표현 학습' : '기본 학습'} 모드 - 클릭하여 홈으로 이동`;
             
             if (mode === 'expression') {
                 document.getElementById('expression-mode').classList.add('active');
@@ -770,6 +770,10 @@
 
         function goBack() {
             window.history.back();
+        }
+
+        function goHome() {
+            window.location.href = '/';
         }
 
         async function autoAdvanceToNextSequence() {
