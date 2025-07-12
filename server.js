@@ -131,6 +131,11 @@ app.get('/flashcards', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Serve the player app
+app.get('/player', (req, res) => {
+    res.sendFile(path.join(__dirname, 'player.html'));
+});
+
 // Serve static files (after all routes are defined)
 app.use(express.static('.'));
 
