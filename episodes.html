@@ -676,10 +676,10 @@
 
         // Redirect to player page
         async function playEpisodeAudio(sequence, speakerButton) {
-            // Navigate to player page
+            // Navigate to player page with autoplay enabled
             const mode = speakerButton.classList.contains('speaker-left') ? 'expression' : 'basic';
             console.log('Navigating to player with sequence:', sequence, 'mode:', mode);
-            window.location.href = `player.html?sequence=${encodeURIComponent(sequence)}&mode=${mode}`;
+            window.location.href = `player.html?sequence=${encodeURIComponent(sequence)}&mode=${mode}&autoplay=true`;
         }
 
         // New function for left speaker button with expressions
