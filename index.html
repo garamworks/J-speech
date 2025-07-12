@@ -1683,6 +1683,17 @@
                 }
             }
             
+            // Preload current card Korean audio if it exists
+            if (currentCard && currentCard.koreanAudioUrl) {
+                const key = `${currentEpisode}_${currentCardIndex}_K`;
+                if (!preloadedAudios[key]) {
+                    console.log('Preloading Korean audio for current card:', currentCard.korean, 'Key:', key);
+                    preloadedAudios[key] = new Audio(currentCard.koreanAudioUrl);
+                    preloadedAudios[key].preload = 'auto';
+                    preloadedAudios[key].load();
+                }
+            }
+            
             // Preload next card audio if it exists
             if (currentCardIndex + 1 < currentEpisodeCards.length) {
                 const nextCard = currentEpisodeCards[currentCardIndex + 1];
@@ -1691,6 +1702,17 @@
                     if (!preloadedAudios[key]) {
                         console.log('Preloading audio for next card:', nextCard.japanese, 'Key:', key);
                         preloadedAudios[key] = new Audio(nextCard.audioUrl);
+                        preloadedAudios[key].preload = 'auto';
+                        preloadedAudios[key].load();
+                    }
+                }
+                
+                // Preload next card Korean audio if it exists
+                if (nextCard && nextCard.koreanAudioUrl) {
+                    const key = `${currentEpisode}_${currentCardIndex + 1}_K`;
+                    if (!preloadedAudios[key]) {
+                        console.log('Preloading Korean audio for next card:', nextCard.korean, 'Key:', key);
+                        preloadedAudios[key] = new Audio(nextCard.koreanAudioUrl);
                         preloadedAudios[key].preload = 'auto';
                         preloadedAudios[key].load();
                     }

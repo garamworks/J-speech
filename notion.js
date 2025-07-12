@@ -223,7 +223,7 @@ async function getFlashcardsFromNotion() {
             const expressionCards = page.properties['일본어 표현카드']?.relation || [];
             const n1Vocabulary = page.properties['일본어 단어공부 N1']?.relation || [];
             
-            // Get MP3 file
+            // Get MP3 file (Japanese)
             const mp3Files = page.properties['mp3file']?.files || [];
             let audioUrl = null;
             if (mp3Files.length > 0) {
@@ -233,6 +233,16 @@ async function getFlashcardsFromNotion() {
                 console.log(`Audio URL: ${audioUrl}`);
             }
 
+            // Get Korean MP3 file
+            const mp3FilesKorean = page.properties['mp3file_K']?.files || [];
+            let koreanAudioUrl = null;
+            if (mp3FilesKorean.length > 0) {
+                const koreanAudioFile = mp3FilesKorean[0];
+                koreanAudioUrl = koreanAudioFile.type === 'external' ? koreanAudioFile.external.url : koreanAudioFile.file.url;
+                console.log(`Korean audio file found in field 'mp3file_K' for: ${korean}`);
+                console.log(`Korean Audio URL: ${koreanAudioUrl}`);
+            }
+
             return {
                 japanese: japanese || "대사 없음",
                 korean: korean || "번역 없음", 
@@ -240,6 +250,7 @@ async function getFlashcardsFromNotion() {
                 characterImage: characterData[characterName]?.imageUrl || null,
                 gender: characterData[characterName]?.gender || null,
                 audioUrl: audioUrl,
+                koreanAudioUrl: koreanAudioUrl,
                 romanji: `${sequence}_${order}`,
                 speaker: characterName || "학습자료",
                 episode: "1화",

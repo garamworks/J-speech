@@ -420,13 +420,17 @@
                     console.log(`No audio URL for card ${cardIndex + 1}, skipping Japanese audio`);
                 }
 
-                // Play Korean TTS
-                if (card.korean) {
-                    console.log(`Starting Korean TTS for card ${cardIndex + 1}: ${card.korean}`);
+                // Play Korean audio (MP3 or TTS fallback)
+                if (card.koreanAudioUrl) {
+                    console.log(`Starting Korean MP3 playback for card ${cardIndex + 1}: ${card.korean}`);
+                    await playAudioFile(card.koreanAudioUrl);
+                    console.log(`Korean MP3 completed for card ${cardIndex + 1}`);
+                } else if (card.korean) {
+                    console.log(`No Korean MP3 found, using TTS for card ${cardIndex + 1}: ${card.korean}`);
                     await playKoreanTTS(card.korean);
                     console.log(`Korean TTS completed for card ${cardIndex + 1}`);
                 } else {
-                    console.log(`No Korean text for card ${cardIndex + 1}, skipping TTS`);
+                    console.log(`No Korean audio or text for card ${cardIndex + 1}, skipping`);
                 }
 
                 // Check if we should continue

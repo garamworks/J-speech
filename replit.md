@@ -93,6 +93,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Implemented full sequence audio playback: Japanese MP3 → 3sec pause → Korean TTS
 - July 12, 2025. Enhanced expression card layout to display horizontally with automatic line wrapping
 - July 12, 2025. Fixed homepage sequence playback functionality with proper API response handling
+- July 12, 2025. Added Korean MP3 audio support using mp3file_K field from Notion database
 
 ## User Preferences
 
@@ -101,5 +102,6 @@ Audio Settings:
 - Only play MP3 files from Notion database for individual flashcards
 - No browser TTS fallback when audio files are unavailable for flashcards
 - Visual feedback for audio playback status
-- Homepage sequence playback: Japanese MP3 → 3 second pause → Korean TTS
+- Homepage sequence playback: Japanese MP3 → 3 second pause → Korean MP3 (with TTS fallback)
+- Korean audio from mp3file_K field in Notion database
 - Expression cards display horizontally with automatic line wrapping
