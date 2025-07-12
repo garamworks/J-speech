@@ -101,6 +101,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Improved loading performance: expressions load in background during playback instead of blocking start
 - July 12, 2025. Added auto-advancement from sequence #001 to #002 for enhanced expression learning mode
 - July 12, 2025. Created dedicated player page with play/pause controls and prev/next navigation
+- July 12, 2025. Fixed player navigation: next/prev buttons now stop current audio and auto-start new card playback
 
 ## User Preferences
 

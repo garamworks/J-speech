@@ -357,6 +357,8 @@
             currentIndex = index;
             const card = currentCards[index];
             
+            console.log(`Displaying card ${index + 1}:`, card.japanese);
+            
             document.getElementById('japanese-text').textContent = card.japanese;
             document.getElementById('korean-text').textContent = card.korean;
             document.getElementById('current-card').textContent = index + 1;
@@ -368,6 +370,18 @@
                 characterImg.style.display = 'block';
             } else {
                 characterImg.style.display = 'none';
+            }
+            
+            // If currently playing, start playback for new card
+            if (isPlaying) {
+                console.log('Auto-starting playback for new card');
+                setTimeout(() => {
+                    if (currentMode === 'basic') {
+                        playBasicMode();
+                    } else {
+                        playExpressionMode();
+                    }
+                }, 500); // Small delay to ensure UI is updated
             }
         }
 
@@ -392,12 +406,15 @@
         }
 
         function stopPlayback() {
+            console.log('Stopping playback');
             isPlaying = false;
             document.getElementById('play-btn').textContent = '▶';
             document.getElementById('play-btn').classList.remove('playing');
             
             if (currentAudio) {
+                console.log('Stopping current audio');
                 currentAudio.pause();
+                currentAudio.currentTime = 0;
                 currentAudio = null;
             }
             
@@ -408,6 +425,7 @@
             
             // Stop TTS
             if (window.speechSynthesis) {
+                console.log('Stopping TTS');
                 window.speechSynthesis.cancel();
             }
         }
@@ -637,12 +655,16 @@
 
         function previousCard() {
             if (currentIndex > 0) {
+                // Stop current playback when changing cards
+                stopPlayback();
                 displayCard(currentIndex - 1);
             }
         }
 
         function nextCard() {
             if (currentIndex < currentCards.length - 1) {
+                // Stop current playback when changing cards
+                stopPlayback();
                 displayCard(currentIndex + 1);
             }
         }
