@@ -94,6 +94,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Enhanced expression card layout to display horizontally with automatic line wrapping
 - July 12, 2025. Fixed homepage sequence playback functionality with proper API response handling
 - July 12, 2025. Added Korean MP3 audio support using mp3file_K field from Notion database
+- July 12, 2025. Implemented auto-advancement from sequence 1 to sequence 2 when sequence playback completes
 
 ## User Preferences
 

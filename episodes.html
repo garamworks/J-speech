@@ -392,6 +392,9 @@
                 speakerButton.classList.remove('playing');
                 currentSpeakerButton = null;
                 isPlayingSequence = false;
+                
+                // Auto-advance to next sequence
+                await autoAdvanceToNextSequence(speakerButton);
                 return;
             }
 
@@ -551,6 +554,46 @@
                     resolve();
                 }, ms);
             });
+        }
+
+        async function autoAdvanceToNextSequence(currentSpeakerButton) {
+            // Get the current sequence number from the speaker button
+            const currentSequenceCard = currentSpeakerButton.closest('.episode-card');
+            const currentSequenceText = currentSequenceCard.querySelector('.episode-title').textContent;
+            const currentSequenceMatch = currentSequenceText.match(/#(\d+)/);
+            
+            if (!currentSequenceMatch) {
+                console.log('Could not determine current sequence number');
+                return;
+            }
+            
+            const currentSequenceNumber = parseInt(currentSequenceMatch[1]);
+            const nextSequenceNumber = currentSequenceNumber + 1;
+            const nextSequenceId = `#${nextSequenceNumber.toString().padStart(3, '0')}`;
+            
+            console.log(`Auto-advancing from sequence ${currentSequenceNumber} to ${nextSequenceNumber}`);
+            
+            // Find the next sequence card
+            const nextSequenceCard = Array.from(document.querySelectorAll('.episode-card')).find(card => {
+                const titleText = card.querySelector('.episode-title').textContent;
+                return titleText.includes(nextSequenceId);
+            });
+            
+            if (!nextSequenceCard) {
+                console.log(`Next sequence ${nextSequenceId} not found - reached end of available sequences`);
+                return;
+            }
+            
+            // Wait 2 seconds before starting next sequence
+            console.log('Waiting 2 seconds before starting next sequence...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Start the next sequence
+            const nextSpeakerButton = nextSequenceCard.querySelector('.speaker-btn');
+            if (nextSpeakerButton) {
+                console.log(`Starting next sequence: ${nextSequenceId}`);
+                nextSpeakerButton.click();
+            }
         }
 
         // Load episodes when page loads
