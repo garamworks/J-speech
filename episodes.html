@@ -742,51 +742,8 @@
 
                 console.log(`Playing expression sequence ${sequence} with ${flashcards.length} cards`);
                 
-                // Fetch expression data for each card
-                for (let i = 0; i < flashcards.length; i++) {
-                    const card = flashcards[i];
-                    if (card.expressionCardIds && card.expressionCardIds.length > 0) {
-                        console.log(`Fetching ${card.expressionCardIds.length} expressions for card ${i + 1}`);
-                        card.expressions = [];
-                        
-                        for (const expressionId of card.expressionCardIds) {
-                            try {
-                                const response = await fetch(`/api/expression/${expressionId}`);
-                                if (response.ok) {
-                                    const expressionData = await response.json();
-                                    console.log(`Expression data fetched for ID ${expressionId}:`, expressionData);
-                                    
-                                    // Transform the expression data to match expected format
-                                    const transformedExpression = {
-                                        mainExpression: expressionData.title,
-                                        audioUrl: null, // No audio for main expression yet
-                                        examples: []
-                                    };
-                                    
-                                    // Add examples
-                                    for (let j = 1; j <= 5; j++) {
-                                        const japaneseExample = expressionData[`application${j}`];
-                                        const koreanExample = expressionData[`application${j}Korean`];
-                                        
-                                        if (japaneseExample && koreanExample) {
-                                            transformedExpression.examples.push({
-                                                japanese: japaneseExample,
-                                                korean: koreanExample,
-                                                audioUrl: null, // No audio for examples yet
-                                                koreanAudioUrl: null
-                                            });
-                                        }
-                                    }
-                                    
-                                    card.expressions.push(transformedExpression);
-                                }
-                            } catch (error) {
-                                console.error(`Error fetching expression ${expressionId}:`, error);
-                            }
-                        }
-                    }
-                }
-                
+                // Start playback immediately, load expressions in background
+                console.log('Starting playback immediately, loading expressions in background...');
                 await playCardSequenceWithExpressions(flashcards, 0, speakerButton);
 
             } catch (error) {
@@ -837,55 +794,7 @@
                 }
 
                 // 4. Check for expressions and play them
-                if (card.expressions && card.expressions.length > 0) {
-                    console.log(`Found ${card.expressions.length} expressions for card ${cardIndex + 1}`);
-                    
-                    for (let i = 0; i < card.expressions.length; i++) {
-                        const expr = card.expressions[i];
-                        console.log(`Playing expression ${i + 1}/${card.expressions.length}: ${expr.mainExpression}`);
-                        
-                        // Skip playing expression title, go directly to examples
-                        console.log(`Skipping expression title, going directly to examples for: ${expr.mainExpression}`);
-                        
-                        // Play all examples for this expression
-                        if (expr.examples && expr.examples.length > 0) {
-                            console.log(`Playing ${expr.examples.length} examples for expression`);
-                            
-                            for (let j = 0; j < expr.examples.length; j++) {
-                                const example = expr.examples[j];
-                                console.log(`Playing example ${j + 1}/${expr.examples.length}: ${example.japanese}`);
-                                
-                                // Play Japanese example using TTS since we don't have Japanese audio files for examples
-                                if (example.japanese) {
-                                    console.log(`Playing Japanese example via TTS: ${example.japanese}`);
-                                    await playTTSAudio(example.japanese, 'ja');
-                                    console.log('Japanese example TTS completed');
-                                }
-                                
-                                // Wait 2 seconds
-                                console.log('Waiting 2 seconds after Japanese example...');
-                                await sleep(2000);
-                                
-                                // Play Korean meaning using TTS since we don't have Korean audio files for examples
-                                if (example.korean) {
-                                    console.log(`Playing Korean example via TTS: ${example.korean}`);
-                                    await playTTSAudio(example.korean, 'ko');
-                                    console.log('Korean example TTS completed');
-                                }
-                                
-                                // Small delay before next example
-                                if (j < expr.examples.length - 1) {
-                                    await sleep(1000);
-                                }
-                            }
-                        }
-                        
-                        // Small delay before next expression
-                        if (i < card.expressions.length - 1) {
-                            await sleep(1000);
-                        }
-                    }
-                }
+                await loadAndPlayExpressions(card, cardIndex);
 
                 // 5. Wait before next card
                 console.log('Waiting 1 second before next card...');
@@ -906,6 +815,108 @@
                     speakerButton.classList.remove('playing');
                     isPlayingSequence = false;
                     currentSpeakerButton = null;
+                }
+            }
+        }
+
+        // Function to load and play expressions for a card
+        async function loadAndPlayExpressions(card, cardIndex) {
+            if (!card.expressionCardIds || card.expressionCardIds.length === 0) {
+                console.log(`No expressions found for card ${cardIndex + 1}`);
+                return;
+            }
+            
+            console.log(`Loading ${card.expressionCardIds.length} expressions for card ${cardIndex + 1}`);
+            
+            // Load expressions if not already loaded
+            if (!card.expressions) {
+                card.expressions = [];
+                
+                for (const expressionId of card.expressionCardIds) {
+                    try {
+                        const response = await fetch(`/api/expression/${expressionId}`);
+                        if (response.ok) {
+                            const expressionData = await response.json();
+                            console.log(`Expression data loaded for ID ${expressionId}:`, expressionData.title);
+                            
+                            // Transform the expression data to match expected format
+                            const transformedExpression = {
+                                mainExpression: expressionData.title,
+                                audioUrl: null, // No audio for main expression yet
+                                examples: []
+                            };
+                            
+                            // Add examples
+                            for (let j = 1; j <= 5; j++) {
+                                const japaneseExample = expressionData[`application${j}`];
+                                const koreanExample = expressionData[`application${j}Korean`];
+                                
+                                if (japaneseExample && koreanExample) {
+                                    transformedExpression.examples.push({
+                                        japanese: japaneseExample,
+                                        korean: koreanExample,
+                                        audioUrl: null, // No audio for examples yet
+                                        koreanAudioUrl: null
+                                    });
+                                }
+                            }
+                            
+                            card.expressions.push(transformedExpression);
+                        }
+                    } catch (error) {
+                        console.error(`Error loading expression ${expressionId}:`, error);
+                    }
+                }
+            }
+            
+            // Play loaded expressions
+            if (card.expressions && card.expressions.length > 0) {
+                console.log(`Playing ${card.expressions.length} expressions for card ${cardIndex + 1}`);
+                
+                for (let i = 0; i < card.expressions.length; i++) {
+                    const expr = card.expressions[i];
+                    console.log(`Playing expression ${i + 1}/${card.expressions.length}: ${expr.mainExpression}`);
+                    
+                    // Skip playing expression title, go directly to examples
+                    console.log(`Skipping expression title, going directly to examples for: ${expr.mainExpression}`);
+                    
+                    // Play all examples for this expression
+                    if (expr.examples && expr.examples.length > 0) {
+                        console.log(`Playing ${expr.examples.length} examples for expression`);
+                        
+                        for (let j = 0; j < expr.examples.length; j++) {
+                            const example = expr.examples[j];
+                            console.log(`Playing example ${j + 1}/${expr.examples.length}: ${example.japanese}`);
+                            
+                            // Play Japanese example using TTS since we don't have Japanese audio files for examples
+                            if (example.japanese) {
+                                console.log(`Playing Japanese example via TTS: ${example.japanese}`);
+                                await playTTSAudio(example.japanese, 'ja');
+                                console.log('Japanese example TTS completed');
+                            }
+                            
+                            // Wait 2 seconds
+                            console.log('Waiting 2 seconds after Japanese example...');
+                            await sleep(2000);
+                            
+                            // Play Korean meaning using TTS since we don't have Korean audio files for examples
+                            if (example.korean) {
+                                console.log(`Playing Korean example via TTS: ${example.korean}`);
+                                await playTTSAudio(example.korean, 'ko');
+                                console.log('Korean example TTS completed');
+                            }
+                            
+                            // Small delay before next example
+                            if (j < expr.examples.length - 1) {
+                                await sleep(1000);
+                            }
+                        }
+                    }
+                    
+                    // Small delay before next expression
+                    if (i < card.expressions.length - 1) {
+                        await sleep(1000);
+                    }
                 }
             }
         }

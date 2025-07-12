@@ -98,6 +98,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Added dual speaker buttons to episode thumbnails: left side (gray background, white icon) and right side (white background, gray icon)
 - July 12, 2025. Implemented advanced expression learning mode for left speaker button: plays dialogue + expressions + 5 example sentences with audio
 - July 12, 2025. Optimized expression learning: removed expression title reading, reduced example delay to 2 seconds
+- July 12, 2025. Improved loading performance: expressions load in background during playback instead of blocking start
 
 ## User Preferences
 
