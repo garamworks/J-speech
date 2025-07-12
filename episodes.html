@@ -294,6 +294,8 @@
         // Track currently playing audio
         let currentAudio = null;
         let currentSpeakerButton = null;
+        let isPlayingSequence = false;
+        let sequenceTimeout = null;
 
         async function playEpisodeAudio(sequence, speakerButton) {
             try {
@@ -303,16 +305,30 @@
                     currentAudio = null;
                 }
 
+                // Clear any existing timeout
+                if (sequenceTimeout) {
+                    clearTimeout(sequenceTimeout);
+                    sequenceTimeout = null;
+                }
+
                 // Reset previous speaker button
                 if (currentSpeakerButton) {
                     currentSpeakerButton.classList.remove('playing');
                 }
 
+                // If already playing this sequence, stop it
+                if (isPlayingSequence && currentSpeakerButton === speakerButton) {
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                    return;
+                }
+
                 // Set button to playing state
                 speakerButton.classList.add('playing');
                 currentSpeakerButton = speakerButton;
+                isPlayingSequence = true;
 
-                // Fetch first card audio for the episode
+                // Fetch all cards for the episode
                 const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch episode data');
@@ -323,29 +339,11 @@
                     throw new Error('No flashcards found for this episode');
                 }
 
-                const firstCard = episodeData.flashcards[0];
-                if (!firstCard.audioUrl) {
-                    throw new Error('No audio available for this episode');
-                }
+                const flashcards = episodeData.flashcards;
+                console.log(`Playing full sequence ${sequence} with ${flashcards.length} cards`);
 
-                // Play the audio
-                currentAudio = new Audio(firstCard.audioUrl);
-                
-                currentAudio.onended = () => {
-                    speakerButton.classList.remove('playing');
-                    currentAudio = null;
-                    currentSpeakerButton = null;
-                };
-
-                currentAudio.onerror = () => {
-                    console.error('Audio playback error');
-                    speakerButton.classList.remove('playing');
-                    speakerButton.classList.add('disabled');
-                    currentAudio = null;
-                    currentSpeakerButton = null;
-                };
-
-                await currentAudio.play();
+                // Play all cards in sequence
+                await playCardSequence(flashcards, 0, speakerButton);
                 
             } catch (error) {
                 console.error('Error playing episode audio:', error);
@@ -353,7 +351,127 @@
                 speakerButton.classList.add('disabled');
                 currentAudio = null;
                 currentSpeakerButton = null;
+                isPlayingSequence = false;
             }
+        }
+
+        async function playCardSequence(flashcards, cardIndex, speakerButton) {
+            // Check if we should stop
+            if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                return;
+            }
+
+            // Check if we've reached the end
+            if (cardIndex >= flashcards.length) {
+                console.log('Sequence playback completed');
+                speakerButton.classList.remove('playing');
+                currentSpeakerButton = null;
+                isPlayingSequence = false;
+                return;
+            }
+
+            const card = flashcards[cardIndex];
+            console.log(`Playing card ${cardIndex + 1}/${flashcards.length}: ${card.japanese}`);
+
+            try {
+                // Play Japanese audio (recorded file)
+                if (card.audioUrl) {
+                    await playAudioFile(card.audioUrl);
+                    
+                    // Wait 3 seconds after Japanese audio
+                    await sleep(3000);
+                    
+                    // Check if we should continue
+                    if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                        return;
+                    }
+                }
+
+                // Play Korean TTS
+                await playKoreanTTS(card.korean);
+
+                // Check if we should continue
+                if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                    return;
+                }
+
+                // Short pause before next card
+                await sleep(1000);
+
+                // Continue to next card
+                await playCardSequence(flashcards, cardIndex + 1, speakerButton);
+
+            } catch (error) {
+                console.error('Error playing card:', error);
+                // Continue to next card even if this one fails
+                await playCardSequence(flashcards, cardIndex + 1, speakerButton);
+            }
+        }
+
+        function playAudioFile(audioUrl) {
+            return new Promise((resolve, reject) => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+
+                currentAudio = new Audio(audioUrl);
+                
+                currentAudio.onended = () => {
+                    currentAudio = null;
+                    resolve();
+                };
+
+                currentAudio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    currentAudio = null;
+                    reject(error);
+                };
+
+                currentAudio.play().catch(reject);
+            });
+        }
+
+        function playKoreanTTS(koreanText) {
+            return new Promise((resolve, reject) => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+
+                // Check if speech synthesis is available
+                if (!window.speechSynthesis) {
+                    console.warn('Speech synthesis not available');
+                    resolve();
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(koreanText);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9;
+                utterance.volume = 0.8;
+
+                utterance.onend = () => {
+                    resolve();
+                };
+
+                utterance.onerror = (error) => {
+                    console.error('TTS error:', error);
+                    resolve(); // Continue even if TTS fails
+                };
+
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => {
+                sequenceTimeout = setTimeout(() => {
+                    if (isPlayingSequence) {
+                        resolve();
+                    }
+                }, ms);
+            });
         }
 
         // Load episodes when page loads

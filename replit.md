@@ -89,11 +89,16 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 10, 2025. Enhanced UI elements: larger # symbols, reduced icon padding, circular episode icons
 - July 10, 2025. Improved mobile flashcard sizing and expression card text readability
 - July 10, 2025. Fixed error handling for unavailable sequences (004-006) with proper user feedback
+- July 12, 2025. Added speaker buttons to episode thumbnails on homepage for sequence audio playback
+- July 12, 2025. Implemented full sequence audio playback: Japanese MP3 → 3sec pause → Korean TTS
+- July 12, 2025. Enhanced expression card layout to display horizontally with automatic line wrapping
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 Audio Settings: 
-- Only play MP3 files from Notion database
-- No browser TTS fallback when audio files are unavailable
+- Only play MP3 files from Notion database for individual flashcards
+- No browser TTS fallback when audio files are unavailable for flashcards
 - Visual feedback for audio playback status
+- Homepage sequence playback: Japanese MP3 → 3 second pause → Korean TTS
+- Expression cards display horizontally with automatic line wrapping
