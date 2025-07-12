@@ -244,6 +244,7 @@
         let preloadedAudio = {};
         let currentAudio = null;
         let playbackTimeout = null;
+        let isAutoAdvancing = false;
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -372,8 +373,8 @@
                 characterImg.style.display = 'none';
             }
             
-            // If currently playing, start playback for new card
-            if (isPlaying) {
+            // Only auto-start playback if manually navigated (not during auto-advance)
+            if (isPlaying && !isAutoAdvancing) {
                 console.log('Auto-starting playback for new card');
                 setTimeout(() => {
                     if (currentMode === 'basic') {
@@ -454,11 +455,13 @@
                 // Auto advance to next card
                 if (isPlaying && currentIndex < currentCards.length - 1) {
                     await sleep(1000);
-                    nextCard();
                     if (isPlaying) {
+                        console.log('Auto advancing to next card');
+                        autoNextCard();
                         await playBasicMode();
                     }
                 } else {
+                    console.log('Reached end of cards or playback stopped');
                     stopPlayback();
                 }
             } catch (error) {
@@ -496,11 +499,13 @@
                 // Auto advance to next card
                 if (isPlaying && currentIndex < currentCards.length - 1) {
                     await sleep(1000);
-                    nextCard();
                     if (isPlaying) {
+                        console.log('Auto advancing to next card (expression mode)');
+                        autoNextCard();
                         await playExpressionMode();
                     }
                 } else {
+                    console.log('Reached end of cards or playback stopped (expression mode)');
                     stopPlayback();
                 }
             } catch (error) {
@@ -666,6 +671,15 @@
                 // Stop current playback when changing cards
                 stopPlayback();
                 displayCard(currentIndex + 1);
+            }
+        }
+
+        function autoNextCard() {
+            if (currentIndex < currentCards.length - 1) {
+                // Don't stop playback for auto-advance
+                isAutoAdvancing = true;
+                displayCard(currentIndex + 1);
+                isAutoAdvancing = false;
             }
         }
 
