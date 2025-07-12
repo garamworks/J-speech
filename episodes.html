@@ -678,7 +678,8 @@
         async function playEpisodeAudio(sequence, speakerButton) {
             // Navigate to player page
             const mode = speakerButton.classList.contains('speaker-left') ? 'expression' : 'basic';
-            window.location.href = `player.html?sequence=${sequence}&mode=${mode}`;
+            console.log('Navigating to player with sequence:', sequence, 'mode:', mode);
+            window.location.href = `player.html?sequence=${encodeURIComponent(sequence)}&mode=${mode}`;
         }
 
         // New function for left speaker button with expressions

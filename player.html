@@ -252,8 +252,12 @@
 
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('URL params:', window.location.search);
+            console.log('Sequence from URL:', sequence);
+            console.log('Mode from URL:', mode);
+            
             if (!sequence) {
-                alert('시퀀스 정보가 없습니다.');
+                alert('시퀀스 정보가 없습니다. URL: ' + window.location.href);
                 goBack();
                 return;
             }
@@ -263,6 +267,8 @@
             
             // Update UI
             document.getElementById('sequence-title').textContent = `PALM ${sequence}`;
+            document.getElementById('sequence-description').textContent = `${mode === 'expression' ? '표현 학습' : '기본 학습'} 모드`;
+            
             if (mode === 'expression') {
                 document.getElementById('expression-mode').classList.add('active');
                 document.getElementById('basic-mode').classList.remove('active');
@@ -280,27 +286,50 @@
 
         async function loadFlashcards() {
             try {
-                const response = await fetch('/api/flashcards');
+                console.log('Loading flashcards for sequence:', currentSequence);
+                
+                // Try to get specific episode data first
+                let response = await fetch(`/api/flashcards?episode=${encodeURIComponent(currentSequence)}`);
+                if (!response.ok) {
+                    // Fall back to general flashcards endpoint
+                    response = await fetch('/api/flashcards');
+                }
+                
                 const data = await response.json();
+                console.log('Received data:', data);
                 
                 // Find cards for current sequence
                 if (Array.isArray(data)) {
                     // Flat array format
-                    currentCards = data.filter(card => card.sequence === sequence);
+                    currentCards = data.filter(card => card.sequence === currentSequence);
+                } else if (data && typeof data === 'object') {
+                    // Grouped format - try different ways to access the data
+                    currentCards = data[currentSequence] || [];
+                    
+                    // If not found, try converting grouped data to flat array
+                    if (currentCards.length === 0) {
+                        const flatCards = [];
+                        for (const [seq, cards] of Object.entries(data)) {
+                            if (Array.isArray(cards)) {
+                                flatCards.push(...cards);
+                            }
+                        }
+                        currentCards = flatCards.filter(card => card.sequence === currentSequence);
+                    }
                 } else {
-                    // Grouped format
-                    currentCards = data[sequence] || [];
+                    throw new Error('Invalid data format received');
                 }
 
+                console.log(`Found ${currentCards.length} cards for sequence ${currentSequence}`);
                 document.getElementById('total-cards').textContent = currentCards.length;
                 
                 if (currentCards.length === 0) {
-                    alert('이 시퀀스에 카드가 없습니다.');
+                    alert(`시퀀스 ${currentSequence}에 카드가 없습니다.`);
                     goBack();
                 }
             } catch (error) {
                 console.error('Error loading flashcards:', error);
-                alert('카드를 불러오는 중 오류가 발생했습니다.');
+                alert('카드를 불러오는 중 오류가 발생했습니다: ' + error.message);
                 goBack();
             }
         }
