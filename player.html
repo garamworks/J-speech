@@ -463,6 +463,8 @@
                 } else {
                     console.log('Reached end of cards or playback stopped');
                     stopPlayback();
+                    // Auto-advance to next sequence
+                    await autoAdvanceToNextSequence();
                 }
             } catch (error) {
                 console.error('Error in basic mode playback:', error);
@@ -507,6 +509,8 @@
                 } else {
                     console.log('Reached end of cards or playback stopped (expression mode)');
                     stopPlayback();
+                    // Auto-advance to next sequence
+                    await autoAdvanceToNextSequence();
                 }
             } catch (error) {
                 console.error('Error in expression mode playback:', error);
@@ -699,6 +703,43 @@
 
         function goBack() {
             window.history.back();
+        }
+
+        async function autoAdvanceToNextSequence() {
+            try {
+                const currentSequenceNumber = parseInt(currentSequence.replace('#', ''));
+                const nextSequenceNumber = currentSequenceNumber + 1;
+                const nextSequence = `#${nextSequenceNumber.toString().padStart(3, '0')}`;
+                
+                console.log(`Auto-advancing from ${currentSequence} to ${nextSequence}`);
+                
+                // Check if next sequence has cards
+                const response = await fetch('/api/flashcards');
+                const data = await response.json();
+                
+                let hasNextSequence = false;
+                if (Array.isArray(data)) {
+                    hasNextSequence = data.some(card => card.sequence === nextSequence);
+                } else if (data && typeof data === 'object') {
+                    hasNextSequence = data[nextSequence] && data[nextSequence].length > 0;
+                }
+                
+                if (hasNextSequence) {
+                    // Navigate to next sequence
+                    console.log(`Navigating to next sequence: ${nextSequence}`);
+                    window.location.href = `player.html?sequence=${encodeURIComponent(nextSequence)}&mode=${currentMode}`;
+                } else {
+                    console.log('No more sequences available');
+                    // Could add a completion message or navigate back to home
+                    setTimeout(() => {
+                        alert('모든 시퀀스를 완료했습니다!');
+                        window.location.href = '/';
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error in autoAdvanceToNextSequence:', error);
+                // Silently fail - just don't advance
+            }
         }
     </script>
 </body>
