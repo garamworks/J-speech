@@ -288,61 +288,23 @@
                 console.log('Auto-starting playback due to autoplay flag');
                 setTimeout(() => {
                     startPlayback();
-                }, 1000); // Small delay to ensure everything is loaded
+                }, 500); // Reduced delay for faster start
             }
         });
 
         async function loadFlashcardsQuick() {
             try {
-                console.log('Quick loading flashcards for sequence:', currentSequence);
+                console.log('Ultra-quick loading flashcards for sequence:', currentSequence);
                 
-                // Show loading indicator
-                document.getElementById('japanese-text').textContent = '로딩 중...';
-                document.getElementById('korean-text').textContent = 'Loading...';
+                // Start loading data immediately
+                const loadingPromise = loadFlashcardData();
                 
-                // Try to get specific episode data first
-                let response = await fetch(`/api/flashcards?episode=${encodeURIComponent(currentSequence)}`);
-                if (!response.ok) {
-                    // Fall back to general flashcards endpoint
-                    response = await fetch('/api/flashcards');
-                }
+                // Show first card immediately with loading text
+                document.getElementById('japanese-text').textContent = '준비 중...';
+                document.getElementById('korean-text').textContent = 'Getting ready...';
                 
-                const data = await response.json();
-                console.log('Received data:', data);
-                
-                // Find cards for current sequence
-                if (Array.isArray(data)) {
-                    // Flat array format
-                    currentCards = data.filter(card => card.sequence === currentSequence);
-                } else if (data && typeof data === 'object') {
-                    // Grouped format - try different ways to access the data
-                    currentCards = data[currentSequence] || [];
-                    
-                    // If not found, try converting grouped data to flat array
-                    if (currentCards.length === 0) {
-                        const flatCards = [];
-                        for (const [seq, cards] of Object.entries(data)) {
-                            if (Array.isArray(cards)) {
-                                flatCards.push(...cards);
-                            }
-                        }
-                        currentCards = flatCards.filter(card => card.sequence === currentSequence);
-                    }
-                } else {
-                    throw new Error('Invalid data format received');
-                }
-
-                console.log(`Found ${currentCards.length} cards for sequence ${currentSequence}`);
-                document.getElementById('total-cards').textContent = currentCards.length;
-                
-                if (currentCards.length === 0) {
-                    alert(`시퀀스 ${currentSequence}에 카드가 없습니다.`);
-                    goBack();
-                    return;
-                }
-                
-                // Preload first few cards for immediate playback
-                await preloadFirstCards();
+                // Wait for data to load
+                await loadingPromise;
                 
             } catch (error) {
                 console.error('Error loading flashcards:', error);
@@ -351,45 +313,119 @@
             }
         }
 
-        async function preloadFirstCards() {
-            // Preload first 3 cards for immediate playback
-            const cardsToPreload = Math.min(3, currentCards.length);
-            
-            for (let i = 0; i < cardsToPreload; i++) {
-                const card = currentCards[i];
-                if (card.audioUrl) {
-                    try {
-                        const audio = new Audio(card.audioUrl);
-                        audio.preload = 'auto';
-                        preloadedAudio[card.audioUrl] = audio;
-                    } catch (error) {
-                        console.log('Error preloading audio:', card.audioUrl);
-                    }
-                }
+        async function loadFlashcardData() {
+            // Try to get specific episode data first
+            let response = await fetch(`/api/flashcards?episode=${encodeURIComponent(currentSequence)}`);
+            if (!response.ok) {
+                // Fall back to general flashcards endpoint
+                response = await fetch('/api/flashcards');
             }
             
-            // Continue preloading remaining cards in background
+            const data = await response.json();
+            console.log('Received data:', data);
+            
+            // Find cards for current sequence
+            if (Array.isArray(data)) {
+                // Flat array format
+                currentCards = data.filter(card => card.sequence === currentSequence);
+            } else if (data && typeof data === 'object') {
+                // Grouped format - try different ways to access the data
+                currentCards = data[currentSequence] || [];
+                
+                // If not found, try converting grouped data to flat array
+                if (currentCards.length === 0) {
+                    const flatCards = [];
+                    for (const [seq, cards] of Object.entries(data)) {
+                        if (Array.isArray(cards)) {
+                            flatCards.push(...cards);
+                        }
+                    }
+                    currentCards = flatCards.filter(card => card.sequence === currentSequence);
+                }
+            } else {
+                throw new Error('Invalid data format received');
+            }
+
+            console.log(`Found ${currentCards.length} cards for sequence ${currentSequence}`);
+            document.getElementById('total-cards').textContent = currentCards.length;
+            
+            if (currentCards.length === 0) {
+                alert(`시퀀스 ${currentSequence}에 카드가 없습니다.`);
+                goBack();
+                return;
+            }
+            
+            // Preload first card only for immediate playback
+            await preloadFirstCardOnly();
+            
+            // Start background loading of remaining cards
             setTimeout(() => {
                 preloadRemainingCards();
             }, 100);
         }
 
+        async function preloadFirstCardOnly() {
+            // Preload only the first card for immediate playback
+            if (currentCards.length > 0) {
+                const card = currentCards[0];
+                if (card.audioUrl) {
+                    try {
+                        const audio = new Audio(card.audioUrl);
+                        audio.preload = 'auto';
+                        preloadedAudio[card.audioUrl] = audio;
+                        console.log('First card audio preloaded');
+                    } catch (error) {
+                        console.log('Error preloading first card audio:', card.audioUrl);
+                    }
+                }
+                
+                // Preload Korean audio for first card too
+                if (card.koreanAudioUrl) {
+                    try {
+                        const audio = new Audio(card.koreanAudioUrl);
+                        audio.preload = 'auto';
+                        preloadedAudio[card.koreanAudioUrl] = audio;
+                        console.log('First card Korean audio preloaded');
+                    } catch (error) {
+                        console.log('Error preloading first card Korean audio:', card.koreanAudioUrl);
+                    }
+                }
+            }
+        }
+
         async function preloadRemainingCards() {
-            for (let i = 3; i < currentCards.length; i++) {
+            console.log('Starting background preload of remaining cards');
+            
+            for (let i = 1; i < currentCards.length; i++) {
                 const card = currentCards[i];
+                
+                // Preload Japanese audio
                 if (card.audioUrl && !preloadedAudio[card.audioUrl]) {
                     try {
                         const audio = new Audio(card.audioUrl);
                         audio.preload = 'auto';
                         preloadedAudio[card.audioUrl] = audio;
-                        
-                        // Small delay to prevent overwhelming the network
-                        await new Promise(resolve => setTimeout(resolve, 50));
                     } catch (error) {
                         console.log('Error preloading audio:', card.audioUrl);
                     }
                 }
+                
+                // Preload Korean audio
+                if (card.koreanAudioUrl && !preloadedAudio[card.koreanAudioUrl]) {
+                    try {
+                        const audio = new Audio(card.koreanAudioUrl);
+                        audio.preload = 'auto';
+                        preloadedAudio[card.koreanAudioUrl] = audio;
+                    } catch (error) {
+                        console.log('Error preloading Korean audio:', card.koreanAudioUrl);
+                    }
+                }
+                
+                // Small delay to prevent overwhelming the network
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
+            
+            console.log('Background preload completed');
         }
 
         function setupEventListeners() {
