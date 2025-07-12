@@ -299,6 +299,8 @@
 
         async function playEpisodeAudio(sequence, speakerButton) {
             try {
+                console.log(`Starting playback for sequence: ${sequence}`);
+                
                 // Stop any currently playing audio
                 if (currentAudio) {
                     currentAudio.pause();
@@ -318,6 +320,7 @@
 
                 // If already playing this sequence, stop it
                 if (isPlayingSequence && currentSpeakerButton === speakerButton) {
+                    console.log('Stopping current playback');
                     isPlayingSequence = false;
                     currentSpeakerButton = null;
                     return;
@@ -329,12 +332,15 @@
                 isPlayingSequence = true;
 
                 // Fetch all cards for the episode
+                console.log(`Fetching cards for episode: ${sequence}`);
                 const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch episode data');
+                    throw new Error(`Failed to fetch episode data: ${response.status}`);
                 }
 
                 const episodeData = await response.json();
+                console.log('Episode data received:', episodeData);
+                
                 if (!episodeData || !episodeData.flashcards || episodeData.flashcards.length === 0) {
                     throw new Error('No flashcards found for this episode');
                 }
@@ -347,6 +353,7 @@
                 
             } catch (error) {
                 console.error('Error playing episode audio:', error);
+                console.error('Error details:', error.message);
                 speakerButton.classList.remove('playing');
                 speakerButton.classList.add('disabled');
                 currentAudio = null;
@@ -415,9 +422,11 @@
                     return;
                 }
 
+                console.log(`Playing audio file: ${audioUrl}`);
                 currentAudio = new Audio(audioUrl);
                 
                 currentAudio.onended = () => {
+                    console.log('Audio file ended');
                     currentAudio = null;
                     resolve();
                 };
@@ -425,10 +434,19 @@
                 currentAudio.onerror = (error) => {
                     console.error('Audio playback error:', error);
                     currentAudio = null;
-                    reject(error);
+                    resolve(); // Continue even if audio fails
                 };
 
-                currentAudio.play().catch(reject);
+                currentAudio.oncanplaythrough = () => {
+                    console.log('Audio can play through');
+                };
+
+                currentAudio.play().then(() => {
+                    console.log('Audio started playing');
+                }).catch((error) => {
+                    console.error('Audio play failed:', error);
+                    resolve(); // Continue even if audio fails
+                });
             });
         }
 
@@ -439,6 +457,8 @@
                     return;
                 }
 
+                console.log(`Playing Korean TTS: ${koreanText}`);
+
                 // Check if speech synthesis is available
                 if (!window.speechSynthesis) {
                     console.warn('Speech synthesis not available');
@@ -446,12 +466,20 @@
                     return;
                 }
 
+                // Cancel any existing speech
+                window.speechSynthesis.cancel();
+
                 const utterance = new SpeechSynthesisUtterance(koreanText);
                 utterance.lang = 'ko-KR';
                 utterance.rate = 0.9;
                 utterance.volume = 0.8;
 
+                utterance.onstart = () => {
+                    console.log('TTS started');
+                };
+
                 utterance.onend = () => {
+                    console.log('TTS ended');
                     resolve();
                 };
 
@@ -460,7 +488,14 @@
                     resolve(); // Continue even if TTS fails
                 };
 
-                window.speechSynthesis.speak(utterance);
+                // Wait a bit before speaking to ensure previous speech is cancelled
+                setTimeout(() => {
+                    if (isPlayingSequence) {
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        resolve();
+                    }
+                }, 100);
             });
         }
 
