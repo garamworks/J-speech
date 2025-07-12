@@ -14,10 +14,13 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 80vh;
+            min-height: 600px;
+            max-height: 800px;
             display: flex;
             flex-direction: column;
             color: white;
+            overflow: hidden;
         }
 
         .header {
@@ -55,7 +58,7 @@
             align-items: center;
             flex: 1;
             justify-content: flex-start;
-            margin-bottom: 80px;
+            margin-bottom: 20px;
         }
 
         .card-display {
@@ -248,9 +251,9 @@
             </div>
 
             <div class="controls">
-                <button class="control-btn" id="prev-btn">⏮</button>
-                <button class="control-btn play-btn" id="play-btn">▶</button>
-                <button class="control-btn" id="next-btn">⏭</button>
+                <button class="control-btn" id="prev-btn">⏮️</button>
+                <button class="control-btn play-btn" id="play-btn">▶️</button>
+                <button class="control-btn" id="next-btn">⏭️</button>
             </div>
 
             <div class="progress-info">
@@ -519,7 +522,7 @@
 
         async function startPlayback() {
             isPlaying = true;
-            document.getElementById('play-btn').innerHTML = '⏸';
+            document.getElementById('play-btn').innerHTML = '⏸️';
             document.getElementById('play-btn').classList.add('playing');
             
             if (currentMode === 'basic') {
@@ -532,7 +535,7 @@
         function stopPlayback() {
             console.log('Stopping playback');
             isPlaying = false;
-            document.getElementById('play-btn').innerHTML = '▶';
+            document.getElementById('play-btn').innerHTML = '▶️';
             document.getElementById('play-btn').classList.remove('playing');
             
             if (currentAudio) {

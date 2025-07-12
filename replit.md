@@ -107,6 +107,9 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Optimized loading performance: immediate first card playback with background loading of remaining cards
 - July 12, 2025. Removed card top padding (0px) for cleaner, more compact flashcard display
 - July 12, 2025. Enhanced player UI: removed back button, improved mobile button styling, moved mode selector to bottom
+- July 12, 2025. Fixed player screen height to 80vh for better fit, reduced main content margins to 20px
+- July 12, 2025. Added explicit emoji variations (️) to all player control buttons for consistent cross-platform display
+- July 12, 2025. Separated thumbnail click area from speaker buttons on homepage to prevent accidental navigation
 
 ## User Preferences
 
