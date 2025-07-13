@@ -786,6 +786,7 @@
             
             // Check if Android environment is available
             if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
+                alert("Android로 재생 요청을 보냅니다");
                 console.log('Starting Android background playback');
                 
                 // Try Android playback
