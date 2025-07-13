@@ -1618,6 +1618,7 @@
 
             try {
                 console.log(`Playing ${playlist.length} audio files on Android background player`);
+                alert("Android로 재생 요청을 보냅니다");
                 Android.playPlaylist(JSON.stringify(playlist));
                 
                 // Set current index to match Android player
