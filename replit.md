@@ -153,6 +153,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Changed background gradient from purple-blue to comfortable blue-cyan (#4facfe to #00f2fe) across all pages to avoid phone call similarity
 - July 13, 2025. Updated background to calmer dark blue gradient (#2c5282 to #2d3748) for more subdued tone per user feedback
 - July 13, 2025. Changed player B/E mode button active color from purple gradient to light blue gradient (#5dade2 to #3498db)
+- July 13, 2025. Brightened background gradient to lighter blue tone (#4a90e2 to #357abd) for better visibility
 
 ## User Preferences
 
