@@ -651,6 +651,11 @@
             
             // Stop current playback
             stopPlayback();
+            
+            // Auto-start playback with new mode
+            setTimeout(() => {
+                startPlayback();
+            }, 100);
         }
 
         function displayCard(index) {
