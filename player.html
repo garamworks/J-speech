@@ -458,141 +458,6 @@
         let playbackTimeout = null;
         let isAutoAdvancing = false;
         let allSequences = ['#001', '#002', '#003', '#004', '#005', '#006', '#007'];
-        
-        // Background playback variables
-        let wakeLock = null;
-        let isPlayingInBackground = false;
-        let backgroundPlaybackInterval = null;
-        let persistentAudioElement = null;
-
-        // Wake Lock API functions
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock acquired');
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock released');
-                        wakeLock = null;
-                        // Try to re-acquire wake lock if still playing
-                        if (isPlayingInBackground) {
-                            setTimeout(() => requestWakeLock(), 100);
-                        }
-                    });
-                } else {
-                    console.log('Wake Lock API not supported');
-                }
-            } catch (err) {
-                console.error('Failed to acquire wake lock:', err);
-                // Retry after a short delay if still playing
-                if (isPlayingInBackground) {
-                    setTimeout(() => requestWakeLock(), 1000);
-                }
-            }
-        }
-
-        function releaseWakeLock() {
-            if (wakeLock) {
-                wakeLock.release();
-                wakeLock = null;
-            }
-        }
-
-        // Media Session API functions
-        function setupMediaSession() {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: 'PALM 일본어 학습',
-                    artist: 'Flashcard Player',
-                    artwork: [
-                        { src: 'https://via.placeholder.com/96x96?text=PALM', sizes: '96x96', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/128x128?text=PALM', sizes: '128x128', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/192x192?text=PALM', sizes: '192x192', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/256x256?text=PALM', sizes: '256x256', type: 'image/png' }
-                    ]
-                });
-
-                navigator.mediaSession.setActionHandler('play', () => {
-                    if (currentAudio && currentAudio.paused) {
-                        currentAudio.play();
-                    }
-                });
-
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    if (currentAudio && !currentAudio.paused) {
-                        currentAudio.pause();
-                    }
-                });
-
-                navigator.mediaSession.setActionHandler('previoustrack', () => {
-                    previousCard();
-                });
-
-                navigator.mediaSession.setActionHandler('nexttrack', () => {
-                    nextCard();
-                });
-            }
-        }
-
-        function updateMediaSessionState(state) {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = state;
-            }
-        }
-
-        // Function to monitor and maintain background playback
-        function startBackgroundPlaybackMonitoring() {
-            if (backgroundPlaybackInterval) {
-                clearInterval(backgroundPlaybackInterval);
-            }
-            
-            backgroundPlaybackInterval = setInterval(() => {
-                if (isPlayingInBackground && currentAudio) {
-                    // Check if audio is still playing
-                    if (currentAudio.paused || currentAudio.ended) {
-                        console.log('Audio paused/ended in background, attempting to resume');
-                        if (!currentAudio.ended) {
-                            currentAudio.play().catch(e => {
-                                console.log('Failed to resume background audio:', e);
-                            });
-                        }
-                    }
-                    
-                    // Try to maintain wake lock
-                    if (!wakeLock) {
-                        requestWakeLock();
-                    }
-                }
-            }, 1000); // Check every second
-        }
-
-        function stopBackgroundPlaybackMonitoring() {
-            if (backgroundPlaybackInterval) {
-                clearInterval(backgroundPlaybackInterval);
-                backgroundPlaybackInterval = null;
-            }
-        }
-
-        // Create a persistent audio element for better background playback
-        function createPersistentAudioElement() {
-            if (!persistentAudioElement) {
-                persistentAudioElement = document.createElement('audio');
-                persistentAudioElement.preload = 'auto';
-                persistentAudioElement.autoplay = false;
-                persistentAudioElement.loop = false;
-                persistentAudioElement.muted = false;
-                persistentAudioElement.volume = 1.0;
-                persistentAudioElement.crossOrigin = 'anonymous';
-                persistentAudioElement.style.display = 'none';
-                
-                // Add to document for better mobile support
-                document.body.appendChild(persistentAudioElement);
-                
-                console.log('Created persistent audio element');
-            }
-            return persistentAudioElement;
-        }
         let currentExpressionModal = null;
 
         // Get URL parameters
@@ -646,53 +511,6 @@
                     startPlayback();
                 }, 500); // Reduced delay for faster start
             }
-
-            // Setup background playback support
-            setupMediaSession();
-            
-            // Create persistent audio element for better background playback
-            createPersistentAudioElement();
-
-            // Handle visibility changes for background playback
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    console.log('Page hidden - maintaining background playback');
-                    // Keep audio playing in background
-                    if (isPlayingInBackground && currentAudio) {
-                        console.log('Audio continues playing in background');
-                        // Force audio to continue playing
-                        if (currentAudio.paused) {
-                            currentAudio.play().catch(e => console.log('Background play failed:', e));
-                        }
-                    }
-                } else {
-                    console.log('Page visible again');
-                    // Re-acquire wake lock if audio is playing
-                    if (isPlayingInBackground && !wakeLock) {
-                        requestWakeLock();
-                    }
-                }
-            });
-
-            // Handle page focus/blur events for additional background playback support
-            window.addEventListener('blur', function() {
-                console.log('Window lost focus - maintaining audio playback');
-                if (isPlayingInBackground && currentAudio && !currentAudio.paused) {
-                    console.log('Keeping audio playing during blur');
-                }
-            });
-
-            window.addEventListener('focus', function() {
-                console.log('Window gained focus');
-                if (isPlayingInBackground && !wakeLock) {
-                    requestWakeLock();
-                }
-            });
-
-            // Handle page unload to clean up wake lock
-            window.addEventListener('beforeunload', function() {
-                releaseWakeLock();
-            });
         });
 
         async function loadFlashcardsQuick() {
@@ -941,13 +759,6 @@
             
             // Close expression modal when stopping
             closeExpressionModal();
-            
-            // Release wake lock and update media session
-            releaseWakeLock();
-            updateMediaSessionState('paused');
-            isPlayingInBackground = false;
-            // Stop monitoring background playback
-            stopBackgroundPlaybackMonitoring();
         }
 
         async function playBasicMode() {
@@ -1156,10 +967,12 @@
                     return;
                 }
                 
-                // Use persistent audio element for better background playback
-                let audio = createPersistentAudioElement();
-                audio.src = url;
-                audio.load();
+                // Use preloaded audio if available
+                let audio = preloadedAudio[url];
+                if (!audio) {
+                    audio = new Audio(url);
+                    preloadedAudio[url] = audio;
+                }
                 
                 // Reset audio to beginning
                 audio.currentTime = 0;
@@ -1167,36 +980,18 @@
                 
                 audio.onended = () => {
                     currentAudio = null;
-                    // Release wake lock when audio ends
-                    releaseWakeLock();
-                    updateMediaSessionState('paused');
-                    isPlayingInBackground = false;
                     resolve();
                 };
                 
                 audio.onerror = () => {
                     console.error('Audio playback error:', url);
                     currentAudio = null;
-                    // Release wake lock on error
-                    releaseWakeLock();
-                    updateMediaSessionState('paused');
-                    isPlayingInBackground = false;
                     resolve();
                 };
                 
-                audio.play().then(() => {
-                    // Request wake lock to prevent screen sleep during playback
-                    requestWakeLock();
-                    // Update media session
-                    setupMediaSession();
-                    updateMediaSessionState('playing');
-                    isPlayingInBackground = true;
-                    // Start monitoring background playback
-                    startBackgroundPlaybackMonitoring();
-                }).catch(error => {
+                audio.play().catch(error => {
                     console.error('Audio play error:', error);
                     currentAudio = null;
-                    updateMediaSessionState('paused');
                     resolve();
                 });
             });
