@@ -61,6 +61,12 @@
             margin-bottom: 0px;
             flex: 1;
             font-family: 'Fjalla One', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        .header h1:hover {
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
         .nav-arrow {
@@ -868,7 +874,7 @@
         <button class="nav-arrow" id="prev-sequence-btn">
             <i class="fas fa-chevron-left"></i>
         </button>
-        <h1 id="sequence-title">PALM #001</h1>
+        <h1 id="sequence-title" onclick="goToHomepage()" style="cursor: pointer;">PALM #001</h1>
         <button class="nav-arrow" id="next-sequence-btn">
             <i class="fas fa-chevron-right"></i>
         </button>
