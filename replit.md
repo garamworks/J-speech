@@ -150,6 +150,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Added isAndroidApp() function for seamless web/Android operation detection across index.html, episodes.html, and player.html
 - July 13, 2025. Implemented Android.playPlaylist() integration for background audio playback with automatic fallback to web audio
 - July 13, 2025. Updated player controls to use Android API functions (pause, play, previousCard, nextCard) when available
+- July 13, 2025. Changed background gradient from purple-blue to comfortable blue-cyan (#4facfe to #00f2fe) across all pages to avoid phone call similarity
 
 ## User Preferences
 
