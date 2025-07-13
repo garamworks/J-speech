@@ -407,7 +407,7 @@
         <div class="main-content">
             <div class="card-display">
                 <div class="character-display">
-                    <img id="character-image" src="" alt="캐릭터" style="display: none;">
+                    <img id="character-image" src="" alt="캐릭터" style="display: none; border-radius: 50%; object-fit: cover;">
                 </div>
                 <div class="card-japanese" id="japanese-text">재생을 시작하세요</div>
                 <div class="card-korean" id="korean-text">Press play to start</div>
@@ -682,6 +682,8 @@
             if (card.characterImageUrl) {
                 characterImg.src = card.characterImageUrl;
                 characterImg.style.display = 'block';
+                characterImg.style.borderRadius = '50%';
+                characterImg.style.objectFit = 'cover';
             } else {
                 characterImg.style.display = 'none';
             }

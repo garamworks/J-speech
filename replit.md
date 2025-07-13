@@ -131,6 +131,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Updated progress counter font to Fjalla One for consistency with navigation styling
 - July 13, 2025. Optimized mobile layout: reduced card size and margins to fit Basic/Expression buttons on screen
 - July 13, 2025. Fixed mobile viewport height issue: used 100dvh to ensure proper fit within browser window
+- July 13, 2025. Enhanced character image display: added circular border-radius and object-fit cover for consistent appearance
 
 ## User Preferences
 
