@@ -133,6 +133,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Fixed mobile viewport height issue: used 100dvh to ensure proper fit within browser window
 - July 13, 2025. Enhanced character image display: added circular border-radius and object-fit cover for consistent appearance
 - July 13, 2025. Improved player character image: increased size from 70px to 90px and removed border for cleaner appearance
+- July 13, 2025. Added mode selection icons: B (Basic) and E (Expression) circular icons on left/right sides of player card for quick mode switching
 
 ## User Preferences
 

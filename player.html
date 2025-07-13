@@ -218,6 +218,7 @@
             box-sizing: border-box;
             max-height: 50vh;
             max-height: 50dvh; /* Dynamic viewport height for mobile */
+            position: relative;
         }
 
         .card-japanese {
@@ -244,6 +245,45 @@
             height: 90px;
             border-radius: 50%;
             object-fit: cover;
+        }
+
+        .mode-icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+        }
+
+        .mode-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .mode-icon.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mode-icon-left {
+            left: 15px;
+        }
+
+        .mode-icon-right {
+            right: 15px;
         }
 
         .controls {
@@ -405,6 +445,8 @@
     <div class="player-container">
         <div class="main-content">
             <div class="card-display">
+                <div class="mode-icon mode-icon-left active" id="basic-icon" onclick="switchMode('basic')">B</div>
+                <div class="mode-icon mode-icon-right" id="expression-icon" onclick="switchMode('expression')">E</div>
                 <div class="character-display">
                     <img id="character-image" src="" alt="캐릭터" style="display: none; border-radius: 50%; object-fit: cover;">
                 </div>
@@ -486,6 +528,11 @@
             if (mode === 'expression') {
                 document.getElementById('expression-mode').classList.add('active');
                 document.getElementById('basic-mode').classList.remove('active');
+                document.getElementById('expression-icon').classList.add('active');
+                document.getElementById('basic-icon').classList.remove('active');
+            } else {
+                document.getElementById('basic-icon').classList.add('active');
+                document.getElementById('expression-icon').classList.remove('active');
             }
 
             // Load flashcards with fast loading
@@ -652,8 +699,18 @@
 
         function switchMode(mode) {
             currentMode = mode;
+            
+            // Update mode buttons
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`${mode}-mode`).classList.add('active');
+            
+            // Update mode icons
+            document.querySelectorAll('.mode-icon').forEach(icon => icon.classList.remove('active'));
+            if (mode === 'basic') {
+                document.getElementById('basic-icon').classList.add('active');
+            } else {
+                document.getElementById('expression-icon').classList.add('active');
+            }
             
             // Stop current playback
             stopPlayback();
