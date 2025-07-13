@@ -71,6 +71,90 @@
             background: rgba(255, 255, 255, 0.2);
             transform: none;
         }
+        
+        /* Expression Modal Styles */
+        .expression-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .expression-modal-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .expression-modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .expression-modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+        
+        .expression-modal-meaning {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .expression-modal-examples {
+            margin-top: 20px;
+        }
+        
+        .expression-example {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .expression-example-jp {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #FFE4B5;
+        }
+        
+        .expression-example-kr {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .expression-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .expression-modal-close:hover {
+            opacity: 1;
+        }
 
         .header p {
             font-size: 16px;
@@ -323,6 +407,18 @@
         </div>
     </div>
 
+    <!-- Expression Modal -->
+    <div class="expression-modal" id="expression-modal">
+        <div class="expression-modal-content">
+            <button class="expression-modal-close" onclick="closeExpressionModal()">&times;</button>
+            <div class="expression-modal-header">
+                <div class="expression-modal-title" id="expression-modal-title"></div>
+                <div class="expression-modal-meaning" id="expression-modal-meaning"></div>
+            </div>
+            <div class="expression-modal-examples" id="expression-modal-examples"></div>
+        </div>
+    </div>
+
     <script>
         let currentCards = [];
         let currentIndex = 0;
@@ -334,6 +430,7 @@
         let playbackTimeout = null;
         let isAutoAdvancing = false;
         let allSequences = ['#001', '#002', '#003', '#004', '#005', '#006', '#007'];
+        let currentExpressionModal = null;
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -615,6 +712,9 @@
                 console.log('Stopping TTS');
                 window.speechSynthesis.cancel();
             }
+            
+            // Close expression modal when stopping
+            closeExpressionModal();
         }
 
         async function playBasicMode() {
@@ -753,6 +853,9 @@
                     
                     console.log(`Playing expression: ${expr.mainExpression}`);
                     
+                    // Show expression modal
+                    showExpressionModal(expr);
+                    
                     // Announce "표현" before reading the meaning
                     await playTTSAudio('표현', 'ko');
                     
@@ -803,6 +906,12 @@
                             await sleep(1000);
                         }
                     }
+                    
+                    // Close modal after expression is done
+                    closeExpressionModal();
+                    
+                    // Wait before next expression
+                    await sleep(1000);
                 }
             }
         }
@@ -966,6 +1075,49 @@
                 nextBtn.disabled = currentIndex >= allSequences.length - 1;
             }
         }
+        
+        function showExpressionModal(expression) {
+            const modal = document.getElementById('expression-modal');
+            const title = document.getElementById('expression-modal-title');
+            const meaning = document.getElementById('expression-modal-meaning');
+            const examples = document.getElementById('expression-modal-examples');
+            
+            // Set content
+            title.textContent = expression.mainExpression;
+            meaning.textContent = expression.meaning || '';
+            
+            // Clear and populate examples
+            examples.innerHTML = '';
+            if (expression.examples && expression.examples.length > 0) {
+                expression.examples.forEach(example => {
+                    const exampleDiv = document.createElement('div');
+                    exampleDiv.className = 'expression-example';
+                    exampleDiv.innerHTML = `
+                        <div class="expression-example-jp">${example.japanese}</div>
+                        <div class="expression-example-kr">${example.korean}</div>
+                    `;
+                    examples.appendChild(exampleDiv);
+                });
+            }
+            
+            // Show modal
+            modal.style.display = 'flex';
+            currentExpressionModal = expression;
+        }
+        
+        function closeExpressionModal() {
+            const modal = document.getElementById('expression-modal');
+            modal.style.display = 'none';
+            currentExpressionModal = null;
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('expression-modal');
+            if (event.target === modal) {
+                closeExpressionModal();
+            }
+        });
 
         async function autoAdvanceToNextSequence() {
             try {
