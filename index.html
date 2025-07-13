@@ -1673,7 +1673,7 @@
             }
 
             // Check if Android environment is available
-            if (isAndroidApp()) {
+            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
                 console.log('Android environment detected - using background player');
                 
                 // Visual feedback for playing

@@ -784,7 +784,7 @@
             document.getElementById('play-btn').classList.add('playing');
             
             // Check if Android environment is available
-            if (isAndroidApp()) {
+            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
                 console.log('Starting Android background playback');
                 
                 // Try Android playback

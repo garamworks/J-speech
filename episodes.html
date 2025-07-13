@@ -423,7 +423,7 @@
                 console.log(`Starting playback for sequence: ${sequence} in ${mode} mode`);
                 
                 // Check if Android environment is available
-                if (isAndroidApp()) {
+                if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
                     console.log('Android environment detected - using background player');
                     
                     // Visual feedback for Android playback
