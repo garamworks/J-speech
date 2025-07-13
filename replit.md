@@ -138,6 +138,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Removed Basic/Expression mode selector buttons and increased card height from 50vh to 60vh for better content display
 - July 13, 2025. Updated B/E mode icons with purple gradient for active state, removed white borders, and adjusted inactive opacity
 - July 13, 2025. Changed card content alignment from center to top, added padding to card top (20px) and character image margin (10px)
+- July 13, 2025. Increased character image top margin from 10px to 20px for better spacing
 
 ## User Preferences
 
