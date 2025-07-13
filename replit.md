@@ -143,6 +143,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Updated B button styling to match E button: white background with gray text (#555) for consistency
 - July 13, 2025. Replaced main flashcard navigation with player-style header: PALM #001 format with left/right arrows for sequence navigation
 - July 13, 2025. Added homepage navigation to sequence title: clicking PALM #001 returns to episode selection page
+- July 13, 2025. Updated navigation icons to caret arrows in circular buttons and applied Fjalla One font to card counter
 
 ## User Preferences
 
