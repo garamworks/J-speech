@@ -402,7 +402,6 @@
                 }
 
                 // Call Android background player
-                alert("Android로 재생 요청을 보냅니다");
                 Android.playPlaylist(JSON.stringify(playlist));
                 
                 // Set mode if available
@@ -424,8 +423,7 @@
                 console.log(`Starting playback for sequence: ${sequence} in ${mode} mode`);
                 
                 // Check if Android environment is available
-                if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
-                    alert("Android로 재생 요청을 보냅니다");
+                if (isAndroidApp()) {
                     console.log('Android environment detected - using background player');
                     
                     // Visual feedback for Android playback
@@ -823,12 +821,7 @@
         }
 
         // Load episodes when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check Android object status
-            alert('typeof Android: ' + typeof Android);
-            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
-            loadEpisodes();
-        });
+        document.addEventListener('DOMContentLoaded', loadEpisodes);
     </script>
 </body>
 </html>

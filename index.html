@@ -1618,7 +1618,6 @@
 
             try {
                 console.log(`Playing ${playlist.length} audio files on Android background player`);
-                alert("Android로 재생 요청을 보냅니다");
                 Android.playPlaylist(JSON.stringify(playlist));
                 
                 // Set current index to match Android player
@@ -1674,8 +1673,7 @@
             }
 
             // Check if Android environment is available
-            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
-                alert("Android로 재생 요청을 보냅니다");
+            if (isAndroidApp()) {
                 console.log('Android environment detected - using background player');
                 
                 // Visual feedback for playing
@@ -2275,16 +2273,8 @@
 
         // Initialize the app when DOM is loaded
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                // Check Android object status
-                alert('typeof Android: ' + typeof Android);
-                alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
-                loadFlashcardsFromNotion();
-            });
+            document.addEventListener('DOMContentLoaded', loadFlashcardsFromNotion);
         } else {
-            // Check Android object status
-            alert('typeof Android: ' + typeof Android);
-            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
             loadFlashcardsFromNotion();
         }
 

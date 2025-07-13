@@ -489,7 +489,6 @@
 
             try {
                 console.log(`Playing ${playlist.length} audio files on Android background player`);
-                alert("Android로 재생 요청을 보냅니다");
                 Android.playPlaylist(JSON.stringify(playlist));
                 
                 // Set current index to match Android player
@@ -517,10 +516,6 @@
 
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check Android object status
-            alert('typeof Android: ' + typeof Android);
-            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
-            
             console.log('URL params:', window.location.search);
             console.log('Sequence from URL:', sequence);
             console.log('Mode from URL:', mode);
@@ -789,8 +784,7 @@
             document.getElementById('play-btn').classList.add('playing');
             
             // Check if Android environment is available
-            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
-                alert("Android로 재생 요청을 보냅니다");
+            if (isAndroidApp()) {
                 console.log('Starting Android background playback');
                 
                 // Try Android playback
