@@ -1091,6 +1091,7 @@
         // Background playback variables
         let wakeLock = null;
         let isPlayingInBackground = false;
+        let backgroundPlaybackInterval = null;
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
@@ -1643,6 +1644,14 @@
                 console.log('Available preloaded keys:', Object.keys(preloadedAudios));
                 const audio = preloadedAudios[preloadedKey] || new Audio(currentCard.audioUrl);
                 console.log('Audio source URL:', audio.src);
+                
+                // Configure audio for background playback
+                audio.preload = 'auto';
+                audio.loop = false;
+                audio.muted = false;
+                audio.volume = 1.0;
+                audio.crossOrigin = 'anonymous';
+                
                 window.currentAudio = audio;
                 
                 // Visual feedback for playing
@@ -1657,6 +1666,8 @@
                     releaseWakeLock();
                     updateMediaSessionState('paused');
                     isPlayingInBackground = false;
+                    // Stop monitoring background playback
+                    stopBackgroundPlaybackMonitoring();
                 };
                 
                 audio.onerror = (event) => {
@@ -1684,6 +1695,8 @@
                     setupMediaSession();
                     updateMediaSessionState('playing');
                     isPlayingInBackground = true;
+                    // Start monitoring background playback
+                    startBackgroundPlaybackMonitoring();
                 }).catch(error => {
                     console.error('Error playing audio:', error);
                     speakerBtn.style.background = '#4299e1';
@@ -2638,10 +2651,19 @@
                     
                     wakeLock.addEventListener('release', () => {
                         console.log('Wake lock released');
+                        wakeLock = null;
+                        // Try to re-acquire wake lock if still playing
+                        if (isPlayingInBackground) {
+                            setTimeout(() => requestWakeLock(), 100);
+                        }
                     });
                 }
             } catch (err) {
                 console.log('Wake lock request failed:', err);
+                // Retry after a short delay if still playing
+                if (isPlayingInBackground) {
+                    setTimeout(() => requestWakeLock(), 1000);
+                }
             }
         }
 
@@ -2709,6 +2731,39 @@
             }
         }
 
+        // Function to monitor and maintain background playback
+        function startBackgroundPlaybackMonitoring() {
+            if (backgroundPlaybackInterval) {
+                clearInterval(backgroundPlaybackInterval);
+            }
+            
+            backgroundPlaybackInterval = setInterval(() => {
+                if (isPlayingInBackground && window.currentAudio) {
+                    // Check if audio is still playing
+                    if (window.currentAudio.paused || window.currentAudio.ended) {
+                        console.log('Audio paused/ended in background, attempting to resume');
+                        if (!window.currentAudio.ended) {
+                            window.currentAudio.play().catch(e => {
+                                console.log('Failed to resume background audio:', e);
+                            });
+                        }
+                    }
+                    
+                    // Try to maintain wake lock
+                    if (!wakeLock) {
+                        requestWakeLock();
+                    }
+                }
+            }, 1000); // Check every second
+        }
+
+        function stopBackgroundPlaybackMonitoring() {
+            if (backgroundPlaybackInterval) {
+                clearInterval(backgroundPlaybackInterval);
+                backgroundPlaybackInterval = null;
+            }
+        }
+
         // Initialize modal event listener after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             const expressionModal = document.getElementById('expression-modal');
@@ -2737,8 +2792,12 @@
                 if (document.hidden) {
                     console.log('Page hidden - maintaining background playback');
                     // Keep audio playing in background
-                    if (isPlayingInBackground) {
+                    if (isPlayingInBackground && window.currentAudio) {
                         console.log('Audio continues playing in background');
+                        // Force audio to continue playing
+                        if (window.currentAudio.paused) {
+                            window.currentAudio.play().catch(e => console.log('Background play failed:', e));
+                        }
                     }
                 } else {
                     console.log('Page visible again');
@@ -2746,6 +2805,21 @@
                     if (isPlayingInBackground && !wakeLock) {
                         requestWakeLock();
                     }
+                }
+            });
+
+            // Handle page focus/blur events for additional background playback support
+            window.addEventListener('blur', function() {
+                console.log('Window lost focus - maintaining audio playback');
+                if (isPlayingInBackground && window.currentAudio && !window.currentAudio.paused) {
+                    console.log('Keeping audio playing during blur');
+                }
+            });
+
+            window.addEventListener('focus', function() {
+                console.log('Window gained focus');
+                if (isPlayingInBackground && !wakeLock) {
+                    requestWakeLock();
                 }
             });
 

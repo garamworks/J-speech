@@ -462,6 +462,7 @@
         // Background playback variables
         let wakeLock = null;
         let isPlayingInBackground = false;
+        let backgroundPlaybackInterval = null;
 
         // Wake Lock API functions
         async function requestWakeLock() {
@@ -473,12 +474,20 @@
                     wakeLock.addEventListener('release', () => {
                         console.log('Wake Lock released');
                         wakeLock = null;
+                        // Try to re-acquire wake lock if still playing
+                        if (isPlayingInBackground) {
+                            setTimeout(() => requestWakeLock(), 100);
+                        }
                     });
                 } else {
                     console.log('Wake Lock API not supported');
                 }
             } catch (err) {
                 console.error('Failed to acquire wake lock:', err);
+                // Retry after a short delay if still playing
+                if (isPlayingInBackground) {
+                    setTimeout(() => requestWakeLock(), 1000);
+                }
             }
         }
 
@@ -528,6 +537,39 @@
         function updateMediaSessionState(state) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = state;
+            }
+        }
+
+        // Function to monitor and maintain background playback
+        function startBackgroundPlaybackMonitoring() {
+            if (backgroundPlaybackInterval) {
+                clearInterval(backgroundPlaybackInterval);
+            }
+            
+            backgroundPlaybackInterval = setInterval(() => {
+                if (isPlayingInBackground && currentAudio) {
+                    // Check if audio is still playing
+                    if (currentAudio.paused || currentAudio.ended) {
+                        console.log('Audio paused/ended in background, attempting to resume');
+                        if (!currentAudio.ended) {
+                            currentAudio.play().catch(e => {
+                                console.log('Failed to resume background audio:', e);
+                            });
+                        }
+                    }
+                    
+                    // Try to maintain wake lock
+                    if (!wakeLock) {
+                        requestWakeLock();
+                    }
+                }
+            }, 1000); // Check every second
+        }
+
+        function stopBackgroundPlaybackMonitoring() {
+            if (backgroundPlaybackInterval) {
+                clearInterval(backgroundPlaybackInterval);
+                backgroundPlaybackInterval = null;
             }
         }
         let currentExpressionModal = null;
@@ -592,8 +634,12 @@
                 if (document.hidden) {
                     console.log('Page hidden - maintaining background playback');
                     // Keep audio playing in background
-                    if (isPlayingInBackground) {
+                    if (isPlayingInBackground && currentAudio) {
                         console.log('Audio continues playing in background');
+                        // Force audio to continue playing
+                        if (currentAudio.paused) {
+                            currentAudio.play().catch(e => console.log('Background play failed:', e));
+                        }
                     }
                 } else {
                     console.log('Page visible again');
@@ -601,6 +647,21 @@
                     if (isPlayingInBackground && !wakeLock) {
                         requestWakeLock();
                     }
+                }
+            });
+
+            // Handle page focus/blur events for additional background playback support
+            window.addEventListener('blur', function() {
+                console.log('Window lost focus - maintaining audio playback');
+                if (isPlayingInBackground && currentAudio && !currentAudio.paused) {
+                    console.log('Keeping audio playing during blur');
+                }
+            });
+
+            window.addEventListener('focus', function() {
+                console.log('Window gained focus');
+                if (isPlayingInBackground && !wakeLock) {
+                    requestWakeLock();
                 }
             });
 
@@ -861,6 +922,8 @@
             releaseWakeLock();
             updateMediaSessionState('paused');
             isPlayingInBackground = false;
+            // Stop monitoring background playback
+            stopBackgroundPlaybackMonitoring();
         }
 
         async function playBasicMode() {
@@ -1076,6 +1139,13 @@
                     preloadedAudio[url] = audio;
                 }
                 
+                // Configure audio for background playback
+                audio.preload = 'auto';
+                audio.loop = false;
+                audio.muted = false;
+                audio.volume = 1.0;
+                audio.crossOrigin = 'anonymous';
+                
                 // Reset audio to beginning
                 audio.currentTime = 0;
                 currentAudio = audio;
@@ -1106,6 +1176,8 @@
                     setupMediaSession();
                     updateMediaSessionState('playing');
                     isPlayingInBackground = true;
+                    // Start monitoring background playback
+                    startBackgroundPlaybackMonitoring();
                 }).catch(error => {
                     console.error('Audio play error:', error);
                     currentAudio = null;

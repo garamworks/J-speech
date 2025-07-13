@@ -148,6 +148,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Fixed db-connection-status visibility and increased word/expression icon area from 70% to 80% for better usability
 - July 13, 2025. Implemented comprehensive background playback functionality using Wake Lock API and Media Session API
 - July 13, 2025. Added background audio continuation when browser goes to background or mobile screen turns off
+- July 13, 2025. Enhanced background playback with automatic wake lock re-acquisition and audio monitoring system
+- July 13, 2025. Added periodic background playback monitoring to prevent audio interruption on mobile devices
 
 ## User Preferences
 
