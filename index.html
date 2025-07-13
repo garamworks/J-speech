@@ -2204,8 +2204,13 @@
                     return aNum - bNum;
                 });
                 const currentIndex = sequences.indexOf(currentEpisode);
+                console.log('Previous sequence click - Available sequences:', sequences);
+                console.log('Current episode:', currentEpisode);
+                console.log('Current index:', currentIndex);
                 if (currentIndex > 0) {
-                    loadEpisode(sequences[currentIndex - 1]);
+                    const prevSeq = sequences[currentIndex - 1];
+                    console.log('Moving to previous sequence:', prevSeq);
+                    loadEpisode(prevSeq);
                 }
             });
         }
@@ -2218,8 +2223,13 @@
                     return aNum - bNum;
                 });
                 const currentIndex = sequences.indexOf(currentEpisode);
+                console.log('Next sequence click - Available sequences:', sequences);
+                console.log('Current episode:', currentEpisode);
+                console.log('Current index:', currentIndex);
                 if (currentIndex < sequences.length - 1) {
-                    loadEpisode(sequences[currentIndex + 1]);
+                    const nextSeq = sequences[currentIndex + 1];
+                    console.log('Moving to next sequence:', nextSeq);
+                    loadEpisode(nextSeq);
                 }
             });
         }
