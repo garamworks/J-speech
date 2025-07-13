@@ -823,7 +823,12 @@
         }
 
         // Load episodes when page loads
-        document.addEventListener('DOMContentLoaded', loadEpisodes);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check Android object status
+            alert('typeof Android: ' + typeof Android);
+            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
+            loadEpisodes();
+        });
     </script>
 </body>
 </html>

@@ -517,6 +517,10 @@
 
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
+            // Check Android object status
+            alert('typeof Android: ' + typeof Android);
+            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
+            
             console.log('URL params:', window.location.search);
             console.log('Sequence from URL:', sequence);
             console.log('Mode from URL:', mode);
