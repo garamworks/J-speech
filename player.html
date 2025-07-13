@@ -1081,8 +1081,8 @@
             // Stop current playback
             stopPlayback();
             
-            // Navigate to new sequence
-            const newUrl = `/player.html?sequence=${encodeURIComponent(sequence)}&mode=${currentMode}&autoplay=false`;
+            // Navigate to new sequence with autoplay enabled
+            const newUrl = `/player.html?sequence=${encodeURIComponent(sequence)}&mode=${currentMode}&autoplay=true`;
             window.location.href = newUrl;
         }
         
