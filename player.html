@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PALM 재생</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -573,7 +574,7 @@
 
         async function startPlayback() {
             isPlaying = true;
-            document.getElementById('play-btn').innerHTML = '&#9208;';
+            document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-pause" style="color: white;"></i>';
             document.getElementById('play-btn').classList.add('playing');
             
             if (currentMode === 'basic') {
