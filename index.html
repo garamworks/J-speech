@@ -2089,64 +2089,44 @@
         }
 
         function goToHomepage() {
-            // Navigate to the homepage
-            window.location.href = '/';
+            // Navigate to the episodes page
+            window.location.href = '/episodes.html';
         }
-
+        
+        // Navigate to previous sequence
+        function goToPrevSequence() {
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
+            
+            if (currentIndex > 0) {
+                currentEpisode = sequences[currentIndex - 1];
+                currentCardIndex = 0;
+                loadEpisode(currentEpisode);
+            }
+        }
+        
+        // Navigate to next sequence
+        function goToNextSequence() {
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
+            
+            if (currentIndex < sequences.length - 1) {
+                currentEpisode = sequences[currentIndex + 1];
+                currentCardIndex = 0;
+                loadEpisode(currentEpisode);
+            }
+        }
+        
+        // Navigation functions with proper naming
         function previousVolume() {
-            // Volume navigation placeholder
             console.log('Previous volume clicked');
         }
-
+        
         function nextVolume() {
-            // Volume navigation placeholder
             console.log('Next volume clicked');
         }
 
-        // Event listeners
-        // Remove global click event - now handled by clickable areas only
-        speakerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            console.log('Speaker button clicked');
-            console.log('typeof speakJapanese:', typeof speakJapanese);
-            console.log('About to call speakJapanese()');
-            try {
-                speakJapanese();
-                console.log('speakJapanese() call completed');
-            } catch (error) {
-                console.error('Error calling speakJapanese:', error);
-            }
-        });
-        speakerBtnBack.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakJapanese();
-        });
-        // Word speaker buttons are hidden and not used
-        prevBtn.addEventListener('click', goToPreviousCard);
-        nextBtn.addEventListener('click', goToNextCard);
-        
-        // Old episode navigation buttons removed from HTML
-        
-        // New sequence navigation button event listeners
-        if (prevSequenceBtn) {
-            prevSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
-                const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex > 0) {
-                    loadEpisode(sequences[currentIndex - 1]);
-                }
-            });
-        }
-        
-        if (nextSequenceBtn) {
-            nextSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
-                const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex < sequences.length - 1) {
-                    loadEpisode(sequences[currentIndex + 1]);
-                }
-            });
-        }
+        // Event listeners are now handled in the main DOMContentLoaded listener above
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
@@ -2175,11 +2155,7 @@
         });
 
         // Initialize the app when DOM is loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadFlashcardsFromNotion);
-        } else {
-            loadFlashcardsFromNotion();
-        }
+        // This is now handled by the main DOMContentLoaded listener
 
         // Handle touch gestures for mobile
         let touchStartX = 0;
@@ -2593,6 +2569,33 @@
                         closeWordModal();
                     }
                 });
+            }
+            
+            // Add event listeners for navigation buttons
+            const prevSequenceBtn = document.getElementById('prev-sequence-btn');
+            const nextSequenceBtn = document.getElementById('next-sequence-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const speakerBtn = document.getElementById('speaker-btn');
+            const speakerBtnBack = document.getElementById('speaker-btn-back');
+            
+            if (prevSequenceBtn) {
+                prevSequenceBtn.addEventListener('click', goToPrevSequence);
+            }
+            if (nextSequenceBtn) {
+                nextSequenceBtn.addEventListener('click', goToNextSequence);
+            }
+            if (prevBtn) {
+                prevBtn.addEventListener('click', goToPreviousCard);
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', goToNextCard);
+            }
+            if (speakerBtn) {
+                speakerBtn.addEventListener('click', speakJapanese);
+            }
+            if (speakerBtnBack) {
+                speakerBtnBack.addEventListener('click', speakJapanese);
             }
             
             // Initialize the flashcard app
