@@ -119,6 +119,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Added expression card modal display during expression learning mode playback
 - July 13, 2025. Converted all player control buttons to Font Awesome icons with white color styling
 - July 13, 2025. Updated expression learning modal design to match main flashcard modal styling
+- July 13, 2025. Updated sequence navigation arrows to Font Awesome icons without circular background
 
 ## User Preferences
 
