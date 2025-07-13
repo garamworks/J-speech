@@ -1,0 +1,44 @@
+Received grouped data structure: (7) ['#001', '#002', '#003', '#004', '#005', '#006', '#007']
+Console.js:61 Converted to flat array: 363 cards
+Console.js:61 Available sequences: (7) ['#001', '#002', '#003', '#004', '#005', '#006', '#007']
+Console.js:61 Using pre-grouped episode data
+Console.js:61 Cleared preloaded data for new sequence: #001
+Console.js:61 Character image URL: https://prod-files-secure.s3.us-west-2.amazonaws.com/3a4b83b6-7d1b-4ef9-aa34-8d68355daf44/9c8d6a20-4a9d-4c6a-9843-c73c6a096899/haeb.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB4665INO34R6%2F20250713%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250713T041512Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA0gn42E99MtBI6nE764%2FazKjK6%2B31vByCrfPpGHuWhGAiBf5eKsonbLzL3Mtw5v2nCDH91CfvyPs6X9HtzaLs9mCyqIBAj8%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMJdqhLSwVYj1qINB2KtwD%2FDTZnrmr2ne%2BB%2FTe8JAauSARG9Y5xBnh0ENjFgY4djxE6aqsYmFzBHJex%2Fks562N0GieLoGYKuFuirnM%2BJ%2B7nvUQPTx4ph8%2B7IdxNdULEQ6nAjZWR7NhWHrgifjrF4LElFF9gXowhdzYFrVR9H45DmnWfHKr%2BS4rMciokkauPcw9VPfW%2FJZPxtk%2BZyh3D3Ofiq%2BIL3ztY742a6Y1eZOz1FIEkyV9qgK%2BG6myzU%2FckaMWCHiuGmVKPC41S%2F0%2FHBQ1QInFakBAHtYEpPepK9aOvSEd8HbSaKqCAB%2FmdgR3%2BdveK8CgTPbnCwqkWLOBYVd%2F%2Bscvk4T08geMoD3eNnt6ag8y41GvFrWO8f34KXZkBRU6BCdsyRbVglP7z%2B4vN1rX%2Fnilt470O9m1aqCSXUnU0fgnoWgjxaE0NxsdX%2BybDgOblUAqeEtg85xbW%2BANVCmJhnO431lghDvSQB8UikFEZKjwy%2BOBZ5FCKFB6D00xO%2B8xzop3Ll5tDMWGo91jIePCvgMmxKMnZ5Xx7IBaVY8H7jKLIINHas48YC0SJJINPrrtyAhK6ZqyWCWlnKYDKNmAHt8c3hqWmAe8DXUedAFvU4p3iiEMSNn7kazRDIS60MSK9fYysADAmiws1SIwmrzMwwY6pgFTKYD%2BEOyCtnQjEoyqJrVUkSTBWAd75oB57jDFZNx4T6ZepLJ7fbs7JN6mijVJaEkrxhxV0DX7rWxMclMWXAVcBqRfMdK1gQz8sUT%2FKbMCMqCyD1S8Y%2FcVhC%2F6hpLFfyY8VKD%2B8hLF%2BbmEN%2FzJiCeCD2doqZY2hHxMSuWkuat6O0xQuraL8Fs0E3RA1cHHJADpBSJEn555uG%2BgpqMFBz4Opimo96pr&X-Amz-Signature=7961ba783c51837e7646d29b5ce8f9bcadd17e4c78da757b8ec6305c4fc6b084&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject
+Console.js:61 Preloading audio for current card: 何があったんです？ Key: #001_0
+Console.js:61 Preloading Korean audio for current card: 무슨 일이 있었던 겁니까? Key: #001_0_K
+Console.js:61 Preloading audio for next card: ご家族の方ですか Key: #001_1
+Console.js:61 Preloading Korean audio for next card: 가족분이신가요? Key: #001_1_K
+Console.js:61 Preloading expression cards for next card: ご家族の方ですか
+Console.js:61 Aggressively preloading current card data: 何があったんです？
+Console.js:61 Preloaded expression cards for next card: 1
+Console.js:61 Character image loaded successfully
+Console.js:61 Character image loaded successfully (back)
+Console.js:61 Cleared preloaded data for new sequence: #002
+Console.js:61 Character image URL: https://prod-files-secure.s3.us-west-2.amazonaws.com/3a4b83b6-7d1b-4ef9-aa34-8d68355daf44/56685a03-aed0-4d94-9413-92fb04b17212/carter.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB4665INO34R6%2F20250713%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250713T041512Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA0gn42E99MtBI6nE764%2FazKjK6%2B31vByCrfPpGHuWhGAiBf5eKsonbLzL3Mtw5v2nCDH91CfvyPs6X9HtzaLs9mCyqIBAj8%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMJdqhLSwVYj1qINB2KtwD%2FDTZnrmr2ne%2BB%2FTe8JAauSARG9Y5xBnh0ENjFgY4djxE6aqsYmFzBHJex%2Fks562N0GieLoGYKuFuirnM%2BJ%2B7nvUQPTx4ph8%2B7IdxNdULEQ6nAjZWR7NhWHrgifjrF4LElFF9gXowhdzYFrVR9H45DmnWfHKr%2BS4rMciokkauPcw9VPfW%2FJZPxtk%2BZyh3D3Ofiq%2BIL3ztY742a6Y1eZOz1FIEkyV9qgK%2BG6myzU%2FckaMWCHiuGmVKPC41S%2F0%2FHBQ1QInFakBAHtYEpPepK9aOvSEd8HbSaKqCAB%2FmdgR3%2BdveK8CgTPbnCwqkWLOBYVd%2F%2Bscvk4T08geMoD3eNnt6ag8y41GvFrWO8f34KXZkBRU6BCdsyRbVglP7z%2B4vN1rX%2Fnilt470O9m1aqCSXUnU0fgnoWgjxaE0NxsdX%2BybDgOblUAqeEtg85xbW%2BANVCmJhnO431lghDvSQB8UikFEZKjwy%2BOBZ5FCKFB6D00xO%2B8xzop3Ll5tDMWGo91jIePCvgMmxKMnZ5Xx7IBaVY8H7jKLIINHas48YC0SJJINPrrtyAhK6ZqyWCWlnKYDKNmAHt8c3hqWmAe8DXUedAFvU4p3iiEMSNn7kazRDIS60MSK9fYysADAmiws1SIwmrzMwwY6pgFTKYD%2BEOyCtnQjEoyqJrVUkSTBWAd75oB57jDFZNx4T6ZepLJ7fbs7JN6mijVJaEkrxhxV0DX7rWxMclMWXAVcBqRfMdK1gQz8sUT%2FKbMCMqCyD1S8Y%2FcVhC%2F6hpLFfyY8VKD%2B8hLF%2BbmEN%2FzJiCeCD2doqZY2hHxMSuWkuat6O0xQuraL8Fs0E3RA1cHHJADpBSJEn555uG%2BgpqMFBz4Opimo96pr&X-Amz-Signature=ca68d2f8c9026eae8e941b96f69f51b00ea178dc5380ffc3ddae6b1c305f4ac0&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject
+Console.js:61 Processing expression cards: ['228fe404-b3dc-80c9-998b-fae36ca4e66e']
+Console.js:61 Preloading audio for current card: なぜそんな本を読んだ？ Key: #002_0
+Console.js:61 Preloading Korean audio for current card: 왜 그런 책을 읽는거야? Key: #002_0_K
+Console.js:61 Preloading audio for next card: ジェイクの本だからさ Key: #002_1
+Console.js:61 Preloading Korean audio for next card: 제이크의 책이니까 Key: #002_1_K
+Console.js:61 Preloading expression cards for current card: なぜそんな本を読んだ？
+Console.js:61 Preloading expression cards for next card: ジェイクの本だからさ
+Console.js:61 Aggressively preloading current card data: なぜそんな本を読んだ？
+Console.js:61 Loading expression cards immediately: 1
+Console.js:61 Cleared preloaded data for new sequence: #003
+Console.js:61 Character image URL: https://prod-files-secure.s3.us-west-2.amazonaws.com/3a4b83b6-7d1b-4ef9-aa34-8d68355daf44/bde6eb5f-741c-4665-b14c-6025e2fc1c4d/%E1%84%92%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A11.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB4665INO34R6%2F20250713%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250713T041512Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA0gn42E99MtBI6nE764%2FazKjK6%2B31vByCrfPpGHuWhGAiBf5eKsonbLzL3Mtw5v2nCDH91CfvyPs6X9HtzaLs9mCyqIBAj8%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMJdqhLSwVYj1qINB2KtwD%2FDTZnrmr2ne%2BB%2FTe8JAauSARG9Y5xBnh0ENjFgY4djxE6aqsYmFzBHJex%2Fks562N0GieLoGYKuFuirnM%2BJ%2B7nvUQPTx4ph8%2B7IdxNdULEQ6nAjZWR7NhWHrgifjrF4LElFF9gXowhdzYFrVR9H45DmnWfHKr%2BS4rMciokkauPcw9VPfW%2FJZPxtk%2BZyh3D3Ofiq%2BIL3ztY742a6Y1eZOz1FIEkyV9qgK%2BG6myzU%2FckaMWCHiuGmVKPC41S%2F0%2FHBQ1QInFakBAHtYEpPepK9aOvSEd8HbSaKqCAB%2FmdgR3%2BdveK8CgTPbnCwqkWLOBYVd%2F%2Bscvk4T08geMoD3eNnt6ag8y41GvFrWO8f34KXZkBRU6BCdsyRbVglP7z%2B4vN1rX%2Fnilt470O9m1aqCSXUnU0fgnoWgjxaE0NxsdX%2BybDgOblUAqeEtg85xbW%2BANVCmJhnO431lghDvSQB8UikFEZKjwy%2BOBZ5FCKFB6D00xO%2B8xzop3Ll5tDMWGo91jIePCvgMmxKMnZ5Xx7IBaVY8H7jKLIINHas48YC0SJJINPrrtyAhK6ZqyWCWlnKYDKNmAHt8c3hqWmAe8DXUedAFvU4p3iiEMSNn7kazRDIS60MSK9fYysADAmiws1SIwmrzMwwY6pgFTKYD%2BEOyCtnQjEoyqJrVUkSTBWAd75oB57jDFZNx4T6ZepLJ7fbs7JN6mijVJaEkrxhxV0DX7rWxMclMWXAVcBqRfMdK1gQz8sUT%2FKbMCMqCyD1S8Y%2FcVhC%2F6hpLFfyY8VKD%2B8hLF%2BbmEN%2FzJiCeCD2doqZY2hHxMSuWkuat6O0xQuraL8Fs0E3RA1cHHJADpBSJEn555uG%2BgpqMFBz4Opimo96pr&X-Amz-Signature=388a638d253f1421844fd699e326fb45cc6c582384d952b86fbc85fa21981fbd&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject
+Console.js:61 Preloading audio for current card: ハリー, マイケル・ネガットが着きました. いや, えと元ネガットのJ・Bさんが Key: #003_0
+Console.js:61 Preloading Korean audio for current card: 해리. 마이클 네가트가 도착했습니다. 아, 아니, 전 네가트였던 J·B 씨가요 Key: #003_0_K
+Console.js:61 Preloading audio for next card: J・Bか. よく来たな Key: #003_1
+Console.js:61 Preloading Korean audio for next card: J·B인가. 잘 왔어 Key: #003_1_K
+Console.js:61 Aggressively preloading current card data: ハリー, マイケル・ネガットが着きました. いや, えと元ネガットのJ・Bさんが
+Console.js:61 Character image loaded successfully (back)
+Console.js:61 Character image loaded successfully
+Console.js:61 Preloaded expression cards for next card: 1
+Console.js:61 Character image loaded successfully
+Console.js:61 Character image loaded successfully (back)
+Console.js:61 Fetched expression cards immediately: [{…}]
+Console.js:61 Processing expression card 1/1: なぜ
+Console.js:61 Added front expression container with 1 items
+Console.js:61 Added back expression container with 1 items
+Console.js:61 Preloaded expression cards for current card: 1
+Console.js:61 Immediately loaded expression cards: 1

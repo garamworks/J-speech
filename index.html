@@ -916,11 +916,11 @@
 <body>
     <div class="app-container">
         <div class="header">
-            <button class="nav-arrow" id="prev-sequence-btn" onclick="previousSequence()">
+            <button class="nav-arrow" id="prev-sequence-btn">
                 <i class="fas fa-chevron-left"></i>
             </button>
             <h1 id="nav-title" onclick="goToHomepage()">PALM 26</h1>
-            <button class="nav-arrow" id="next-sequence-btn" onclick="nextSequence()">
+            <button class="nav-arrow" id="next-sequence-btn">
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
@@ -2197,31 +2197,11 @@
         
         // New sequence navigation button event listeners
         if (prevSequenceBtn) {
-            prevSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort((a, b) => {
-                    const aNum = parseInt(a.replace('#', ''));
-                    const bNum = parseInt(b.replace('#', ''));
-                    return aNum - bNum;
-                });
-                const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex > 0) {
-                    loadEpisode(sequences[currentIndex - 1]);
-                }
-            });
+            prevSequenceBtn.addEventListener('click', previousSequence);
         }
         
         if (nextSequenceBtn) {
-            nextSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort((a, b) => {
-                    const aNum = parseInt(a.replace('#', ''));
-                    const bNum = parseInt(b.replace('#', ''));
-                    return aNum - bNum;
-                });
-                const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex < sequences.length - 1) {
-                    loadEpisode(sequences[currentIndex + 1]);
-                }
-            });
+            nextSequenceBtn.addEventListener('click', nextSequence);
         }
 
         // Keyboard navigation
