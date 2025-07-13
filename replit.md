@@ -136,6 +136,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Added mode selection icons: B (Basic) and E (Expression) circular icons on left/right sides of player card for quick mode switching
 - July 13, 2025. Relocated mode icons to control area: moved B/E icons to left/right of prev/play/next buttons with Fjalla One font
 - July 13, 2025. Removed Basic/Expression mode selector buttons and increased card height from 50vh to 60vh for better content display
+- July 13, 2025. Updated B/E mode icons with purple gradient for active state, removed white borders, and adjusted inactive opacity
 
 ## User Preferences
 
