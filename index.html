@@ -40,11 +40,52 @@
 
         .episode-nav {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             margin-bottom: 1rem;
-            gap: 0.5rem;
+            gap: 1rem;
+        }
+
+        .nav-arrow {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .nav-arrow:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3rem;
+            font-weight: normal;
+            font-family: 'Fjalla One', sans-serif;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            min-width: 120px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-title:hover {
+            color: rgba(255, 255, 255, 1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         .volume-navigation {
@@ -848,32 +889,17 @@
 <body>
     <div class="app-container">
         <div class="episode-nav">
-            <div class="volume-navigation">
-                <button class="volume-nav-btn" onclick="previousVolume()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                </button>
-                <span class="volume-title" onclick="goToHomepage()">PALM 26권</span>
-                <button class="volume-nav-btn" onclick="nextVolume()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="sequence-navigation">
-                <button class="sequence-nav-btn" id="prev-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                </button>
-                <span class="sequence-text" id="sequence-text">#001</span>
-                <button class="sequence-nav-btn" id="next-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                </button>
-            </div>
+            <button class="nav-arrow" id="prev-sequence-btn" onclick="previousSequence()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+            <div class="nav-title" id="nav-title" onclick="goToHomepage()">PALM 26</div>
+            <button class="nav-arrow" id="next-sequence-btn" onclick="nextSequence()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </button>
         </div>
         
         <div class="flashcard-container">
@@ -973,8 +999,7 @@
         const nextBtn = document.getElementById('next-btn');
         const currentCardSpan = document.getElementById('current-card');
         const totalCardsSpan = document.getElementById('total-cards');
-        const episodeTitle = document.getElementById('episode-title');
-        // Remove unused episode buttons that were deleted from HTML
+        const navTitle = document.getElementById('nav-title');
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
         const nextSequenceBtn = document.getElementById('next-sequence-btn');
         const dbStatusFront = document.getElementById('db-status-front');
@@ -1157,15 +1182,8 @@
             preloadedN1WordData = {};
             console.log('Cleared preloaded data for new sequence:', sequenceName);
             
-            // Update title to show volume and sequence
-            const firstCard = currentEpisodeCards[0];
-            const volume = firstCard?.volume || '26권';
-            
-            // Update volume and sequence text
-            const volumeText = document.querySelector('.volume-text');
-            const sequenceText = document.querySelector('.sequence-text');
-            if (volumeText) volumeText.textContent = volume;
-            if (sequenceText) sequenceText.textContent = sequenceName;
+            // Update nav title to show sequence
+            navTitle.textContent = `PALM ${sequenceName}`;
             
             if (currentEpisodeCards.length > 0) {
                 // Sort cards by sequence number (romanji) in ascending order
@@ -2091,14 +2109,20 @@
             window.location.href = '/';
         }
 
-        function previousVolume() {
-            // Volume navigation placeholder
-            console.log('Previous volume clicked');
+        function previousSequence() {
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
+            if (currentIndex > 0) {
+                loadEpisode(sequences[currentIndex - 1]);
+            }
         }
 
-        function nextVolume() {
-            // Volume navigation placeholder
-            console.log('Next volume clicked');
+        function nextSequence() {
+            const sequences = Object.keys(episodeData).sort();
+            const currentIndex = sequences.indexOf(currentEpisode);
+            if (currentIndex < sequences.length - 1) {
+                loadEpisode(sequences[currentIndex + 1]);
+            }
         }
 
         // Event listeners
