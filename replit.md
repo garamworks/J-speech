@@ -140,6 +140,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Changed card content alignment from center to top, added padding to card top (20px) and character image margin (10px)
 - July 13, 2025. Increased character image top margin from 10px to 20px for better spacing
 - July 13, 2025. Replaced homepage speaker buttons with B/E mode buttons (Basic/Expression) using Fjalla One font
+- July 13, 2025. Updated B button styling to match E button: white background with gray text (#555) for consistency
 
 ## User Preferences
 
