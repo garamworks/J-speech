@@ -127,6 +127,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Added margin spacing between progress counter and player control buttons
 - July 13, 2025. Enhanced mode switching: Basic/Expression modes now auto-start playback when selected
 - July 13, 2025. Fixed sequence navigation: Previous/Next sequence buttons now auto-start playback
+- July 13, 2025. Increased mode selector button font size to 18px for better readability
 
 ## User Preferences
 
