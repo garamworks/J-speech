@@ -1447,7 +1447,7 @@
                     } else {
                         // Fetch all expression cards immediately if not preloaded
                         const expressionPromises = card.expressionCardIds.map(id => 
-                            fetch(`/api/expression-card/${id}`).then(res => res.json())
+                            fetch(`/api/expression/${id}`).then(res => res.json())
                         );
                         
                         expressionCards = await Promise.all(expressionPromises);
@@ -1751,7 +1751,7 @@
                         
                         // Fetch expression cards for current card
                         Promise.all(currentCard.expressionCardIds.map(id => 
-                            fetch(`/api/expression-card/${id}`)
+                            fetch(`/api/expression/${id}`)
                                 .then(response => response.json())
                                 .catch(error => {
                                     console.error('Error preloading expression card:', error);
@@ -1769,7 +1769,7 @@
                         
                         // Fetch expression cards for current card
                         Promise.all(currentCard.expressionCards.map(id => 
-                            fetch(`/api/expression-card/${id}`)
+                            fetch(`/api/expression/${id}`)
                                 .then(response => response.json())
                                 .catch(error => {
                                     console.error('Error preloading expression card:', error);
@@ -1815,7 +1815,7 @@
                         
                         // Fetch expression cards for next card
                         Promise.all(nextCard.expressionCardIds.map(id => 
-                            fetch(`/api/expression-card/${id}`)
+                            fetch(`/api/expression/${id}`)
                                 .then(response => response.json())
                                 .catch(error => {
                                     console.error('Error preloading expression card:', error);
@@ -1833,7 +1833,7 @@
                         
                         // Fetch expression cards for next card
                         Promise.all(nextCard.expressionCards.map(id => 
-                            fetch(`/api/expression-card/${id}`)
+                            fetch(`/api/expression/${id}`)
                                 .then(response => response.json())
                                 .catch(error => {
                                     console.error('Error preloading expression card:', error);
@@ -1879,7 +1879,7 @@
             if (currentCard.expressionCardIds && currentCard.expressionCardIds.length > 0) {
                 console.log('Loading expression cards immediately:', currentCard.expressionCardIds.length);
                 Promise.all(currentCard.expressionCardIds.map(id => 
-                    fetch(`/api/expression-card/${id}`)
+                    fetch(`/api/expression/${id}`)
                         .then(response => response.json())
                         .catch(error => {
                             console.error('Error loading expression card:', error);
@@ -1892,7 +1892,7 @@
             } else if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
                 console.log('Loading expression cards immediately (fallback):', currentCard.expressionCards.length);
                 Promise.all(currentCard.expressionCards.map(id => 
-                    fetch(`/api/expression-card/${id}`)
+                    fetch(`/api/expression/${id}`)
                         .then(response => response.json())
                         .catch(error => {
                             console.error('Error loading expression card:', error);
@@ -2269,7 +2269,7 @@
             
             // Fetch expression card data immediately
             console.log('Fetching expression card data for ID:', expressionCardId);
-            fetch(`/api/expression-card/${expressionCardId}`)
+            fetch(`/api/expression/${expressionCardId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
