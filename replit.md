@@ -121,7 +121,6 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Updated expression learning modal design to match main flashcard modal styling
 - July 13, 2025. Updated sequence navigation arrows to Font Awesome icons without circular background
 - July 13, 2025. Updated player navigation title font to match homepage thumbnail style (Fjalla One, normal weight)
-- July 13, 2025. Fixed homepage scrolling and clicking issues by adjusting body overflow and JavaScript initialization
 
 ## User Preferences
 
