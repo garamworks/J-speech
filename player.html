@@ -218,7 +218,6 @@
             box-sizing: border-box;
             max-height: 50vh;
             max-height: 50dvh; /* Dynamic viewport height for mobile */
-            position: relative;
         }
 
         .card-japanese {
@@ -248,9 +247,6 @@
         }
 
         .mode-icon {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -262,28 +258,20 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 18px;
-            font-weight: bold;
+            font-weight: normal;
             color: white;
-            z-index: 10;
+            font-family: 'Fjalla One', sans-serif;
         }
 
         .mode-icon:hover {
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-50%) scale(1.1);
+            transform: scale(1.1);
         }
 
         .mode-icon.active {
             background: rgba(255, 255, 255, 0.4);
             border-color: rgba(255, 255, 255, 0.6);
-        }
-
-        .mode-icon-left {
-            left: 15px;
-        }
-
-        .mode-icon-right {
-            right: 15px;
         }
 
         .controls {
@@ -445,8 +433,6 @@
     <div class="player-container">
         <div class="main-content">
             <div class="card-display">
-                <div class="mode-icon mode-icon-left active" id="basic-icon" onclick="switchMode('basic')">B</div>
-                <div class="mode-icon mode-icon-right" id="expression-icon" onclick="switchMode('expression')">E</div>
                 <div class="character-display">
                     <img id="character-image" src="" alt="캐릭터" style="display: none; border-radius: 50%; object-fit: cover;">
                 </div>
@@ -461,9 +447,11 @@
         
         <div class="bottom-controls">
             <div class="controls">
+                <div class="mode-icon mode-icon-left active" id="basic-icon" onclick="switchMode('basic')">B</div>
                 <button class="control-btn" id="prev-btn"><i class="fa-solid fa-backward" style="color: white;"></i></button>
                 <button class="control-btn play-btn" id="play-btn"><i class="fa-solid fa-play" style="color: white;"></i></button>
                 <button class="control-btn" id="next-btn"><i class="fa-solid fa-forward" style="color: white;"></i></button>
+                <div class="mode-icon mode-icon-right" id="expression-icon" onclick="switchMode('expression')">E</div>
             </div>
             
             <div class="mode-selector">
