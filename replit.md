@@ -112,6 +112,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 12, 2025. Increased player screen height to 88vh (110% of original) for better fit
 - July 12, 2025. Changed player control buttons to HTML entities for consistent mobile/PC icon display
 - July 12, 2025. Separated thumbnail click area from speaker buttons on homepage to prevent accidental navigation
+- July 13, 2025. Fixed player control buttons to bottom position with stable layout using flexbox bottom-controls wrapper
 
 ## User Preferences
 
