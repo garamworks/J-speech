@@ -18,6 +18,8 @@
             min-height: 100vh;
             padding: 20px;
             color: white;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .container {
@@ -52,6 +54,7 @@
             position: relative;
             overflow: hidden;
             color: #333;
+            cursor: pointer;
         }
 
         .episode-card:hover {
@@ -86,6 +89,7 @@
             bottom: 60px;
             cursor: pointer;
             z-index: 10;
+            touch-action: manipulation;
         }
 
         .episode-thumbnail img {
@@ -129,6 +133,7 @@
             border: 1px solid rgba(128, 128, 128, 0.3);
             z-index: 20;
             color: #555;
+            touch-action: manipulation;
         }
 
         .episode-speaker-left {
@@ -147,6 +152,7 @@
             border: 1px solid rgba(128, 128, 128, 0.3);
             z-index: 20;
             color: white;
+            touch-action: manipulation;
         }
 
         .episode-speaker:hover {
@@ -1023,7 +1029,10 @@
         }
 
         // Load episodes when page loads
-        document.addEventListener('DOMContentLoaded', loadEpisodes);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - starting episode loading');
+            loadEpisodes();
+        });
     </script>
 </body>
 </html>
