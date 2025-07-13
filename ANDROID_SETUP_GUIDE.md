@@ -227,7 +227,23 @@ public class AudioPlaybackService extends Service {
 
 ## 3. JavaScript 사용법
 
-### 기본 설정
+### 기본 설정 (안드로이드 네이티브에서 직접 호출)
+```javascript
+// Android.playPlaylist 함수 사용 (권장 방법)
+Android.playPlaylist(JSON.stringify([
+    { audioUrl: "https://example.com/audio1.mp3" },
+    { audioUrl: "https://example.com/audio2.mp3" },
+    { 
+        japanese: "こんにちは",
+        korean: "안녕하세요",
+        audioUrl: "https://example.com/audio3.mp3",
+        koreanAudioUrl: "https://example.com/audio3_kr.mp3",
+        characterImage: "https://example.com/character.png"
+    }
+]));
+```
+
+### 기존 방법 (호환성 유지)
 ```javascript
 // 1. 플레이리스트 설정
 const flashcards = [
@@ -272,8 +288,13 @@ AndroidAudioPlayer.setPlaybackMode("expression");
 
 ### 상태 확인
 ```javascript
+// AndroidAudioPlayer를 통한 상태 확인
 const state = AndroidAudioPlayer.getPlaybackState();
 console.log(state);
+
+// Android 객체를 통한 상태 확인 (JSON 문자열 반환)
+const stateJson = Android.getPlaybackStateJson();
+console.log(JSON.parse(stateJson));
 /*
 {
     isPlaying: true,
@@ -283,6 +304,39 @@ console.log(state);
     playbackMode: "basic"
 }
 */
+```
+
+### 안드로이드 네이티브 함수들 (Android 객체)
+```javascript
+// 재생 제어
+Android.play();          // 재생
+Android.pause();         // 일시정지
+Android.stop();          // 중지
+Android.next();          // 다음 오디오
+Android.previous();      // 이전 오디오
+Android.goToIndex(5);    // 특정 인덱스로 이동
+
+// 설정
+Android.setMode("basic");      // 기본 모드
+Android.setMode("expression"); // 표현 모드
+
+// 정리
+Android.cleanup();       // 리소스 정리
+```
+
+### 웹앱 데이터 활용 (AndroidPlaylistUtils)
+```javascript
+// 현재 시퀀스 재생
+AndroidPlaylistUtils.playCurrentSequence();
+
+// 특정 시퀀스 재생 (예: 시퀀스 #003)
+AndroidPlaylistUtils.playSequence(3);
+
+// 모든 시퀀스 재생
+AndroidPlaylistUtils.playAllSequences();
+
+// 선택된 카드만 재생 (현재 시퀀스에서 인덱스 0, 2, 5번 카드만)
+AndroidPlaylistUtils.playSelectedCards([0, 2, 5]);
 ```
 
 ## 4. 안드로이드 프로젝트 구조

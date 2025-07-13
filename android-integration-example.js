@@ -220,6 +220,25 @@ function createAndroidController() {
         // 특정 시퀀스로 이동
         goToSequence: (sequenceNumber) => {
             AndroidBridge.loadSequence(sequenceNumber);
+        },
+        
+        // 현재 웹앱 데이터를 Android.playPlaylist 형태로 변환
+        playCurrentEpisodeAsPlaylist: () => {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                console.log('현재 에피소드 카드가 없습니다');
+                return;
+            }
+            
+            const playlist = currentEpisodeCards.map(card => ({
+                japanese: card.japanese,
+                korean: card.korean,
+                audioUrl: card.audioUrl,
+                koreanAudioUrl: card.koreanAudioUrl,
+                characterImage: card.characterImage,
+                speaker: card.speaker
+            }));
+            
+            Android.playPlaylist(JSON.stringify(playlist));
         }
     };
     
@@ -231,5 +250,111 @@ function createAndroidController() {
 
 // 컨트롤러 생성
 createAndroidController();
+
+// 9. 현재 웹앱 데이터를 안드로이드 형태로 변환하는 유틸리티 함수들
+window.AndroidPlaylistUtils = {
+    /**
+     * 현재 시퀀스를 Android.playPlaylist 형태로 재생
+     */
+    playCurrentSequence: () => {
+        if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+            console.log('현재 시퀀스에 카드가 없습니다');
+            return false;
+        }
+        
+        const playlist = currentEpisodeCards.map(card => ({
+            japanese: card.japanese,
+            korean: card.korean,
+            audioUrl: card.audioUrl,
+            koreanAudioUrl: card.koreanAudioUrl,
+            characterImage: card.characterImage,
+            speaker: card.speaker
+        }));
+        
+        const result = Android.playPlaylist(JSON.stringify(playlist));
+        console.log('현재 시퀀스 재생 시작:', result);
+        return result;
+    },
+    
+    /**
+     * 특정 시퀀스를 Android.playPlaylist 형태로 재생
+     */
+    playSequence: (sequenceNumber) => {
+        const sequenceName = `#${sequenceNumber.toString().padStart(3, '0')}`;
+        
+        if (!episodeData[sequenceName]) {
+            console.log(`시퀀스 ${sequenceName}를 찾을 수 없습니다`);
+            return false;
+        }
+        
+        const cards = episodeData[sequenceName];
+        const playlist = cards.map(card => ({
+            japanese: card.japanese,
+            korean: card.korean,
+            audioUrl: card.audioUrl,
+            koreanAudioUrl: card.koreanAudioUrl,
+            characterImage: card.characterImage,
+            speaker: card.speaker
+        }));
+        
+        const result = Android.playPlaylist(JSON.stringify(playlist));
+        console.log(`시퀀스 ${sequenceName} 재생 시작:`, result);
+        return result;
+    },
+    
+    /**
+     * 모든 시퀀스를 하나의 플레이리스트로 재생
+     */
+    playAllSequences: () => {
+        const allCards = [];
+        const sequences = Object.keys(episodeData).sort();
+        
+        sequences.forEach(sequenceName => {
+            const cards = episodeData[sequenceName];
+            cards.forEach(card => {
+                allCards.push({
+                    japanese: card.japanese,
+                    korean: card.korean,
+                    audioUrl: card.audioUrl,
+                    koreanAudioUrl: card.koreanAudioUrl,
+                    characterImage: card.characterImage,
+                    speaker: card.speaker
+                });
+            });
+        });
+        
+        const result = Android.playPlaylist(JSON.stringify(allCards));
+        console.log(`전체 시퀀스 재생 시작 (${allCards.length}개 카드):`, result);
+        return result;
+    },
+    
+    /**
+     * 특정 카드들만 선택해서 재생
+     */
+    playSelectedCards: (cardIndices) => {
+        if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+            console.log('현재 시퀀스에 카드가 없습니다');
+            return false;
+        }
+        
+        const selectedCards = cardIndices
+            .filter(index => index >= 0 && index < currentEpisodeCards.length)
+            .map(index => {
+                const card = currentEpisodeCards[index];
+                return {
+                    japanese: card.japanese,
+                    korean: card.korean,
+                    audioUrl: card.audioUrl,
+                    koreanAudioUrl: card.koreanAudioUrl,
+                    characterImage: card.characterImage,
+                    speaker: card.speaker
+                };
+            });
+        
+        const result = Android.playPlaylist(JSON.stringify(selectedCards));
+        console.log(`선택된 카드 재생 시작 (${selectedCards.length}개):`, result);
+        return result;
+    }
+};
 
 console.log('안드로이드 통합 코드 로드 완료');

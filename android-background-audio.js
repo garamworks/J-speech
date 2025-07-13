@@ -442,6 +442,118 @@ window.AndroidAudioPlayer = {
     cleanup: () => backgroundAudioPlayer.cleanup()
 };
 
+// 안드로이드 네이티브에서 직접 호출할 수 있는 전역 Android 객체
+window.Android = {
+    /**
+     * JSON 형태의 플레이리스트를 받아서 재생하는 함수
+     * @param {string} playlistJson - JSON 문자열 형태의 플레이리스트
+     * 예시: Android.playPlaylist(JSON.stringify([
+     *   { audioUrl: "https://.../1.mp3" },
+     *   { audioUrl: "https://.../2.mp3" }
+     * ]))
+     */
+    playPlaylist: (playlistJson) => {
+        try {
+            const playlistData = JSON.parse(playlistJson);
+            
+            // JSON 데이터를 플래시카드 형태로 변환
+            const flashcards = playlistData.map((item, index) => ({
+                japanese: item.japanese || `오디오 ${index + 1}`,
+                korean: item.korean || `Audio ${index + 1}`,
+                audioUrl: item.audioUrl,
+                koreanAudioUrl: item.koreanAudioUrl || null,
+                characterImage: item.characterImage || null,
+                speaker: item.speaker || 'Unknown',
+                expressionCards: item.expressionCards || []
+            }));
+            
+            // 플레이리스트 설정
+            backgroundAudioPlayer.setPlaylist(flashcards, 'android-playlist');
+            
+            // 즉시 재생 시작
+            backgroundAudioPlayer.play();
+            
+            console.log(`Android.playPlaylist: ${flashcards.length}개 오디오 재생 시작`);
+            
+            return {
+                success: true,
+                message: `${flashcards.length}개 오디오 재생 시작`,
+                totalCards: flashcards.length
+            };
+            
+        } catch (error) {
+            console.error('Android.playPlaylist 에러:', error);
+            return {
+                success: false,
+                message: `플레이리스트 재생 실패: ${error.message}`,
+                totalCards: 0
+            };
+        }
+    },
+    
+    /**
+     * 현재 재생 상태를 JSON 문자열로 반환
+     */
+    getPlaybackStateJson: () => {
+        const state = backgroundAudioPlayer.getPlaybackState();
+        return JSON.stringify(state);
+    },
+    
+    /**
+     * 재생 제어 함수들
+     */
+    play: () => {
+        backgroundAudioPlayer.play();
+        return JSON.stringify({ success: true, action: 'play' });
+    },
+    
+    pause: () => {
+        backgroundAudioPlayer.pause();
+        return JSON.stringify({ success: true, action: 'pause' });
+    },
+    
+    stop: () => {
+        backgroundAudioPlayer.stop();
+        return JSON.stringify({ success: true, action: 'stop' });
+    },
+    
+    next: () => {
+        backgroundAudioPlayer.nextCard();
+        return JSON.stringify({ success: true, action: 'next' });
+    },
+    
+    previous: () => {
+        backgroundAudioPlayer.previousCard();
+        return JSON.stringify({ success: true, action: 'previous' });
+    },
+    
+    /**
+     * 특정 인덱스의 오디오로 이동
+     * @param {number} index - 이동할 오디오 인덱스
+     */
+    goToIndex: (index) => {
+        backgroundAudioPlayer.goToCard(index);
+        return JSON.stringify({ success: true, action: 'goToIndex', index: index });
+    },
+    
+    /**
+     * 재생 모드 설정
+     * @param {string} mode - 'basic' 또는 'expression'
+     */
+    setMode: (mode) => {
+        backgroundAudioPlayer.setPlaybackMode(mode);
+        return JSON.stringify({ success: true, action: 'setMode', mode: mode });
+    },
+    
+    /**
+     * 플레이리스트 정리
+     */
+    cleanup: () => {
+        backgroundAudioPlayer.cleanup();
+        return JSON.stringify({ success: true, action: 'cleanup' });
+    }
+};
+
 // 사용 예시:
 /*
 // 1. 플레이리스트 설정
