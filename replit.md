@@ -146,8 +146,10 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Updated navigation icons to caret arrows in circular buttons and applied Fjalla One font to card counter
 - July 13, 2025. Fixed expression card API endpoint calls from /api/expression-card/ to /api/expression/ to resolve JSON parsing errors
 - July 13, 2025. Fixed db-connection-status visibility and increased word/expression icon area from 70% to 80% for better usability
-- July 13, 2025. Implemented comprehensive background playback functionality using Wake Lock API and Media Session API
-- July 13, 2025. Added background audio continuation when browser goes to background or mobile screen turns off
+- July 13, 2025. Enhanced all audio playback functions with automatic Android environment detection and background audio support
+- July 13, 2025. Added isAndroidApp() function for seamless web/Android operation detection across index.html, episodes.html, and player.html
+- July 13, 2025. Implemented Android.playPlaylist() integration for background audio playback with automatic fallback to web audio
+- July 13, 2025. Updated player controls to use Android API functions (pause, play, previousCard, nextCard) when available
 
 ## User Preferences
 

@@ -1087,10 +1087,6 @@
         let preloadedAudios = {}; // Store preloaded audio elements
         let preloadedExpressionCards = {}; // Store preloaded expression card data
         let preloadedN1WordData = {}; // Store preloaded N1 word data
-        
-        // Background playback variables
-        let wakeLock = null;
-        let isPlayingInBackground = false;
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
@@ -1593,6 +1589,50 @@
             isFlipped = !isFlipped;
         }
 
+        // Check if Android environment is available
+        function isAndroidApp() {
+            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
+        }
+
+        // Play current sequence using Android background audio
+        function playCurrentSequenceOnAndroid() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                console.log('No episode cards available for Android playback');
+                return false;
+            }
+
+            // Create playlist from current episode cards
+            const playlist = currentEpisodeCards.map(card => ({
+                audioUrl: card.audioUrl,
+                japanese: card.japanese,
+                korean: card.korean,
+                koreanAudioUrl: card.koreanAudioUrl,
+                characterImage: card.characterImage,
+                speaker: card.speaker
+            })).filter(card => card.audioUrl); // Only include cards with audio
+
+            if (playlist.length === 0) {
+                console.log('No audio URLs found in current episode');
+                return false;
+            }
+
+            try {
+                console.log(`Playing ${playlist.length} audio files on Android background player`);
+                alert("Android로 재생 요청을 보냅니다");
+                Android.playPlaylist(JSON.stringify(playlist));
+                
+                // Set current index to match Android player
+                if (typeof Android.goToIndex === 'function') {
+                    Android.goToIndex(currentCardIndex);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error playing playlist on Android:', error);
+                return false;
+            }
+        }
+
         // Text-to-speech functionality
         function speakJapanese() {
             console.log('=== speakJapanese function started ===');
@@ -1632,10 +1672,31 @@
                 console.error('Current card is null or undefined');
                 return;
             }
+
+            // Check if Android environment is available
+            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
+                alert("Android로 재생 요청을 보냅니다");
+                console.log('Android environment detected - using background player');
+                
+                // Visual feedback for playing
+                speakerBtn.style.background = '#2b6cb0';
+                speakerBtnBack.style.background = '#2b6cb0';
+                
+                // Try to play using Android background player
+                if (playCurrentSequenceOnAndroid()) {
+                    console.log('=== speakJapanese function ended (Android background playback) ===');
+                    return;
+                } else {
+                    console.log('Android playback failed, falling back to web audio');
+                    // Reset visual feedback
+                    speakerBtn.style.background = '#4299e1';
+                    speakerBtnBack.style.background = '#4299e1';
+                }
+            }
             
-            // Try to play MP3 file from Notion first
+            // Web environment or Android fallback - use regular Audio() object
             if (currentCard.audioUrl) {
-                console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
+                console.log('Playing audio from Notion MP3 (Web mode):', currentCard.audioUrl);
                 
                 // Use preloaded audio if available
                 const preloadedKey = `${currentEpisode}_${currentCardIndex}`;
@@ -1653,10 +1714,6 @@
                     speakerBtn.style.background = '#4299e1';
                     speakerBtnBack.style.background = '#4299e1';
                     console.log('Audio playback ended');
-                    // Release wake lock when audio ends
-                    releaseWakeLock();
-                    updateMediaSessionState('paused');
-                    isPlayingInBackground = false;
                 };
                 
                 audio.onerror = (event) => {
@@ -1664,10 +1721,6 @@
                     speakerBtnBack.style.background = '#4299e1';
                     console.warn('Audio playback error - no fallback');
                     console.error('Audio Error:', event);
-                    // Release wake lock on error
-                    releaseWakeLock();
-                    updateMediaSessionState('paused');
-                    isPlayingInBackground = false;
                 };
                 
                 // Start loading and play when ready (skip load if preloaded)
@@ -1677,21 +1730,13 @@
                 } else {
                     console.log('Using preloaded audio');
                 }
-                audio.play().then(() => {
-                    // Request wake lock to prevent screen sleep during playback
-                    requestWakeLock();
-                    // Update media session
-                    setupMediaSession();
-                    updateMediaSessionState('playing');
-                    isPlayingInBackground = true;
-                }).catch(error => {
+                audio.play().catch(error => {
                     console.error('Error playing audio:', error);
                     speakerBtn.style.background = '#4299e1';
                     speakerBtnBack.style.background = '#4299e1';
-                    updateMediaSessionState('paused');
                 });
                 
-                console.log('=== speakJapanese function ended (MP3 playback) ===');
+                console.log('=== speakJapanese function ended (Web MP3 playback) ===');
                 return;
             }
             
@@ -2230,8 +2275,16 @@
 
         // Initialize the app when DOM is loaded
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadFlashcardsFromNotion);
+            document.addEventListener('DOMContentLoaded', function() {
+                // Check Android object status
+                alert('typeof Android: ' + typeof Android);
+                alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
+                loadFlashcardsFromNotion();
+            });
         } else {
+            // Check Android object status
+            alert('typeof Android: ' + typeof Android);
+            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
             loadFlashcardsFromNotion();
         }
 
@@ -2629,86 +2682,6 @@
             }
         }
 
-        // Background playback functions
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake lock acquired');
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake lock released');
-                    });
-                }
-            } catch (err) {
-                console.log('Wake lock request failed:', err);
-            }
-        }
-
-        function releaseWakeLock() {
-            if (wakeLock) {
-                wakeLock.release();
-                wakeLock = null;
-                console.log('Wake lock released manually');
-            }
-        }
-
-        // Set up Media Session API for background playback
-        function setupMediaSession() {
-            if ('mediaSession' in navigator) {
-                const currentCard = currentEpisodeCards[currentCardIndex];
-                if (currentCard) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: currentCard.japanese,
-                        artist: 'PALM Japanese Learning',
-                        album: `${currentEpisode} - ${currentCardIndex + 1}/${currentEpisodeCards.length}`,
-                        artwork: [
-                            { src: currentCard.characterImageUrl || '', sizes: '96x96', type: 'image/png' },
-                            { src: currentCard.characterImageUrl || '', sizes: '128x128', type: 'image/png' },
-                            { src: currentCard.characterImageUrl || '', sizes: '192x192', type: 'image/png' },
-                            { src: currentCard.characterImageUrl || '', sizes: '256x256', type: 'image/png' },
-                            { src: currentCard.characterImageUrl || '', sizes: '384x384', type: 'image/png' },
-                            { src: currentCard.characterImageUrl || '', sizes: '512x512', type: 'image/png' }
-                        ]
-                    });
-                }
-
-                navigator.mediaSession.setActionHandler('play', () => {
-                    playCurrentCard();
-                });
-
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    pauseCurrentAudio();
-                });
-
-                navigator.mediaSession.setActionHandler('previoustrack', () => {
-                    prevCard();
-                });
-
-                navigator.mediaSession.setActionHandler('nexttrack', () => {
-                    nextCard();
-                });
-
-                navigator.mediaSession.setActionHandler('seekbackward', () => {
-                    prevCard();
-                });
-
-                navigator.mediaSession.setActionHandler('seekforward', () => {
-                    nextCard();
-                });
-
-                // Set playback state
-                navigator.mediaSession.playbackState = 'playing';
-            }
-        }
-
-        // Update playback state
-        function updateMediaSessionState(state) {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = state;
-            }
-        }
-
         // Initialize modal event listener after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             const expressionModal = document.getElementById('expression-modal');
@@ -2728,31 +2701,6 @@
                     }
                 });
             }
-
-            // Setup background playback support
-            setupMediaSession();
-
-            // Handle visibility changes for background playback
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    console.log('Page hidden - maintaining background playback');
-                    // Keep audio playing in background
-                    if (isPlayingInBackground) {
-                        console.log('Audio continues playing in background');
-                    }
-                } else {
-                    console.log('Page visible again');
-                    // Re-acquire wake lock if audio is playing
-                    if (isPlayingInBackground && !wakeLock) {
-                        requestWakeLock();
-                    }
-                }
-            });
-
-            // Handle page unload to clean up wake lock
-            window.addEventListener('beforeunload', function() {
-                releaseWakeLock();
-            });
         });
     </script>
     

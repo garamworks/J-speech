@@ -344,9 +344,107 @@
         let isPlayingSequence = false;
         let sequenceTimeout = null;
 
+        // Check if Android environment is available
+        function isAndroidApp() {
+            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
+        }
+
+        // Play sequence using Android background audio
+        async function playSequenceOnAndroid(sequence, mode = 'basic') {
+            try {
+                console.log(`Playing sequence ${sequence} on Android in ${mode} mode`);
+                
+                // Fetch flashcards for this sequence
+                const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const episodeData = await response.json();
+                console.log('Episode data received for Android:', episodeData);
+                
+                // Handle different response formats
+                let flashcards;
+                if (episodeData.flashcards) {
+                    flashcards = episodeData.flashcards;
+                } else if (episodeData[sequence]) {
+                    flashcards = episodeData[sequence];
+                } else {
+                    const keys = Object.keys(episodeData);
+                    const matchingKey = keys.find(key => key === sequence);
+                    if (matchingKey) {
+                        flashcards = episodeData[matchingKey];
+                    } else {
+                        console.log('No flashcards found for this sequence');
+                        return false;
+                    }
+                }
+
+                if (!flashcards || flashcards.length === 0) {
+                    console.log('No flashcards found for this sequence');
+                    return false;
+                }
+
+                // Create playlist for Android
+                const playlist = flashcards.map(card => ({
+                    audioUrl: card.audioUrl,
+                    japanese: card.japanese,
+                    korean: card.korean,
+                    koreanAudioUrl: card.koreanAudioUrl,
+                    characterImage: card.characterImage,
+                    speaker: card.speaker
+                })).filter(card => card.audioUrl);
+
+                if (playlist.length === 0) {
+                    console.log('No audio URLs found in flashcards');
+                    return false;
+                }
+
+                // Call Android background player
+                alert("Android로 재생 요청을 보냅니다");
+                Android.playPlaylist(JSON.stringify(playlist));
+                
+                // Set mode if available
+                if (typeof Android.setMode === 'function') {
+                    Android.setMode(mode);
+                }
+
+                console.log(`Android playback started for ${playlist.length} cards`);
+                return true;
+
+            } catch (error) {
+                console.error('Error in Android playback:', error);
+                return false;
+            }
+        }
+
         async function playEpisodeAudio(sequence, speakerButton, mode = 'basic') {
             try {
                 console.log(`Starting playback for sequence: ${sequence} in ${mode} mode`);
+                
+                // Check if Android environment is available
+                if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
+                    alert("Android로 재생 요청을 보냅니다");
+                    console.log('Android environment detected - using background player');
+                    
+                    // Visual feedback for Android playback
+                    speakerButton.classList.add('playing');
+                    
+                    // Try Android playback
+                    const androidSuccess = await playSequenceOnAndroid(sequence, mode);
+                    
+                    if (androidSuccess) {
+                        console.log('Android playback successful');
+                        return;
+                    } else {
+                        console.log('Android playback failed, falling back to web audio');
+                        speakerButton.classList.remove('playing');
+                    }
+                }
+                
+                // Web environment or Android fallback
+                console.log('Using web audio playback');
                 
                 // Stop any currently playing audio
                 if (currentAudio) {
@@ -725,7 +823,12 @@
         }
 
         // Load episodes when page loads
-        document.addEventListener('DOMContentLoaded', loadEpisodes);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check Android object status
+            alert('typeof Android: ' + typeof Android);
+            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
+            loadEpisodes();
+        });
     </script>
 </body>
 </html>
