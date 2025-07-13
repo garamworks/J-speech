@@ -679,13 +679,15 @@
             
             // Update character image
             const characterImg = document.getElementById('character-image');
-            if (card.characterImageUrl) {
-                characterImg.src = card.characterImageUrl;
+            if (card.characterImage) {
+                characterImg.src = card.characterImage;
                 characterImg.style.display = 'block';
                 characterImg.style.borderRadius = '50%';
                 characterImg.style.objectFit = 'cover';
+                console.log('Character image loaded:', card.characterImage);
             } else {
                 characterImg.style.display = 'none';
+                console.log('No character image available for card:', card.japanese);
             }
             
             // Auto-start playback for manually navigated cards when playing

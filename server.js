@@ -136,6 +136,11 @@ app.get('/player', (req, res) => {
     res.sendFile(path.join(__dirname, 'player.html'));
 });
 
+// Serve player.html directly
+app.get('/player.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'player.html'));
+});
+
 // Serve static files (after all routes are defined)
 app.use(express.static('.'));
 
