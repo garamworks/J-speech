@@ -1589,50 +1589,6 @@
             isFlipped = !isFlipped;
         }
 
-        // Check if Android environment is available
-        function isAndroidApp() {
-            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
-        }
-
-        // Play current sequence using Android background audio
-        function playCurrentSequenceOnAndroid() {
-            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
-                console.log('No episode cards available for Android playback');
-                return false;
-            }
-
-            // Create playlist from current episode cards
-            const playlist = currentEpisodeCards.map(card => ({
-                audioUrl: card.audioUrl,
-                japanese: card.japanese,
-                korean: card.korean,
-                koreanAudioUrl: card.koreanAudioUrl,
-                characterImage: card.characterImage,
-                speaker: card.speaker
-            })).filter(card => card.audioUrl); // Only include cards with audio
-
-            if (playlist.length === 0) {
-                console.log('No audio URLs found in current episode');
-                return false;
-            }
-
-            try {
-                console.log(`Playing ${playlist.length} audio files on Android background player`);
-                alert("Android로 재생 요청을 보냅니다");
-                Android.playPlaylist(JSON.stringify(playlist));
-                
-                // Set current index to match Android player
-                if (typeof Android.goToIndex === 'function') {
-                    Android.goToIndex(currentCardIndex);
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Error playing playlist on Android:', error);
-                return false;
-            }
-        }
-
         // Text-to-speech functionality
         function speakJapanese() {
             console.log('=== speakJapanese function started ===');
@@ -1672,31 +1628,10 @@
                 console.error('Current card is null or undefined');
                 return;
             }
-
-            // Check if Android environment is available
-            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
-                alert("Android로 재생 요청을 보냅니다");
-                console.log('Android environment detected - using background player');
-                
-                // Visual feedback for playing
-                speakerBtn.style.background = '#2b6cb0';
-                speakerBtnBack.style.background = '#2b6cb0';
-                
-                // Try to play using Android background player
-                if (playCurrentSequenceOnAndroid()) {
-                    console.log('=== speakJapanese function ended (Android background playback) ===');
-                    return;
-                } else {
-                    console.log('Android playback failed, falling back to web audio');
-                    // Reset visual feedback
-                    speakerBtn.style.background = '#4299e1';
-                    speakerBtnBack.style.background = '#4299e1';
-                }
-            }
             
-            // Web environment or Android fallback - use regular Audio() object
+            // Try to play MP3 file from Notion first
             if (currentCard.audioUrl) {
-                console.log('Playing audio from Notion MP3 (Web mode):', currentCard.audioUrl);
+                console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
                 
                 // Use preloaded audio if available
                 const preloadedKey = `${currentEpisode}_${currentCardIndex}`;
@@ -1736,7 +1671,7 @@
                     speakerBtnBack.style.background = '#4299e1';
                 });
                 
-                console.log('=== speakJapanese function ended (Web MP3 playback) ===');
+                console.log('=== speakJapanese function ended (MP3 playback) ===');
                 return;
             }
             
@@ -2275,16 +2210,8 @@
 
         // Initialize the app when DOM is loaded
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                // Check Android object status
-                alert('typeof Android: ' + typeof Android);
-                alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
-                loadFlashcardsFromNotion();
-            });
+            document.addEventListener('DOMContentLoaded', loadFlashcardsFromNotion);
         } else {
-            // Check Android object status
-            alert('typeof Android: ' + typeof Android);
-            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
             loadFlashcardsFromNotion();
         }
 

@@ -460,55 +460,6 @@
         let allSequences = ['#001', '#002', '#003', '#004', '#005', '#006', '#007'];
         let currentExpressionModal = null;
 
-        // Check if Android environment is available
-        function isAndroidApp() {
-            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
-        }
-
-        // Play current sequence using Android background audio
-        function playCurrentSequenceOnAndroid() {
-            if (!currentCards || currentCards.length === 0) {
-                console.log('No cards available for Android playback');
-                return false;
-            }
-
-            // Create playlist from current cards
-            const playlist = currentCards.map(card => ({
-                audioUrl: card.audioUrl,
-                japanese: card.japanese,
-                korean: card.korean,
-                koreanAudioUrl: card.koreanAudioUrl,
-                characterImage: card.characterImage,
-                speaker: card.speaker
-            })).filter(card => card.audioUrl); // Only include cards with audio
-
-            if (playlist.length === 0) {
-                console.log('No audio URLs found in current cards');
-                return false;
-            }
-
-            try {
-                console.log(`Playing ${playlist.length} audio files on Android background player`);
-                alert("Android로 재생 요청을 보냅니다");
-                Android.playPlaylist(JSON.stringify(playlist));
-                
-                // Set current index to match Android player
-                if (typeof Android.goToIndex === 'function') {
-                    Android.goToIndex(currentIndex);
-                }
-
-                // Set playback mode
-                if (typeof Android.setMode === 'function') {
-                    Android.setMode(currentMode);
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Error playing playlist on Android:', error);
-                return false;
-            }
-        }
-
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const sequence = urlParams.get('sequence');
@@ -517,10 +468,6 @@
 
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check Android object status
-            alert('typeof Android: ' + typeof Android);
-            alert('typeof Android.playPlaylist: ' + typeof Android.playPlaylist);
-            
             console.log('URL params:', window.location.search);
             console.log('Sequence from URL:', sequence);
             console.log('Mode from URL:', mode);
@@ -770,16 +717,7 @@
             if (isPlaying) {
                 stopPlayback();
             } else {
-                // Check if Android environment is available and try to resume
-                if (isAndroidApp() && typeof Android.play === 'function') {
-                    console.log('Resuming Android background playback');
-                    Android.play();
-                    isPlaying = true;
-                    document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-pause" style="color: white;"></i>';
-                    document.getElementById('play-btn').classList.add('playing');
-                } else {
-                    await startPlayback();
-                }
+                await startPlayback();
             }
         }
 
@@ -787,25 +725,6 @@
             isPlaying = true;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-pause" style="color: white;"></i>';
             document.getElementById('play-btn').classList.add('playing');
-            
-            // Check if Android environment is available
-            if (typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function') {
-                alert("Android로 재생 요청을 보냅니다");
-                console.log('Starting Android background playback');
-                
-                // Try Android playback
-                const androidSuccess = playCurrentSequenceOnAndroid();
-                
-                if (androidSuccess) {
-                    console.log('Android background playback started successfully');
-                    return;
-                } else {
-                    console.log('Android playback failed, falling back to web audio');
-                }
-            }
-            
-            // Web environment or Android fallback
-            console.log('Starting web audio playback');
             
             if (currentMode === 'basic') {
                 await playBasicMode();
@@ -819,12 +738,6 @@
             isPlaying = false;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-play" style="color: white;"></i>';
             document.getElementById('play-btn').classList.remove('playing');
-            
-            // Stop Android playback if available
-            if (isAndroidApp() && typeof Android.pause === 'function') {
-                console.log('Stopping Android background playback');
-                Android.pause();
-            }
             
             if (currentAudio) {
                 console.log('Stopping current audio');
@@ -1125,16 +1038,7 @@
         function previousCard() {
             if (currentIndex > 0) {
                 const wasPlaying = isPlaying;
-                
-                // Handle Android navigation
-                if (isAndroidApp() && typeof Android.previousCard === 'function') {
-                    console.log('Using Android previous card navigation');
-                    Android.previousCard();
-                    displayCard(currentIndex - 1);
-                    return;
-                }
-                
-                // Web environment - stop current playback when changing cards
+                // Stop current playback when changing cards
                 stopPlayback();
                 displayCard(currentIndex - 1);
                 // If it was playing, restart playback for new card
@@ -1149,16 +1053,7 @@
         function nextCard() {
             if (currentIndex < currentCards.length - 1) {
                 const wasPlaying = isPlaying;
-                
-                // Handle Android navigation
-                if (isAndroidApp() && typeof Android.nextCard === 'function') {
-                    console.log('Using Android next card navigation');
-                    Android.nextCard();
-                    displayCard(currentIndex + 1);
-                    return;
-                }
-                
-                // Web environment - stop current playback when changing cards
+                // Stop current playback when changing cards
                 stopPlayback();
                 displayCard(currentIndex + 1);
                 // If it was playing, restart playback for new card
