@@ -350,6 +350,9 @@
             // Update UI
             document.getElementById('sequence-title').textContent = `PALM ${sequence}`;
             
+            // Update navigation buttons
+            updateNavigationButtons();
+            
             if (mode === 'expression') {
                 document.getElementById('expression-mode').classList.add('active');
                 document.getElementById('basic-mode').classList.remove('active');
@@ -709,6 +712,7 @@
                             
                             const transformedExpression = {
                                 mainExpression: expressionData.title,
+                                meaning: expressionData.meaning || expressionData['뜻(한국어)'] || '',
                                 examples: []
                             };
                             
@@ -738,10 +742,35 @@
                 for (const expr of card.expressions) {
                     if (!isPlaying) break;
                     
+                    console.log(`Playing expression: ${expr.mainExpression}`);
+                    
+                    // Announce "표현" before reading the meaning
+                    await playTTSAudio('표현', 'ko');
+                    
+                    if (!isPlaying) break;
+                    
+                    // Wait 1 second
+                    await sleep(1000);
+                    
+                    if (!isPlaying) break;
+                    
+                    // Read the meaning in Korean
+                    if (expr.meaning) {
+                        console.log(`Reading meaning: ${expr.meaning}`);
+                        await playTTSAudio(expr.meaning, 'ko');
+                        
+                        if (!isPlaying) break;
+                        
+                        // Wait 2 seconds before examples
+                        await sleep(2000);
+                    }
+                    
                     // Play examples
                     if (expr.examples && expr.examples.length > 0) {
                         for (const example of expr.examples) {
                             if (!isPlaying) break;
+                            
+                            console.log(`Playing example: ${example.japanese} → ${example.korean}`);
                             
                             // Play Japanese example
                             if (example.japanese) {
