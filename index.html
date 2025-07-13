@@ -1170,7 +1170,11 @@
             }
             
             // Set current sequence to first available or use URL parameter
-            const availableSequences = Object.keys(episodeData).sort();
+            const availableSequences = Object.keys(episodeData).sort((a, b) => {
+                const aNum = parseInt(a.replace('#', ''));
+                const bNum = parseInt(b.replace('#', ''));
+                return aNum - bNum;
+            });
             if (availableSequences.length > 0) {
                 // Check if requested sequence exists
                 if (currentEpisode && !availableSequences.includes(currentEpisode)) {
@@ -1234,7 +1238,11 @@
 
         // Update sequence navigation buttons
         function updateEpisodeButtons() {
-            const sequences = Object.keys(episodeData).sort();
+            const sequences = Object.keys(episodeData).sort((a, b) => {
+                const aNum = parseInt(a.replace('#', ''));
+                const bNum = parseInt(b.replace('#', ''));
+                return aNum - bNum;
+            });
             const currentIndex = sequences.indexOf(currentEpisode);
             
             // Update sequence navigation buttons
@@ -2109,7 +2117,11 @@
                 preloadCurrentCardDataImmediately();
             } else {
                 // At last card of episode, try to go to next episode
-                const sequences = Object.keys(episodeData).sort();
+                const sequences = Object.keys(episodeData).sort((a, b) => {
+                    const aNum = parseInt(a.replace('#', ''));
+                    const bNum = parseInt(b.replace('#', ''));
+                    return aNum - bNum;
+                });
                 const currentIndex = sequences.indexOf(currentEpisode);
                 if (currentIndex < sequences.length - 1) {
                     const nextSequence = sequences[currentIndex + 1];
@@ -2136,7 +2148,11 @@
         }
 
         function previousSequence() {
-            const sequences = Object.keys(episodeData).sort();
+            const sequences = Object.keys(episodeData).sort((a, b) => {
+                const aNum = parseInt(a.replace('#', ''));
+                const bNum = parseInt(b.replace('#', ''));
+                return aNum - bNum;
+            });
             const currentIndex = sequences.indexOf(currentEpisode);
             if (currentIndex > 0) {
                 loadEpisode(sequences[currentIndex - 1]);
@@ -2144,7 +2160,11 @@
         }
 
         function nextSequence() {
-            const sequences = Object.keys(episodeData).sort();
+            const sequences = Object.keys(episodeData).sort((a, b) => {
+                const aNum = parseInt(a.replace('#', ''));
+                const bNum = parseInt(b.replace('#', ''));
+                return aNum - bNum;
+            });
             const currentIndex = sequences.indexOf(currentEpisode);
             if (currentIndex < sequences.length - 1) {
                 loadEpisode(sequences[currentIndex + 1]);
@@ -2178,7 +2198,11 @@
         // New sequence navigation button event listeners
         if (prevSequenceBtn) {
             prevSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                const sequences = Object.keys(episodeData).sort((a, b) => {
+                    const aNum = parseInt(a.replace('#', ''));
+                    const bNum = parseInt(b.replace('#', ''));
+                    return aNum - bNum;
+                });
                 const currentIndex = sequences.indexOf(currentEpisode);
                 if (currentIndex > 0) {
                     loadEpisode(sequences[currentIndex - 1]);
@@ -2188,7 +2212,11 @@
         
         if (nextSequenceBtn) {
             nextSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                const sequences = Object.keys(episodeData).sort((a, b) => {
+                    const aNum = parseInt(a.replace('#', ''));
+                    const bNum = parseInt(b.replace('#', ''));
+                    return aNum - bNum;
+                });
                 const currentIndex = sequences.indexOf(currentEpisode);
                 if (currentIndex < sequences.length - 1) {
                     loadEpisode(sequences[currentIndex + 1]);

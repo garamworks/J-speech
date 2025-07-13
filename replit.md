@@ -142,6 +142,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Replaced homepage speaker buttons with B/E mode buttons (Basic/Expression) using Fjalla One font
 - July 13, 2025. Updated B button styling to match E button: white background with gray text (#555) for consistency
 - July 13, 2025. Updated flashcard index.html navigation to match player style: PALM #XXX title with prev/next sequence arrows
+- July 13, 2025. Updated index.html design to match player style: full-height layout, header with backdrop-filter, white text on transparent cards
+- July 13, 2025. Fixed sequence navigation order to sort numerically (#001, #002, #003...) instead of alphabetically
 
 ## User Preferences
 
