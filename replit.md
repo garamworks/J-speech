@@ -124,6 +124,7 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Changed player mode selector text from Korean to English (Basic, Expression)
 - July 13, 2025. Updated mode selector buttons font to match navigation title (Fjalla One, normal weight)
 - July 13, 2025. Adjusted player layout to use full viewport height for natural vertical fill
+- July 13, 2025. Added margin spacing between progress counter and player control buttons
 
 ## User Preferences
 
