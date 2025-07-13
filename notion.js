@@ -273,25 +273,12 @@ async function getFlashcardsFromNotion() {
             episodeData[sequenceKey].push(card);
         });
 
-        // Sort sequence keys numerically for consistent ordering
-        const sortedEpisodeData = {};
-        const sortedKeys = Object.keys(episodeData).sort((a, b) => {
-            const aNum = parseInt(a.replace('#', ''));
-            const bNum = parseInt(b.replace('#', ''));
-            return aNum - bNum;
-        });
-        
-        // Rebuild episode data with sorted keys
-        sortedKeys.forEach(key => {
-            sortedEpisodeData[key] = episodeData[key];
-        });
-
-        console.log('Grouped flashcards by sequence:', sortedKeys);
-        Object.entries(sortedEpisodeData).forEach(([seq, cards]) => {
+        console.log('Grouped flashcards by sequence:', Object.keys(episodeData));
+        Object.entries(episodeData).forEach(([seq, cards]) => {
             console.log(`Sequence ${seq}: ${cards.length} cards`);
         });
 
-        return sortedEpisodeData;
+        return episodeData;
     } catch (error) {
         console.error("Error fetching flashcards from Notion:", error);
         throw error;
