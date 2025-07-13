@@ -1092,6 +1092,7 @@
         let wakeLock = null;
         let isPlayingInBackground = false;
         let backgroundPlaybackInterval = null;
+        let persistentAudioElement = null;
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
@@ -1638,19 +1639,12 @@
             if (currentCard.audioUrl) {
                 console.log('Playing audio from Notion MP3:', currentCard.audioUrl);
                 
-                // Use preloaded audio if available
-                const preloadedKey = `${currentEpisode}_${currentCardIndex}`;
-                console.log('Looking for preloaded audio with key:', preloadedKey);
-                console.log('Available preloaded keys:', Object.keys(preloadedAudios));
-                const audio = preloadedAudios[preloadedKey] || new Audio(currentCard.audioUrl);
-                console.log('Audio source URL:', audio.src);
+                // Use persistent audio element for better background playback
+                const audio = createPersistentAudioElement();
+                audio.src = currentCard.audioUrl;
+                audio.load();
                 
-                // Configure audio for background playback
-                audio.preload = 'auto';
-                audio.loop = false;
-                audio.muted = false;
-                audio.volume = 1.0;
-                audio.crossOrigin = 'anonymous';
+                console.log('Audio source URL:', audio.src);
                 
                 window.currentAudio = audio;
                 
@@ -2743,8 +2737,23 @@
                     if (window.currentAudio.paused || window.currentAudio.ended) {
                         console.log('Audio paused/ended in background, attempting to resume');
                         if (!window.currentAudio.ended) {
-                            window.currentAudio.play().catch(e => {
+                            // Try multiple recovery methods
+                            window.currentAudio.volume = 1.0;
+                            window.currentAudio.muted = false;
+                            window.currentAudio.play().then(() => {
+                                console.log('Successfully resumed background audio');
+                            }).catch(e => {
                                 console.log('Failed to resume background audio:', e);
+                                // Try to reload the audio source
+                                const currentSrc = window.currentAudio.src;
+                                if (currentSrc) {
+                                    window.currentAudio.load();
+                                    setTimeout(() => {
+                                        window.currentAudio.play().catch(e2 => {
+                                            console.log('Failed to resume after reload:', e2);
+                                        });
+                                    }, 100);
+                                }
                             });
                         }
                     }
@@ -2754,7 +2763,7 @@
                         requestWakeLock();
                     }
                 }
-            }, 1000); // Check every second
+            }, 500); // Check every 500ms for more responsive monitoring
         }
 
         function stopBackgroundPlaybackMonitoring() {
@@ -2762,6 +2771,26 @@
                 clearInterval(backgroundPlaybackInterval);
                 backgroundPlaybackInterval = null;
             }
+        }
+
+        // Create a persistent audio element for better background playback
+        function createPersistentAudioElement() {
+            if (!persistentAudioElement) {
+                persistentAudioElement = document.createElement('audio');
+                persistentAudioElement.preload = 'auto';
+                persistentAudioElement.autoplay = false;
+                persistentAudioElement.loop = false;
+                persistentAudioElement.muted = false;
+                persistentAudioElement.volume = 1.0;
+                persistentAudioElement.crossOrigin = 'anonymous';
+                persistentAudioElement.style.display = 'none';
+                
+                // Add to document for better mobile support
+                document.body.appendChild(persistentAudioElement);
+                
+                console.log('Created persistent audio element');
+            }
+            return persistentAudioElement;
         }
 
         // Initialize modal event listener after DOM is ready
@@ -2786,6 +2815,9 @@
 
             // Setup background playback support
             setupMediaSession();
+            
+            // Create persistent audio element for better background playback
+            createPersistentAudioElement();
 
             // Handle visibility changes for background playback
             document.addEventListener('visibilitychange', function() {
@@ -2798,6 +2830,9 @@
                         if (window.currentAudio.paused) {
                             window.currentAudio.play().catch(e => console.log('Background play failed:', e));
                         }
+                        // Keep the audio element active
+                        window.currentAudio.muted = false;
+                        window.currentAudio.volume = 1.0;
                     }
                 } else {
                     console.log('Page visible again');

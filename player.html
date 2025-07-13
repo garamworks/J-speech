@@ -463,6 +463,7 @@
         let wakeLock = null;
         let isPlayingInBackground = false;
         let backgroundPlaybackInterval = null;
+        let persistentAudioElement = null;
 
         // Wake Lock API functions
         async function requestWakeLock() {
@@ -572,6 +573,26 @@
                 backgroundPlaybackInterval = null;
             }
         }
+
+        // Create a persistent audio element for better background playback
+        function createPersistentAudioElement() {
+            if (!persistentAudioElement) {
+                persistentAudioElement = document.createElement('audio');
+                persistentAudioElement.preload = 'auto';
+                persistentAudioElement.autoplay = false;
+                persistentAudioElement.loop = false;
+                persistentAudioElement.muted = false;
+                persistentAudioElement.volume = 1.0;
+                persistentAudioElement.crossOrigin = 'anonymous';
+                persistentAudioElement.style.display = 'none';
+                
+                // Add to document for better mobile support
+                document.body.appendChild(persistentAudioElement);
+                
+                console.log('Created persistent audio element');
+            }
+            return persistentAudioElement;
+        }
         let currentExpressionModal = null;
 
         // Get URL parameters
@@ -628,6 +649,9 @@
 
             // Setup background playback support
             setupMediaSession();
+            
+            // Create persistent audio element for better background playback
+            createPersistentAudioElement();
 
             // Handle visibility changes for background playback
             document.addEventListener('visibilitychange', function() {
@@ -1132,19 +1156,10 @@
                     return;
                 }
                 
-                // Use preloaded audio if available
-                let audio = preloadedAudio[url];
-                if (!audio) {
-                    audio = new Audio(url);
-                    preloadedAudio[url] = audio;
-                }
-                
-                // Configure audio for background playback
-                audio.preload = 'auto';
-                audio.loop = false;
-                audio.muted = false;
-                audio.volume = 1.0;
-                audio.crossOrigin = 'anonymous';
+                // Use persistent audio element for better background playback
+                let audio = createPersistentAudioElement();
+                audio.src = url;
+                audio.load();
                 
                 // Reset audio to beginning
                 audio.currentTime = 0;
