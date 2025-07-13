@@ -144,6 +144,8 @@ This is a web-based Japanese learning flashcard application that integrates with
 - July 13, 2025. Replaced main flashcard navigation with player-style header: PALM #001 format with left/right arrows for sequence navigation
 - July 13, 2025. Added homepage navigation to sequence title: clicking PALM #001 returns to episode selection page
 - July 13, 2025. Updated navigation icons to caret arrows in circular buttons and applied Fjalla One font to card counter
+- July 13, 2025. Fixed expression card API endpoint calls from /api/expression-card/ to /api/expression/ to resolve JSON parsing errors
+- July 13, 2025. Fixed db-connection-status visibility and increased word/expression icon area from 70% to 80% for better usability
 
 ## User Preferences
 
