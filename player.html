@@ -216,8 +216,8 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            max-height: 50vh;
-            max-height: 50dvh; /* Dynamic viewport height for mobile */
+            max-height: 60vh;
+            max-height: 60dvh; /* Dynamic viewport height for mobile */
         }
 
         .card-japanese {
@@ -332,29 +332,7 @@
             font-weight: normal;
         }
 
-        .mode-selector {
-            display: flex;
-            gap: 10px;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
 
-        .mode-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Fjalla One', sans-serif;
-            font-weight: normal;
-            font-size: 18px;
-        }
-
-        .mode-btn.active {
-            background: rgba(255, 255, 255, 0.4);
-        }
 
         .back-btn {
             position: absolute;
@@ -453,11 +431,6 @@
                 <button class="control-btn" id="next-btn"><i class="fa-solid fa-forward" style="color: white;"></i></button>
                 <div class="mode-icon mode-icon-right" id="expression-icon" onclick="switchMode('expression')">E</div>
             </div>
-            
-            <div class="mode-selector">
-                <button class="mode-btn active" id="basic-mode">Basic</button>
-                <button class="mode-btn" id="expression-mode">Expression</button>
-            </div>
         </div>
     </div>
 
@@ -514,8 +487,6 @@
             updateNavigationButtons();
             
             if (mode === 'expression') {
-                document.getElementById('expression-mode').classList.add('active');
-                document.getElementById('basic-mode').classList.remove('active');
                 document.getElementById('expression-icon').classList.add('active');
                 document.getElementById('basic-icon').classList.remove('active');
             } else {
@@ -681,16 +652,10 @@
             document.getElementById('play-btn').addEventListener('click', togglePlayback);
             document.getElementById('prev-btn').addEventListener('click', previousCard);
             document.getElementById('next-btn').addEventListener('click', nextCard);
-            document.getElementById('basic-mode').addEventListener('click', () => switchMode('basic'));
-            document.getElementById('expression-mode').addEventListener('click', () => switchMode('expression'));
         }
 
         function switchMode(mode) {
             currentMode = mode;
-            
-            // Update mode buttons
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`${mode}-mode`).classList.add('active');
             
             // Update mode icons
             document.querySelectorAll('.mode-icon').forEach(icon => icon.classList.remove('active'));
