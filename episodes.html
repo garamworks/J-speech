@@ -449,7 +449,7 @@
         function selectEpisode(sequence) {
             console.log('Selected episode sequence:', sequence);
             // Navigate to the main app with the selected episode
-            window.location.href = `flashcards?episode=${encodeURIComponent(sequence)}`;
+            window.location.href = `/flashcards?episode=${encodeURIComponent(sequence)}`;
         }
 
         // Track currently playing audio
