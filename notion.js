@@ -17,10 +17,11 @@ function extractDatabaseIdFromUrl(pageUrl) {
 
 // Updated database structure - using connected databases
 const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b"; // Main dialogue database
-const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a"; // Character database 
+const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a"; // Character database
 const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8037-86b5-fea02dcf9913"; // Expression cards database (connected)
 const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd"; // N1 vocabulary database (connected)
 const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21"; // Episodes/Sequence database (connected)
+const BOOK_DATABASE_ID = "22cfe404-b3dc-8035-baae-ea57e7401e3a"; // Book database (main menu)
 
 // Get database info by ID
 async function getNotionDatabases() {
@@ -384,84 +385,122 @@ async function getN1VocabularyInfo(n1VocabularyId) {
     }
 }
 
-// Get episodes data for the main menu
+// Get books data for the main menu (using Book DB)
 async function getEpisodesFromNotion() {
     try {
-        // First, get the database schema to understand the property names
-        const database = await notion.databases.retrieve({
-            database_id: EPISODES_DATABASE_ID
-        });
-        
-        console.log('Episodes database properties:', Object.keys(database.properties));
-        
+        // Query the Book database
         const response = await notion.databases.query({
-            database_id: EPISODES_DATABASE_ID,
-            // Remove sort for now to avoid validation errors
+            database_id: BOOK_DATABASE_ID,
         });
 
-        const episodes = response.results.map(page => {
+        const books = response.results.map(page => {
             const properties = page.properties;
-            
-            // Log available properties to debug
-            console.log('Available properties for episode:', Object.keys(properties));
-            
-            // Extract episode data using the actual field names found in the database
-            const sequence = properties.시퀀스?.rich_text?.[0]?.plain_text || '';
-            const sequenceTitle = properties['시퀀스 제목']?.rich_text?.[0]?.plain_text || '';
-            const title = properties.Name?.title?.[0]?.plain_text || 
-                         properties.제목?.title?.[0]?.plain_text || 
-                         'Untitled Episode';
-            const description = sequenceTitle || '';
+
+            // Extract book data from Book DB
+            // 권 (title field) - e.g., "PALM 26"
+            const bookTitle = properties.권?.title?.[0]?.plain_text || 'Untitled Book';
+
+            // 제목 (rich_text) - e.g., "오후의 빛 I"
+            const subtitle = properties.제목?.rich_text?.[0]?.plain_text || '';
+
+            // 표지 (files) - book cover image
             const thumbnail = properties.표지?.files?.[0];
             const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
-            const status = 'published'; // Default to published since there's no status field
-            
-            // Extract episode number from title if sequence is empty
-            let episodeNumber = sequence;
-            if (!episodeNumber && title) {
-                const match = title.match(/(\d+)(?:-(\d+))?/);
-                if (match) {
-                    episodeNumber = match[2] ? `#${match[2].padStart(3, '0')}` : `#${match[1].padStart(3, '0')}`;
-                }
-            }
-                          
-            const createdAt = properties.created_at?.created_time || 
-                             properties.Created?.created_time || 
-                             page.created_time;
-            
+
+            // PALM Sequence DB (relation) - array of related sequence IDs
+            const sequenceRelations = properties['PALM Sequence DB']?.relation || [];
+
             return {
                 id: page.id,
-                sequence: episodeNumber,
-                title: title,
-                description: description,
+                bookTitle: bookTitle,
+                subtitle: subtitle,
                 thumbnailUrl: thumbnailUrl,
-                status: status,
-                createdAt: createdAt
+                sequenceCount: sequenceRelations.length,
+                sequenceRelations: sequenceRelations,
+                createdAt: page.created_time
             };
         });
 
-        // Filter only published episodes
-        const publishedEpisodes = episodes.filter(episode => 
-            episode.status === 'published' || 
-            episode.status === 'active' || 
-            episode.status === 'public' ||
-            episode.status === '활성' ||
-            episode.status === '공개' ||
-            !episode.status  // Include episodes without status
-        );
-        
-        console.log(`Found ${publishedEpisodes.length} published episodes out of ${episodes.length} total`);
-        return publishedEpisodes;
+        console.log(`Found ${books.length} books`);
+        return books;
     } catch (error) {
-        console.error("Error fetching episodes from Notion:", error);
+        console.error("Error fetching books from Notion:", error);
         return [];
     }
 }
 
-module.exports = { 
-    getFlashcardsFromNotion, 
-    getNotionDatabases, 
-    getExpressionCardInfo, 
-    getN1VocabularyInfo, 
-    getEpisodesFromNotion 
+// Get sequences for a specific book
+async function getSequencesForBook(bookId) {
+    try {
+        // First, get the book to find its related sequences
+        const bookPage = await notion.pages.retrieve({ page_id: bookId });
+        const sequenceRelations = bookPage.properties['PALM Sequence DB']?.relation || [];
+
+        if (sequenceRelations.length === 0) {
+            console.log(`No sequences found for book ${bookId}`);
+            return [];
+        }
+
+        // Fetch each sequence's details
+        const sequences = await Promise.all(
+            sequenceRelations.map(async (relation) => {
+                try {
+                    const sequencePage = await notion.pages.retrieve({ page_id: relation.id });
+                    const properties = sequencePage.properties;
+
+                    const sequence = properties.시퀀스?.rich_text?.[0]?.plain_text || '';
+                    const sequenceTitle = properties['시퀀스 제목']?.rich_text?.[0]?.plain_text || '';
+                    const title = properties.Name?.title?.[0]?.plain_text ||
+                                 properties.제목?.title?.[0]?.plain_text ||
+                                 'Untitled Episode';
+                    const thumbnail = properties.표지?.files?.[0];
+                    const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
+
+                    // Extract episode number from title if sequence is empty
+                    let episodeNumber = sequence;
+                    if (!episodeNumber && title) {
+                        const match = title.match(/(\d+)(?:-(\d+))?/);
+                        if (match) {
+                            episodeNumber = match[2] ? `#${match[2].padStart(3, '0')}` : `#${match[1].padStart(3, '0')}`;
+                        }
+                    }
+
+                    return {
+                        id: sequencePage.id,
+                        sequence: episodeNumber,
+                        title: title,
+                        description: sequenceTitle || '',
+                        thumbnailUrl: thumbnailUrl,
+                        createdAt: sequencePage.created_time
+                    };
+                } catch (error) {
+                    console.error(`Error fetching sequence ${relation.id}:`, error);
+                    return null;
+                }
+            })
+        );
+
+        // Filter out null results and sort by sequence
+        const validSequences = sequences.filter(s => s !== null);
+        validSequences.sort((a, b) => {
+            const aNum = parseInt(a.sequence.replace('#', ''));
+            const bNum = parseInt(b.sequence.replace('#', ''));
+            return bNum - aNum; // descending order
+        });
+
+        console.log(`Found ${validSequences.length} sequences for book ${bookId}`);
+        return validSequences;
+    } catch (error) {
+        console.error(`Error fetching sequences for book ${bookId}:`, error);
+        return [];
+    }
+}
+
+module.exports = {
+    getFlashcardsFromNotion,
+    getNotionDatabases,
+    getExpressionCardInfo,
+    getN1VocabularyInfo,
+    getEpisodesFromNotion,
+    getSequencesForBook
 };

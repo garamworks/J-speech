@@ -62,7 +62,8 @@
 
         .episode-thumbnail {
             width: 100%;
-            height: 200px;
+            height: 0;
+            padding-bottom: 142%;
             background: #f8f9fa;
             border-radius: 10px;
             margin-bottom: 10px;
@@ -77,6 +78,10 @@
             border: 0.5px solid rgba(128, 128, 128, 0.3);
             cursor: pointer;
         }
+
+        .episode-thumbnail.episode-ratio {
+            padding-bottom: 56.25%; /* 16:9 ratio (9/16 = 0.5625) */
+        }
         
         .episode-thumbnail-safe-area {
             position: absolute;
@@ -89,6 +94,9 @@
         }
 
         .episode-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -247,8 +255,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>PALM 26 - 오후의 빛 I</h1>
+        <div class="header" id="pageHeader" style="display: none;">
+            <h1 id="headerTitle"></h1>
         </div>
 
         <div id="loading" class="loading">
@@ -266,57 +274,157 @@
     </div>
 
     <script>
-        // Load episodes from API
+        // Check URL parameters to determine what to load
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                bookId: params.get('book')
+            };
+        }
+
+        // Load books or sequences based on URL
         async function loadEpisodes() {
+            const params = getUrlParams();
+
+            if (params.bookId) {
+                // Load sequences for a specific book
+                await loadSequences(params.bookId);
+            } else {
+                // Load all books
+                await loadBooks();
+            }
+        }
+
+        // Load books from API
+        async function loadBooks() {
             try {
-                const response = await fetch('/api/episodes');
+                const response = await fetch('/api/books');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch episodes');
+                    throw new Error('Failed to fetch books');
                 }
-                
-                const episodes = await response.json();
-                console.log('Loaded episodes:', episodes);
-                
-                renderEpisodes(episodes);
+
+                const books = await response.json();
+                console.log('Loaded books:', books);
+
+                renderBooks(books);
             } catch (error) {
-                console.error('Error loading episodes:', error);
+                console.error('Error loading books:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
             }
         }
 
-        function renderEpisodes(episodes) {
+        // Load sequences for a specific book
+        async function loadSequences(bookId) {
+            try {
+                // First, get book info to display title
+                const bookResponse = await fetch('/api/books');
+                const books = await bookResponse.json();
+                const currentBook = books.find(b => b.id === bookId);
+
+                // Fetch sequences
+                const response = await fetch(`/api/book/${bookId}/sequences`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sequences');
+                }
+
+                const sequences = await response.json();
+                console.log('Loaded sequences:', sequences);
+
+                renderSequences(sequences, bookId, currentBook);
+            } catch (error) {
+                console.error('Error loading sequences:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function renderBooks(books) {
             const container = document.getElementById('episodesContainer');
             const loading = document.getElementById('loading');
-            
-            if (episodes.length === 0) {
-                container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
+
+            if (books.length === 0) {
+                container.innerHTML = '<p class="error">사용 가능한 책이 없습니다.</p>';
             } else {
-                // Sort episodes by sequence in descending order (newest first)
-                const sortedEpisodes = episodes.sort((a, b) => {
-                    const aNum = parseInt(a.sequence.replace('#', ''));
-                    const bNum = parseInt(b.sequence.replace('#', ''));
-                    return bNum - aNum; // descending order
+                // Sort books by title (newest first)
+                const sortedBooks = books.sort((a, b) => {
+                    return b.bookTitle.localeCompare(a.bookTitle);
                 });
-                
-                container.innerHTML = sortedEpisodes.map(episode => createEpisodeCard(episode)).join('');
+
+                container.innerHTML = sortedBooks.map(book => createBookCard(book)).join('');
             }
-            
+
             loading.style.display = 'none';
             container.style.display = 'grid';
         }
 
-        function createEpisodeCard(episode) {
-            const thumbnailContent = episode.thumbnailUrl 
-                ? `<img src="${episode.thumbnailUrl}" alt="${episode.title}">`
-                : `<div style="font-size: 3rem;">🎬</div>`;
-            
-            // Format sequence with larger # symbol
-            const formattedSequence = episode.sequence.replace('#', '<span class="hash">#</span>');
-            
+        function renderSequences(sequences, bookId, currentBook) {
+            const container = document.getElementById('episodesContainer');
+            const loading = document.getElementById('loading');
+            const pageHeader = document.getElementById('pageHeader');
+            const headerTitle = document.getElementById('headerTitle');
+
+            // Show header with book title
+            if (currentBook) {
+                const bookTitle = currentBook.subtitle
+                    ? `${currentBook.bookTitle} - ${currentBook.subtitle}`
+                    : currentBook.bookTitle;
+                headerTitle.textContent = bookTitle;
+                pageHeader.style.display = 'block';
+            }
+
+            if (sequences.length === 0) {
+                container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
+            } else {
+                // Add back button at the top
+                const backButton = `
+                    <div style="grid-column: 1 / -1; padding: 0 0 10px 0;">
+                        <div style="padding: 15px; text-align: left; cursor: pointer; color: white; font-size: 1.1rem;" onclick="window.location.href='/'">
+                            ← 책 목록으로 돌아가기
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = backButton + sequences.map(seq => createEpisodeCard(seq)).join('');
+            }
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+        }
+
+        function createBookCard(book) {
+            const thumbnailContent = book.thumbnailUrl
+                ? `<img src="${book.thumbnailUrl}" alt="${book.bookTitle}">`
+                : `<div style="font-size: 3rem;">📚</div>`;
+
+            // Display book title and subtitle
+            const displayTitle = book.bookTitle;
+            const displaySubtitle = book.subtitle || '';
+
             return `
                 <div class="episode-card">
-                    <div class="episode-thumbnail">
+                    <div class="episode-thumbnail" onclick="selectBook('${book.id}')" style="cursor: pointer;">
+                        ${thumbnailContent}
+                    </div>
+                    <div class="episode-description" onclick="selectBook('${book.id}')" style="cursor: pointer;">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #000000; font-size: 1.2em;">${displayTitle}</div>
+                        ${displaySubtitle}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createEpisodeCard(episode) {
+            const thumbnailContent = episode.thumbnailUrl
+                ? `<img src="${episode.thumbnailUrl}" alt="${episode.title}">`
+                : `<div style="font-size: 3rem;">🎬</div>`;
+
+            // Format sequence with larger # symbol
+            const formattedSequence = episode.sequence.replace('#', '<span class="hash">#</span>');
+
+            return `
+                <div class="episode-card">
+                    <div class="episode-thumbnail episode-ratio">
                         ${thumbnailContent}
                         <div class="episode-sequence">${formattedSequence}</div>
                         <div class="episode-thumbnail-safe-area" onclick="selectEpisode('${episode.sequence}')"></div>
@@ -330,6 +438,12 @@
                     <div class="episode-description" onclick="selectEpisode('${episode.sequence}')">${episode.description}</div>
                 </div>
             `;
+        }
+
+        function selectBook(bookId) {
+            console.log('Selected book ID:', bookId);
+            // Navigate to episode list for this book
+            window.location.href = `/?book=${encodeURIComponent(bookId)}`;
         }
 
         function selectEpisode(sequence) {
@@ -778,6 +892,12 @@
             // Navigate to player page with autoplay enabled
             console.log('Navigating to player with sequence:', sequence, 'mode:', mode);
             window.location.href = `player.html?sequence=${encodeURIComponent(sequence)}&mode=${mode}&autoplay=true`;
+        }
+
+        async function playBookAudio(bookId, speakerButton, mode = 'basic') {
+            // Navigate to player page with book ID
+            console.log('Navigating to player with book:', bookId, 'mode:', mode);
+            window.location.href = `player.html?book=${encodeURIComponent(bookId)}&mode=${mode}&autoplay=true`;
         }
 
 

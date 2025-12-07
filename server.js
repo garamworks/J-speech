@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo, getEpisodesFromNotion } = require('./notion.js');
+const { getFlashcardsFromNotion, getNotionDatabases, getExpressionCardInfo, getN1VocabularyInfo, getEpisodesFromNotion, getSequencesForBook } = require('./notion.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -107,16 +107,45 @@ app.get('/api/n1-vocabulary-multiple/:ids', async (req, res) => {
     }
 });
 
-// API endpoint to get episodes for the main menu
+// API endpoint to get books for the main menu
+app.get('/api/books', async (req, res) => {
+    try {
+        const books = await getEpisodesFromNotion(); // This now returns books
+        res.json(books);
+    } catch (error) {
+        console.error('Error fetching books:', error);
+        res.status(500).json({
+            error: 'Failed to fetch books from Notion',
+            message: error.message
+        });
+    }
+});
+
+// API endpoint to get sequences for a specific book
+app.get('/api/book/:bookId/sequences', async (req, res) => {
+    try {
+        const bookId = req.params.bookId;
+        const sequences = await getSequencesForBook(bookId);
+        res.json(sequences);
+    } catch (error) {
+        console.error('Error fetching sequences:', error);
+        res.status(500).json({
+            error: 'Failed to fetch sequences from Notion',
+            message: error.message
+        });
+    }
+});
+
+// Legacy endpoint for backwards compatibility
 app.get('/api/episodes', async (req, res) => {
     try {
         const episodes = await getEpisodesFromNotion();
         res.json(episodes);
     } catch (error) {
         console.error('Error fetching episodes:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to fetch episodes from Notion',
-            message: error.message 
+            message: error.message
         });
     }
 });
