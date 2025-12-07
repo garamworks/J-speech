@@ -8,13 +8,17 @@ const PORT = process.env.PORT || 5000;
 // API endpoint to get flashcards from Notion
 app.get('/api/flashcards', async (req, res) => {
     try {
-        const flashcards = await getFlashcardsFromNotion();
+        // Get episode parameter from query string
+        const episodeSequence = req.query.episode;
+        console.log('API request for flashcards, episode:', episodeSequence || 'all');
+
+        const flashcards = await getFlashcardsFromNotion(episodeSequence);
         res.json(flashcards);
     } catch (error) {
         console.error('Error fetching flashcards:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to fetch flashcards from Notion',
-            message: error.message 
+            message: error.message
         });
     }
 });
@@ -125,7 +129,8 @@ app.get('/api/books', async (req, res) => {
 app.get('/api/book/:bookId/sequences', async (req, res) => {
     try {
         const bookId = req.params.bookId;
-        const sequences = await getSequencesForBook(bookId);
+        const limit = req.query.limit ? parseInt(req.query.limit) : null;
+        const sequences = await getSequencesForBook(bookId, limit);
         res.json(sequences);
     } catch (error) {
         console.error('Error fetching sequences:', error);

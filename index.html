@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japanese Learning Flashcards</title>
+    <title>J-speech</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1197,17 +1197,14 @@
                     const bNum = parseInt(b.romanji) || 0;
                     return aNum - bNum; // Ascending order
                 });
-                
+
                 loadCard(currentCardIndex);
                 totalCardsSpan.textContent = currentEpisodeCards.length;
                 updateNavigationButtons();
                 updateEpisodeButtons();
-                
-                // Preload audio for current and next cards
-                preloadAudio();
-                
-                // Aggressively preload current card data immediately
-                preloadCurrentCardDataImmediately();
+
+                // Progressive loading: Preload first 3 cards immediately, then load rest in background
+                preloadInitialCards();
             }
         }
 
@@ -1940,6 +1937,106 @@
             }
         }
         
+        // Progressive loading: Preload first 3 cards immediately, then rest in background
+        function preloadInitialCards() {
+            console.log('Starting progressive loading...');
+            const totalCards = currentEpisodeCards.length;
+            const initialLoadCount = Math.min(3, totalCards);
+
+            // Preload first 3 cards immediately
+            console.log(`Preloading first ${initialLoadCount} cards immediately...`);
+            for (let i = 0; i < initialLoadCount; i++) {
+                preloadCardResources(i);
+            }
+
+            // Preload remaining cards progressively in background after a short delay
+            if (totalCards > initialLoadCount) {
+                console.log(`Will preload remaining ${totalCards - initialLoadCount} cards in background...`);
+                setTimeout(() => {
+                    preloadRemainingCards(initialLoadCount);
+                }, 500); // 500ms delay to let initial cards load first
+            }
+        }
+
+        // Preload resources for a specific card index
+        function preloadCardResources(cardIndex) {
+            if (cardIndex >= currentEpisodeCards.length) return;
+
+            const card = currentEpisodeCards[cardIndex];
+            const cardKey = `${currentEpisode}_${cardIndex}`;
+
+            // Preload audio
+            if (card.audioUrl && !preloadedAudios[cardKey]) {
+                preloadedAudios[cardKey] = new Audio(card.audioUrl);
+                preloadedAudios[cardKey].preload = 'auto';
+                preloadedAudios[cardKey].load();
+            }
+
+            // Preload Korean audio
+            if (card.koreanAudioUrl) {
+                const koreanKey = `${cardKey}_K`;
+                if (!preloadedAudios[koreanKey]) {
+                    preloadedAudios[koreanKey] = new Audio(card.koreanAudioUrl);
+                    preloadedAudios[koreanKey].preload = 'auto';
+                    preloadedAudios[koreanKey].load();
+                }
+            }
+
+            // Preload expression cards
+            if (card.expressionCardIds && card.expressionCardIds.length > 0) {
+                Promise.all(card.expressionCardIds.map(id =>
+                    fetch(`/api/expression/${id}`)
+                        .then(response => response.json())
+                        .catch(error => null)
+                )).then(results => {
+                    preloadedExpressionCards[cardKey] = results.filter(r => r !== null);
+                });
+            }
+
+            // Preload N1 vocabulary data
+            if (card.n1VocabularyIds && card.n1VocabularyIds.length > 0) {
+                const ids = card.n1VocabularyIds.join(',');
+                fetch(`/api/n1-vocabulary-multiple/${ids}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        preloadedN1WordData[cardKey] = data;
+                    })
+                    .catch(error => {
+                        console.error('Error loading N1 vocabulary data:', error);
+                    });
+            }
+        }
+
+        // Preload remaining cards progressively in background
+        function preloadRemainingCards(startIndex) {
+            const totalCards = currentEpisodeCards.length;
+            console.log(`Preloading remaining cards from index ${startIndex} to ${totalCards - 1}...`);
+
+            // Preload in batches to avoid overwhelming the browser
+            const batchSize = 5;
+            let currentBatch = startIndex;
+
+            function preloadNextBatch() {
+                const endIndex = Math.min(currentBatch + batchSize, totalCards);
+                console.log(`Preloading batch: cards ${currentBatch} to ${endIndex - 1}`);
+
+                for (let i = currentBatch; i < endIndex; i++) {
+                    preloadCardResources(i);
+                }
+
+                currentBatch = endIndex;
+
+                // Continue with next batch after a delay
+                if (currentBatch < totalCards) {
+                    setTimeout(preloadNextBatch, 1000); // 1 second between batches
+                } else {
+                    console.log('All cards preloaded!');
+                }
+            }
+
+            preloadNextBatch();
+        }
+
         // Aggressively preload current card data immediately when card is loaded
         function preloadCurrentCardDataImmediately() {
             const currentCard = currentEpisodeCards[currentCardIndex];
@@ -2235,8 +2332,9 @@
         // Update sequence title in header
         function updateSequenceTitle() {
             const sequenceTitle = document.getElementById('sequence-title');
-            if (sequenceTitle) {
-                sequenceTitle.textContent = `PALM ${currentEpisode}`;
+            if (sequenceTitle && currentEpisodeCards && currentEpisodeCards.length > 0) {
+                const bookTitle = currentEpisodeCards[0].bookTitle || 'PALM';
+                sequenceTitle.textContent = `${bookTitle} ${currentEpisode}`;
             }
         }
 

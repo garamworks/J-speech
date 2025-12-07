@@ -30,3 +30,6 @@ Thumbs.db
 
 # Attached assets (optional - uncomment if you want to exclude)
 # attached_assets/
+
+# Local data
+.local/

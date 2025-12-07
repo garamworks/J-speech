@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PALM 시리즈 - 에피소드 선택</title>
+    <title>J-speech</title>
     <link href="https://fonts.googleapis.com/css2?family=Fjalla+One:wght@400&display=swap" rel="stylesheet">
     <style>
         * {
@@ -322,16 +322,45 @@
                 const books = await bookResponse.json();
                 const currentBook = books.find(b => b.id === bookId);
 
-                // Fetch sequences
-                const response = await fetch(`/api/book/${bookId}/sequences`);
-                if (!response.ok) {
+                // Fetch first 2 sequences immediately for quick display
+                console.log('Loading first 2 sequences...');
+                const initialResponse = await fetch(`/api/book/${bookId}/sequences?limit=2`);
+                if (!initialResponse.ok) {
                     throw new Error('Failed to fetch sequences');
                 }
 
-                const sequences = await response.json();
-                console.log('Loaded sequences:', sequences);
+                const initialSequences = await initialResponse.json();
+                console.log('Loaded first 2 sequences:', initialSequences);
 
-                renderSequences(sequences, bookId, currentBook);
+                // Render initial sequences immediately
+                renderSequences(initialSequences, bookId, currentBook);
+
+                // Only load remaining sequences if there might be more than 2
+                if (initialSequences.length >= 2) {
+                    // Load remaining sequences in background after user has time to see initial content
+                    setTimeout(async () => {
+                        try {
+                            console.log('Loading all remaining sequences...');
+                            const allResponse = await fetch(`/api/book/${bookId}/sequences`);
+                            if (!allResponse.ok) {
+                                throw new Error('Failed to fetch all sequences');
+                            }
+
+                            const allSequences = await allResponse.json();
+                            console.log('Loaded all sequences:', allSequences.length);
+
+                            // If there are more sequences than the initial 2, append them
+                            if (allSequences.length > initialSequences.length) {
+                                const remainingSequences = allSequences.slice(initialSequences.length);
+                                console.log('Appending', remainingSequences.length, 'additional sequences');
+                                appendSequences(remainingSequences);
+                            }
+                        } catch (error) {
+                            console.error('Error loading remaining sequences:', error);
+                        }
+                    }, 2000); // Wait 2 seconds before loading the rest
+                }
+
             } catch (error) {
                 console.error('Error loading sequences:', error);
                 document.getElementById('loading').style.display = 'none';
@@ -373,7 +402,11 @@
                 pageHeader.style.display = 'block';
             }
 
-            if (sequences.length === 0) {
+            // Filter out sequences without thumbnails
+            const sequencesWithThumbnails = sequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+            console.log(`Filtered ${sequences.length - sequencesWithThumbnails.length} sequences without thumbnails`);
+
+            if (sequencesWithThumbnails.length === 0) {
                 container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
             } else {
                 // Add back button at the top
@@ -385,11 +418,35 @@
                     </div>
                 `;
 
-                container.innerHTML = backButton + sequences.map(seq => createEpisodeCard(seq)).join('');
+                container.innerHTML = backButton + sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
             }
 
             loading.style.display = 'none';
             container.style.display = 'grid';
+        }
+
+        function appendSequences(sequences) {
+            const container = document.getElementById('episodesContainer');
+
+            if (sequences.length === 0) {
+                console.log('No sequences to append');
+                return;
+            }
+
+            // Filter out sequences without thumbnails
+            const sequencesWithThumbnails = sequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+            console.log(`Appending ${sequencesWithThumbnails.length} sequences (filtered ${sequences.length - sequencesWithThumbnails.length} without thumbnails)`);
+
+            if (sequencesWithThumbnails.length === 0) {
+                console.log('No sequences with thumbnails to append');
+                return;
+            }
+
+            // Append new sequence cards to the existing container
+            const newCardsHTML = sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
+            container.insertAdjacentHTML('beforeend', newCardsHTML);
+
+            console.log(`Appended ${sequencesWithThumbnails.length} sequence cards`);
         }
 
         function createBookCard(book) {

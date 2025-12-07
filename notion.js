@@ -19,7 +19,7 @@ function extractDatabaseIdFromUrl(pageUrl) {
 const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b"; // Main dialogue database
 const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a"; // Character database
 const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8037-86b5-fea02dcf9913"; // Expression cards database (connected)
-const N1_VOCABULARY_DATABASE_ID = "216fe404-b3dc-80e4-9e28-d68b149ce1bd"; // N1 vocabulary database (connected)
+const N1_VOCABULARY_DATABASE_ID = "2bafe404-b3dc-811a-913f-df1dc06ea699"; // N1 vocabulary database (connected) - Updated 2025-12-07
 const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21"; // Episodes/Sequence database (connected)
 const BOOK_DATABASE_ID = "22cfe404-b3dc-8035-baae-ea57e7401e3a"; // Book database (main menu)
 
@@ -94,9 +94,48 @@ function getCharacterEmoji(characterName) {
     return emojiMap[characterName] || emojiMap.default;
 }
 
+// Cache for flashcards data
+let flashcardsCache = null;
+let flashcardsCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache for sequences per book
+let sequencesCache = {}; // bookId -> sequences array
+let sequencesCacheTime = {}; // bookId -> timestamp
+
+function isCacheValid() {
+    return flashcardsCache !== null &&
+           flashcardsCacheTime !== null &&
+           (Date.now() - flashcardsCacheTime) < CACHE_DURATION;
+}
+
+function isSequenceCacheValid(bookId) {
+    return sequencesCache[bookId] !== undefined &&
+           sequencesCacheTime[bookId] !== undefined &&
+           (Date.now() - sequencesCacheTime[bookId]) < CACHE_DURATION;
+}
+
 // Get flashcard data from Notion database (updated for connected database structure)
-async function getFlashcardsFromNotion() {
+async function getFlashcardsFromNotion(episodeSequence = null) {
     try {
+        // Check cache first - use cache for both full and filtered requests
+        if (isCacheValid()) {
+            console.log('Using cached flashcards data');
+            if (episodeSequence) {
+                // Return filtered data from cache
+                if (flashcardsCache[episodeSequence]) {
+                    return { [episodeSequence]: flashcardsCache[episodeSequence] };
+                } else {
+                    console.log(`No flashcards found for sequence: ${episodeSequence} in cache`);
+                    return {};
+                }
+            }
+            return flashcardsCache;
+        }
+
+        const startTime = Date.now();
+        console.log('Fetching fresh data from Notion...');
+
         // Get all dialogue data with pagination, filtering only completed entries
         let allResults = [];
         let hasMore = true;
@@ -109,11 +148,13 @@ async function getFlashcardsFromNotion() {
                 page_size: 100
                 // Removed status filter to include all entries (Done and Not started)
             });
-            
+
             allResults = allResults.concat(response.results);
             hasMore = response.has_more;
             startCursor = response.next_cursor;
         }
+
+        console.log(`Fetched ${allResults.length} cards from Notion in ${Date.now() - startTime}ms`);
 
         // Get character data
         const characterData = await getCharacterData();
@@ -135,26 +176,60 @@ async function getFlashcardsFromNotion() {
 
         // Get sequence relations from PALM Sequence DB
         const sequenceRelations = {};
+        const sequenceTitles = {}; // Store book titles for each sequence
         const SEQUENCE_DB_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
-        
+
         // First, get all sequences from the sequence database
         const sequenceResponse = await notion.databases.query({
             database_id: SEQUENCE_DB_ID
         });
-        
-        // Map sequence IDs to their names (use Name property which contains the sequence title)
+
+        // Map sequence IDs to their identifiers and titles
+        // Extract sequence numbers from titles or 시퀀스 field
         for (const seq of sequenceResponse.results) {
-            const sequenceNumber = seq.properties['Name']?.title?.[0]?.plain_text;
-            if (sequenceNumber) {
-                // Convert "PALM 26-002" to "#002" format
-                const sequenceMatch = sequenceNumber.match(/PALM 26-(\d+)/);
-                if (sequenceMatch) {
-                    const formattedSequence = '#' + sequenceMatch[1].padStart(3, '0');
-                    sequenceRelations[seq.id] = formattedSequence;
+            const sequenceTitle = seq.properties['Name']?.title?.[0]?.plain_text;
+            const sequenceField = seq.properties['시퀀스']?.rich_text?.[0]?.plain_text || '';
+
+            if (sequenceTitle) {
+                let identifier;
+                let bookTitle;
+                // For PALM sequences, convert "PALM 26-002" to "#002" format
+                const palmMatch = sequenceTitle.match(/PALM 26-(\d+)/);
+                if (palmMatch) {
+                    identifier = '#' + palmMatch[1].padStart(3, '0');
+                    bookTitle = 'PALM';
+                    console.log(`Mapped PALM sequence: ${seq.id} -> ${identifier} (${sequenceTitle})`);
+                } else {
+                    // For other sequences, try to use 시퀀스 field first
+                    if (sequenceField) {
+                        // Extract numbers from the 시퀀스 field
+                        const sequenceMatch = sequenceField.match(/\d+/);
+                        if (sequenceMatch) {
+                            identifier = '#' + sequenceMatch[0];
+                        } else {
+                            // If no number found in 시퀀스, use it as-is
+                            identifier = sequenceField.startsWith('#') ? sequenceField : '#' + sequenceField;
+                        }
+                    } else {
+                        // Try to extract from title (e.g., "3월의 라이온 - 195화" -> "195")
+                        const titleMatch = sequenceTitle.match(/(\d+)화/);
+                        if (titleMatch) {
+                            identifier = '#' + titleMatch[1];
+                        } else {
+                            // Fallback to page ID
+                            identifier = seq.id;
+                        }
+                    }
+                    // Extract book title from sequence title (e.g., "3월의 라이온 - 195화" -> "3월의 라이온")
+                    const bookTitleMatch = sequenceTitle.match(/^(.+?)\s*-\s*\d+화/);
+                    bookTitle = bookTitleMatch ? bookTitleMatch[1] : sequenceTitle;
+                    console.log(`Mapped other sequence: ${seq.id} -> ${identifier} (${sequenceTitle}, 시퀀스: "${sequenceField}")`);
                 }
+                sequenceRelations[seq.id] = identifier;
+                sequenceTitles[seq.id] = bookTitle;
             }
         }
-        
+
         console.log('Sequence relations loaded:', Object.keys(sequenceRelations).length, 'sequences');
 
         if (allResults.length === 0) {
@@ -186,10 +261,17 @@ async function getFlashcardsFromNotion() {
             const characterRelation = page.properties['사람']?.relation?.[0]?.id;
             const characterName = characterRelations[characterRelation] || 'Unknown';
             
-            // Get sequence from PALM Sequence DB relation
-            const sequenceRelationId = page.properties['PALM Sequence DB']?.relation?.[0]?.id;
+            // Get sequence from Sequence DB relation (try both field names for compatibility)
+            const sequenceRelationId = page.properties['Sequence DB']?.relation?.[0]?.id ||
+                                      page.properties['PALM Sequence DB']?.relation?.[0]?.id;
             let sequence = sequenceRelations[sequenceRelationId] || '';
+            let bookTitle = sequenceTitles[sequenceRelationId] || 'Unknown';
             const order = page.properties['순서']?.number || 0;
+
+            // Debug logging for sequence mapping
+            if (sequenceRelationId && !sequence) {
+                console.log(`Warning: Dialogue "${japanese.substring(0, 30)}" has sequence relation ${sequenceRelationId} but no mapping found`);
+            }
             
             // If no sequence relation exists, use the local sequence property as fallback
             if (!sequence || sequence.trim() === '') {
@@ -220,10 +302,13 @@ async function getFlashcardsFromNotion() {
             // Get volume
             const volume = page.properties['권']?.select?.name || '';
             
-            // Get expression cards and N1 vocabulary relations
+            // Get expression cards and vocabulary relations
             const expressionCards = page.properties['일본어 표현카드']?.relation || [];
-            const n1Vocabulary = page.properties['일본어 단어공부 N1']?.relation || [];
-            
+            // Try new field name first, then fall back to old field name for backwards compatibility
+            const mangaVocab = page.properties['일본어 단어공부 Manga']?.relation || [];
+            const n1Vocab = page.properties['일본어 단어공부 N1']?.relation || [];
+            const n1Vocabulary = mangaVocab.length > 0 ? mangaVocab : n1Vocab;
+
             // Get MP3 file (Japanese)
             const mp3Files = page.properties['mp3file']?.files || [];
             let audioUrl = null;
@@ -246,7 +331,7 @@ async function getFlashcardsFromNotion() {
 
             return {
                 japanese: japanese || "대사 없음",
-                korean: korean || "번역 없음", 
+                korean: korean || "번역 없음",
                 character: characterData[characterName]?.emoji || '🎭',
                 characterImage: characterData[characterName]?.imageUrl || null,
                 gender: characterData[characterName]?.gender || null,
@@ -257,6 +342,7 @@ async function getFlashcardsFromNotion() {
                 episode: "1화",
                 volume: volume,
                 sequence: sequence,
+                bookTitle: bookTitle,
                 expressionCardIds: expressionCards.map(card => card.id),
                 n1VocabularyIds: n1Vocabulary.map(vocab => vocab.id)
             };
@@ -278,6 +364,22 @@ async function getFlashcardsFromNotion() {
         Object.entries(episodeData).forEach(([seq, cards]) => {
             console.log(`Sequence ${seq}: ${cards.length} cards`);
         });
+
+        // Always cache the full dataset
+        flashcardsCache = episodeData;
+        flashcardsCacheTime = Date.now();
+        console.log('Cached flashcards data for 5 minutes');
+
+        // If episodeSequence parameter is provided, return only that specific episode
+        if (episodeSequence) {
+            console.log(`Filtering for episode sequence: ${episodeSequence}`);
+            if (episodeData[episodeSequence]) {
+                return { [episodeSequence]: episodeData[episodeSequence] };
+            } else {
+                console.log(`No flashcards found for sequence: ${episodeSequence}`);
+                return {};
+            }
+        }
 
         return episodeData;
     } catch (error) {
@@ -407,8 +509,9 @@ async function getEpisodesFromNotion() {
             const thumbnail = properties.표지?.files?.[0];
             const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
 
-            // PALM Sequence DB (relation) - array of related sequence IDs
-            const sequenceRelations = properties['PALM Sequence DB']?.relation || [];
+            // Sequence DB (relation) - array of related sequence IDs
+            const sequenceRelations = properties['Sequence DB']?.relation ||
+                                     properties['PALM Sequence DB']?.relation || [];
 
             return {
                 id: page.id,
@@ -430,11 +533,23 @@ async function getEpisodesFromNotion() {
 }
 
 // Get sequences for a specific book
-async function getSequencesForBook(bookId) {
+async function getSequencesForBook(bookId, limit = null) {
     try {
+        // Check cache first
+        if (isSequenceCacheValid(bookId)) {
+            console.log(`Using cached sequences for book ${bookId}`);
+            const cached = sequencesCache[bookId];
+            // Return limited results if limit is specified
+            return limit ? cached.slice(0, limit) : cached;
+        }
+
+        console.log(`Fetching sequences for book ${bookId}...`);
+        const startTime = Date.now();
+
         // First, get the book to find its related sequences
         const bookPage = await notion.pages.retrieve({ page_id: bookId });
-        const sequenceRelations = bookPage.properties['PALM Sequence DB']?.relation || [];
+        const sequenceRelations = bookPage.properties['Sequence DB']?.relation ||
+                                 bookPage.properties['PALM Sequence DB']?.relation || [];
 
         if (sequenceRelations.length === 0) {
             console.log(`No sequences found for book ${bookId}`);
@@ -456,18 +571,44 @@ async function getSequencesForBook(bookId) {
                     const thumbnail = properties.표지?.files?.[0];
                     const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
 
-                    // Extract episode number from title if sequence is empty
-                    let episodeNumber = sequence;
-                    if (!episodeNumber && title) {
-                        const match = title.match(/(\d+)(?:-(\d+))?/);
-                        if (match) {
-                            episodeNumber = match[2] ? `#${match[2].padStart(3, '0')}` : `#${match[1].padStart(3, '0')}`;
+                    console.log(`Sequence page - Title: "${title}", 시퀀스 field: "${sequence}"`);
+
+                    // Determine the sequence identifier
+                    // For PALM sequences, extract formatted number like "#002"
+                    // For other sequences, try to use the 시퀀스 field or extract from title
+                    let episodeIdentifier;
+                    const palmMatch = title.match(/PALM 26-(\d+)/);
+                    if (palmMatch) {
+                        // PALM sequence - use formatted number
+                        episodeIdentifier = '#' + palmMatch[1].padStart(3, '0');
+                    } else {
+                        // Other sequences - try to use 시퀀스 field first
+                        if (sequence) {
+                            // Extract numbers from the 시퀀스 field
+                            const sequenceMatch = sequence.match(/\d+/);
+                            if (sequenceMatch) {
+                                episodeIdentifier = '#' + sequenceMatch[0];
+                            } else {
+                                // If no number found in 시퀀스, use it as-is
+                                episodeIdentifier = sequence.startsWith('#') ? sequence : '#' + sequence;
+                            }
+                        } else {
+                            // Try to extract from title (e.g., "3월의 라이온 - 195화" -> "195")
+                            const titleMatch = title.match(/(\d+)화/);
+                            if (titleMatch) {
+                                episodeIdentifier = '#' + titleMatch[1];
+                            } else {
+                                // Fallback to page ID
+                                episodeIdentifier = sequencePage.id;
+                            }
                         }
                     }
 
+                    console.log(`Final episode identifier: "${episodeIdentifier}"`);
+
                     return {
                         id: sequencePage.id,
-                        sequence: episodeNumber,
+                        sequence: episodeIdentifier,
                         title: title,
                         description: sequenceTitle || '',
                         thumbnailUrl: thumbnailUrl,
@@ -488,7 +629,13 @@ async function getSequencesForBook(bookId) {
             return bNum - aNum; // descending order
         });
 
-        console.log(`Found ${validSequences.length} sequences for book ${bookId}`);
+        // Cache the results
+        sequencesCache[bookId] = validSequences;
+        sequencesCacheTime[bookId] = Date.now();
+
+        console.log(`Found ${validSequences.length} sequences for book ${bookId} in ${Date.now() - startTime}ms`);
+        console.log(`Cached sequences for book ${bookId}`);
+
         return validSequences;
     } catch (error) {
         console.error(`Error fetching sequences for book ${bookId}:`, error);
