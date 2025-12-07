@@ -244,16 +244,117 @@
             .episodes-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
 
+
+        }
+
+        /* Password overlay */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .password-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-modal h2 {
+            color: #357abd;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .password-modal input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .password-modal input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .password-modal button {
+            width: 100%;
+            padding: 15px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .password-modal button:hover {
+            background: #357abd;
+        }
+
+        .password-error {
+            color: #ff6b6b;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Loading placeholder cards */
+        .episode-card.placeholder {
+            background: rgb(255, 255, 255);
+            cursor: default;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .episode-card.placeholder:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgb(255, 255, 255);
+        }
+
+        .episode-card.placeholder .episode-thumbnail {
+            background: rgb(245, 245, 245);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
         }
     </style>
 </head>
 <body>
+    <div id="passwordOverlay">
+        <div class="password-modal">
+            <h2>J-speech</h2>
+            <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" />
+            <button onclick="checkPassword()">확인</button>
+            <p class="password-error" id="passwordError">비밀번호가 올바르지 않습니다</p>
+        </div>
+    </div>
     <div class="container">
         <div class="header" id="pageHeader" style="display: none;">
             <h1 id="headerTitle"></h1>
@@ -274,6 +375,49 @@
     </div>
 
     <script>
+        // Password authentication
+        const CORRECT_PASSWORD = 'sunchip2025';
+
+        // Check if already authenticated
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('jspeech_authenticated') === 'true';
+            if (isAuthenticated) {
+                document.getElementById('passwordOverlay').style.display = 'none';
+                return true;
+            }
+            return false;
+        }
+
+        // Check password
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+
+            if (input.value === CORRECT_PASSWORD) {
+                sessionStorage.setItem('jspeech_authenticated', 'true');
+                document.getElementById('passwordOverlay').style.display = 'none';
+                error.style.display = 'none';
+                input.value = '';
+                // Load content after authentication
+                loadEpisodes();
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Allow Enter key to submit password
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('passwordInput');
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            input.focus();
+        });
+
         // Check URL parameters to determine what to load
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
@@ -322,21 +466,29 @@
                 const books = await bookResponse.json();
                 const currentBook = books.find(b => b.id === bookId);
 
-                // Fetch first 2 sequences immediately for quick display
-                console.log('Loading first 2 sequences...');
-                const initialResponse = await fetch(`/api/book/${bookId}/sequences?limit=2`);
+                // Fetch first 5 sequences to ensure we have at least 2 after filtering
+                console.log('Loading initial sequences...');
+                const initialResponse = await fetch(`/api/book/${bookId}/sequences?limit=5`);
                 if (!initialResponse.ok) {
                     throw new Error('Failed to fetch sequences');
                 }
 
                 const initialSequences = await initialResponse.json();
-                console.log('Loaded first 2 sequences:', initialSequences);
+                console.log('Loaded initial sequences:', initialSequences);
 
-                // Render initial sequences immediately
-                renderSequences(initialSequences, bookId, currentBook);
+                // Filter sequences with thumbnails first
+                const filteredInitial = initialSequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+                console.log(`Filtered initial sequences: ${filteredInitial.length} out of ${initialSequences.length}`);
 
-                // Only load remaining sequences if there might be more than 2
-                if (initialSequences.length >= 2) {
+                // Take only first 2 after filtering
+                const first2Sequences = filteredInitial.slice(0, 2);
+                console.log('Showing first 2 filtered sequences:', first2Sequences.length);
+
+                // Render initial sequences immediately with placeholders
+                renderSequences(first2Sequences, bookId, currentBook, true);
+
+                // Only load remaining sequences if we have at least 1 sequence showing
+                if (first2Sequences.length > 0) {
                     // Load remaining sequences in background after user has time to see initial content
                     setTimeout(async () => {
                         try {
@@ -349,11 +501,20 @@
                             const allSequences = await allResponse.json();
                             console.log('Loaded all sequences:', allSequences.length);
 
+                            // Filter all sequences
+                            const allFiltered = allSequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+                            console.log('Filtered all sequences:', allFiltered.length);
+
                             // If there are more sequences than the initial 2, append them
-                            if (allSequences.length > initialSequences.length) {
-                                const remainingSequences = allSequences.slice(initialSequences.length);
+                            if (allFiltered.length > first2Sequences.length) {
+                                const remainingSequences = allFiltered.slice(first2Sequences.length);
                                 console.log('Appending', remainingSequences.length, 'additional sequences');
                                 appendSequences(remainingSequences);
+                            } else {
+                                // Still need to remove placeholders even if no new sequences
+                                const container = document.getElementById('episodesContainer');
+                                const placeholders = container.querySelectorAll('.episode-card.placeholder');
+                                placeholders.forEach(placeholder => placeholder.remove());
                             }
                         } catch (error) {
                             console.error('Error loading remaining sequences:', error);
@@ -387,7 +548,7 @@
             container.style.display = 'grid';
         }
 
-        function renderSequences(sequences, bookId, currentBook) {
+        function renderSequences(sequences, bookId, currentBook, isInitialLoad = false) {
             const container = document.getElementById('episodesContainer');
             const loading = document.getElementById('loading');
             const pageHeader = document.getElementById('pageHeader');
@@ -402,9 +563,9 @@
                 pageHeader.style.display = 'block';
             }
 
-            // Filter out sequences without thumbnails
+            // Filter out sequences without thumbnails (only if not already filtered)
             const sequencesWithThumbnails = sequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
-            console.log(`Filtered ${sequences.length - sequencesWithThumbnails.length} sequences without thumbnails`);
+            console.log(`Rendering ${sequencesWithThumbnails.length} sequences (filtered ${sequences.length - sequencesWithThumbnails.length})`);
 
             if (sequencesWithThumbnails.length === 0) {
                 container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
@@ -418,7 +579,17 @@
                     </div>
                 `;
 
-                container.innerHTML = backButton + sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
+                const sequenceCards = sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
+
+                // Add placeholder cards if this is the initial load
+                let placeholders = '';
+                if (isInitialLoad) {
+                    console.log('Adding placeholder cards for initial load');
+                    // Add 4 placeholder cards to indicate more content is loading
+                    placeholders = createPlaceholderCard() + createPlaceholderCard() + createPlaceholderCard() + createPlaceholderCard();
+                }
+
+                container.innerHTML = backButton + sequenceCards + placeholders;
             }
 
             loading.style.display = 'none';
@@ -439,8 +610,15 @@
 
             if (sequencesWithThumbnails.length === 0) {
                 console.log('No sequences with thumbnails to append');
+                // Remove placeholders even if no new sequences
+                const placeholders = container.querySelectorAll('.episode-card.placeholder');
+                placeholders.forEach(placeholder => placeholder.remove());
                 return;
             }
+
+            // Remove placeholder cards first
+            const placeholders = container.querySelectorAll('.episode-card.placeholder');
+            placeholders.forEach(placeholder => placeholder.remove());
 
             // Append new sequence cards to the existing container
             const newCardsHTML = sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
@@ -493,6 +671,16 @@
                         </div>
                     </div>
                     <div class="episode-description" onclick="selectEpisode('${episode.sequence}')">${episode.description}</div>
+                </div>
+            `;
+        }
+
+        function createPlaceholderCard() {
+            return `
+                <div class="episode-card placeholder">
+                    <div class="episode-thumbnail episode-ratio">
+                    </div>
+                    <div class="episode-description"></div>
                 </div>
             `;
         }
@@ -997,8 +1185,12 @@
             });
         }
 
-        // Load episodes when page loads
-        document.addEventListener('DOMContentLoaded', loadEpisodes);
+        // Load episodes when page loads (only if authenticated)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                loadEpisodes();
+            }
+        });
     </script>
 </body>
 </html>
