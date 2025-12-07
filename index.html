@@ -994,7 +994,17 @@
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
             try {
-                const response = await fetch('/api/flashcards');
+                // Check if there's an episode parameter in the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const episodeParam = urlParams.get('episode');
+
+                // Build API URL with episode parameter if provided
+                const apiUrl = episodeParam
+                    ? `/api/flashcards?episode=${encodeURIComponent(episodeParam)}`
+                    : '/api/flashcards';
+
+                console.log('Fetching flashcards from:', apiUrl);
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error('Failed to fetch flashcards');
                 }
