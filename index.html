@@ -200,13 +200,13 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            right: 75px; /* 스피커 버튼 영역 고려하여 오른쪽 여백 확보 */
+            right: 10px; /* 좌우 동일한 여백 */
             display: flex;
             flex-direction: column;
             gap: 5px;
             z-index: 10;
             pointer-events: none;
-            max-width: 80%; /* 전체 컨테이너 폭 제한 */
+            max-width: none; /* 전체 폭 사용 */
         }
         
         .db-expression-container {
@@ -220,7 +220,7 @@
         .db-connection-status {
             background: #F1F8E9;
             color: #555;
-            padding: 6px 10px;
+            padding: 6px 12px; /* 오른쪽 여백 증가 */
             border-radius: 15px;
             border: 0.25px solid #E0E0E0;
             font-size: 1.1rem;
@@ -231,17 +231,15 @@
             backdrop-filter: blur(5px);
             width: fit-content;
             pointer-events: auto;
-            max-width: 80%; /* 스피커 버튼 영역을 침범하지 않도록 최대 폭 제한 */
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            max-width: none; /* 버튼 자체는 제한 없이, 내부 span이 overflow 처리 */
         }
         
         .db-connection-status span {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 0;
+            max-width: 12em; /* 약 10-12글자 후 생략, 화면 공간 절약 */
+            flex: 0 1 auto; /* 내용에 맞게 축소, 필요시 확장 */
         }
         
         .db-connection-status.clickable {
@@ -269,6 +267,10 @@
             max-width: none;
         }
 
+        .db-n1-status span {
+            min-width: 0; /* 단어 버튼은 텍스트 길이에 맞춰 가변폭 */
+        }
+
         /* Expression Card Modal Styles */
         .expression-modal {
             position: fixed;
@@ -282,6 +284,7 @@
             align-items: center;
             z-index: 1000;
             padding: 20px;
+            pointer-events: auto; /* 모달이 모든 클릭 이벤트를 차단 */
         }
 
         .expression-modal-content {
@@ -311,6 +314,35 @@
 
         .expression-modal-close:hover {
             color: #000;
+        }
+
+        .expression-modal-play-pause {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: rgba(74, 144, 226, 0.1);
+            border: 2px solid #4a90e2;
+            color: #4a90e2;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .expression-modal-play-pause:hover {
+            background: rgba(74, 144, 226, 0.2);
+            transform: scale(1.05);
+        }
+
+        .expression-modal-play-pause svg {
+            width: 18px;
+            height: 18px;
+            fill: #4a90e2;
         }
 
         .expression-main-section {
@@ -387,13 +419,14 @@
             align-items: center;
             z-index: 1000;
             padding: 20px;
+            pointer-events: auto; /* 모달이 모든 클릭 이벤트를 차단 */
         }
 
         .word-modal-content {
             background: white;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            padding: 20px 8px 16px 8px;
+            padding: 20px 16px 16px 16px;
             max-width: 90%;
             width: 100%;
             max-height: 85vh;
@@ -492,6 +525,7 @@
             height: 12px;
             border-radius: 50%;
             background: #C8E6C9;
+            flex-shrink: 0; /* 원이 찌그러지지 않도록 */
         }
         
         .db-n1-status-dot {
@@ -606,7 +640,7 @@
         }
 
         .korean-text {
-            font-size: 1.1rem;
+            font-size: 0.88rem;
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
@@ -688,6 +722,37 @@
             font-weight: 500;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             font-family: 'Fjalla One', sans-serif;
+        }
+
+        .play-pause-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .play-pause-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .play-pause-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-pause-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
 
         .flip-instruction {
@@ -826,7 +891,7 @@
             }
 
             .korean-text {
-                font-size: 0.95rem;
+                font-size: 0.76rem;
                 margin-top: 0.245rem;
             }
             
@@ -922,16 +987,6 @@
                         <div class="speaker-name" id="speaker-name"></div>
                         <div class="japanese-text" id="japanese-text"></div>
                     </div>
-                    <button class="speaker-btn" id="speaker-btn" title="Listen to pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                    </button>
-                    <button class="word-speaker-btn" id="word-speaker-btn" title="Listen to word pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                        </svg>
-                    </button>
                     <div class="db-status-container" id="db-status-container-front">
                         <div class="db-n1-status-container" id="db-n1-status-container-front">
                             <!-- Multiple N1 vocabulary items will be inserted here -->
@@ -948,16 +1003,6 @@
                         <div class="japanese-text" id="japanese-text-back"></div>
                         <div class="korean-text" id="korean-text"></div>
                     </div>
-                    <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                    </button>
-                    <button class="word-speaker-btn" id="word-speaker-btn-back" title="Listen to word pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                        </svg>
-                    </button>
                     <div class="db-status-container" id="db-status-container-back">
                         <div class="db-n1-status-container" id="db-n1-status-container-back">
                             <!-- Multiple N1 vocabulary items will be inserted here -->
@@ -975,9 +1020,14 @@
             <button class="nav-btn" id="prev-btn">
                 <i class="fa-solid fa-caret-left"></i>
             </button>
-            <div class="card-counter">
-                <span id="current-card">1</span> / <span id="total-cards">3</span>
-            </div>
+            <button class="play-pause-btn" id="play-pause-btn">
+                <svg class="play-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+            </button>
             <button class="nav-btn" id="next-btn">
                 <i class="fa-solid fa-caret-right"></i>
             </button>
@@ -990,6 +1040,7 @@
 
         let currentCardIndex = 0;
         let isFlipped = false;
+        let isPlaying = false;
 
         // DOM elements
         const flashcard = document.getElementById('flashcard');
@@ -999,14 +1050,14 @@
         const characterAvatar = document.getElementById('character-avatar');
         const characterAvatarBack = document.getElementById('character-avatar-back');
         const speakerName = document.getElementById('speaker-name');
-        const speakerBtn = document.getElementById('speaker-btn');
-        const speakerBtnBack = document.getElementById('speaker-btn-back');
-        const wordSpeakerBtn = document.getElementById('word-speaker-btn');
-        const wordSpeakerBtnBack = document.getElementById('word-speaker-btn-back');
+        // Speaker buttons removed - now using play/pause button instead
+        // const speakerBtn = document.getElementById('speaker-btn');
+        // const speakerBtnBack = document.getElementById('speaker-btn-back');
+        // const wordSpeakerBtn = document.getElementById('word-speaker-btn');
+        // const wordSpeakerBtnBack = document.getElementById('word-speaker-btn-back');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
-        const currentCardSpan = document.getElementById('current-card');
-        const totalCardsSpan = document.getElementById('total-cards');
+        const playPauseBtn = document.getElementById('play-pause-btn');
         const episodeTitle = document.getElementById('episode-title');
         // Remove unused episode buttons that were deleted from HTML
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
@@ -1226,7 +1277,7 @@
                 });
 
                 loadCard(currentCardIndex);
-                totalCardsSpan.textContent = currentEpisodeCards.length;
+                // totalCardsSpan removed - now using play/pause button instead
                 updateNavigationButtons();
                 updateEpisodeButtons();
 
@@ -1353,8 +1404,8 @@
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
             speakerName.textContent = "";
-            currentCardSpan.textContent = index + 1;
-            
+            // currentCardSpan removed - now using play/pause button instead
+
             // Set character avatar for both front and back - use image if available, otherwise emoji based on sentence mood
             if (card.characterImage) {
                 console.log('Character image URL:', card.characterImage);
@@ -1569,9 +1620,24 @@
             // Check if card has N1 vocabulary relations (multiple possible)
             if (card.n1VocabularyIds && card.n1VocabularyIds.length > 0) {
                 try {
-                    const response = await fetch(`/api/n1-vocabulary-multiple/${card.n1VocabularyIds.join(',')}`);
-                    const n1Vocabularies = await response.json();
-                    
+                    // Check if N1 vocabulary data is already preloaded
+                    const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+                    const preloadedData = preloadedN1WordData[currentCardKey];
+
+                    let n1Vocabularies;
+                    if (preloadedData && Array.isArray(preloadedData)) {
+                        console.log('Using preloaded N1 vocabulary data');
+                        n1Vocabularies = preloadedData;
+                    } else {
+                        // Fetch immediately if not preloaded
+                        console.log('Fetching N1 vocabulary data immediately');
+                        const response = await fetch(`/api/n1-vocabulary-multiple/${card.n1VocabularyIds.join(',')}`);
+                        n1Vocabularies = await response.json();
+
+                        // Cache the results for future use
+                        preloadedN1WordData[currentCardKey] = n1Vocabularies;
+                    }
+
                     if (n1Vocabularies && n1Vocabularies.length > 0) {
                         // Create N1 vocabulary status items for each word
                         n1Vocabularies.forEach(vocabulary => {
@@ -1711,8 +1777,9 @@
                 console.log('Android environment detected - using background player');
                 
                 // Visual feedback for playing
-                speakerBtn.style.background = '#2b6cb0';
-                speakerBtnBack.style.background = '#2b6cb0';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#2b6cb0';
+                // speakerBtnBack.style.background = '#2b6cb0';
                 
                 // Try to play using Android background player
                 if (playCurrentSequenceOnAndroid()) {
@@ -1721,8 +1788,9 @@
                 } else {
                     console.log('Android playback failed, falling back to web audio');
                     // Reset visual feedback
-                    speakerBtn.style.background = '#4299e1';
-                    speakerBtnBack.style.background = '#4299e1';
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
                 }
             }
             
@@ -1739,18 +1807,22 @@
                 window.currentAudio = audio;
                 
                 // Visual feedback for playing
-                speakerBtn.style.background = '#2b6cb0';
-                speakerBtnBack.style.background = '#2b6cb0';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#2b6cb0';
+                // speakerBtnBack.style.background = '#2b6cb0';
                 
                 audio.onended = () => {
-                    speakerBtn.style.background = '#4299e1';
-                    speakerBtnBack.style.background = '#4299e1';
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
+                    resetPlayPauseButton();
                     console.log('Audio playback ended');
                 };
                 
                 audio.onerror = (event) => {
-                    speakerBtn.style.background = '#4299e1';
-                    speakerBtnBack.style.background = '#4299e1';
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
                     console.warn('Audio playback error - no fallback');
                     console.error('Audio Error:', event);
                 };
@@ -1764,8 +1836,9 @@
                 }
                 audio.play().catch(error => {
                     console.error('Error playing audio:', error);
-                    speakerBtn.style.background = '#4299e1';
-                    speakerBtnBack.style.background = '#4299e1';
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
                 });
                 
                 console.log('=== speakJapanese function ended (Web MP3 playback) ===');
@@ -2158,17 +2231,20 @@
             utterance.lang = 'ja-JP';
             
             // Visual feedback for speaking
-            speakerBtn.style.background = '#2b6cb0';
-            speakerBtnBack.style.background = '#2b6cb0';
+            // Speaker buttons removed
+            // speakerBtn.style.background = '#2b6cb0';
+            // speakerBtnBack.style.background = '#2b6cb0';
             
             utterance.onend = () => {
-                speakerBtn.style.background = '#4299e1';
-                speakerBtnBack.style.background = '#4299e1';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#4299e1';
+                // speakerBtnBack.style.background = '#4299e1';
             };
             
             utterance.onerror = (event) => {
-                speakerBtn.style.background = '#4299e1';
-                speakerBtnBack.style.background = '#4299e1';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#4299e1';
+                // speakerBtnBack.style.background = '#4299e1';
                 console.warn('Speech synthesis error - Japanese voice may not be available');
                 console.error('TTS Error:', event);
                 
@@ -2232,10 +2308,22 @@
             speechSynthesis.speak(utterance);
         }
 
+        // Reset play/pause button to play state
+        function resetPlayPauseButton() {
+            if (!playPauseBtn) return;
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            isPlaying = false;
+        }
+
         // Navigation functions
         function goToPreviousCard() {
             if (currentCardIndex > 0) {
                 currentCardIndex--;
+                resetPlayPauseButton();
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
                 
@@ -2265,6 +2353,7 @@
         function goToNextCard() {
             if (currentCardIndex < currentEpisodeCards.length - 1) {
                 currentCardIndex++;
+                resetPlayPauseButton();
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
                 
@@ -2313,22 +2402,63 @@
 
         // Event listeners
         // Remove global click event - now handled by clickable areas only
-        speakerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            console.log('Speaker button clicked');
-            console.log('typeof speakJapanese:', typeof speakJapanese);
-            console.log('About to call speakJapanese()');
-            try {
-                speakJapanese();
-                console.log('speakJapanese() call completed');
-            } catch (error) {
-                console.error('Error calling speakJapanese:', error);
+        // Speaker buttons removed - now using play/pause button instead
+        // speakerBtn.addEventListener('click', (e) => {
+        //     e.stopPropagation();
+        //     speakJapanese();
+        // });
+        // speakerBtnBack.addEventListener('click', (e) => {
+        //     e.stopPropagation();
+        //     speakJapanese();
+        // });
+
+        // Play/Pause button functionality
+        if (playPauseBtn) {
+            playPauseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePlayPause();
+            });
+        }
+
+        function togglePlayPause() {
+            if (!playPauseBtn) return;
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            if (isPlaying) {
+                // Pause the audio
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                }
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
+                }
+
+                // Switch to play icon
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                isPlaying = false;
+            } else {
+                // Check if we're resuming or starting fresh
+                if (window.currentAudio && window.currentAudio.paused && window.currentAudio.currentTime > 0) {
+                    // Resume paused audio
+                    window.currentAudio.play();
+                } else if (window.speechSynthesis.paused) {
+                    // Resume paused TTS
+                    window.speechSynthesis.resume();
+                } else {
+                    // Start playing from beginning
+                    speakJapanese();
+                }
+
+                // Switch to pause icon
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                isPlaying = true;
             }
-        });
-        speakerBtnBack.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakJapanese();
-        });
+        }
+
         // Word speaker buttons are hidden and not used
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
@@ -2486,6 +2616,9 @@
         function closeExpressionModal() {
             const modal = document.getElementById('expression-modal');
             modal.style.display = 'none';
+            // Stop any ongoing speech and reset button
+            window.speechSynthesis.cancel();
+            resetExpressionPlayPauseButton();
         }
 
         function openWordModal() {
@@ -2744,10 +2877,13 @@
 
         function renderExpressionCard(data) {
             const modalBody = document.getElementById('expression-modal-body');
-            
+
+            // Store data globally for audio playback
+            currentExpressionCardData = data;
+
             // console.log('=== Expression Card Data ===');
             // console.log('Full data:', data);
-            
+
             // Prepare applications array
             const applications = [
                 { japanese: data.application1, korean: data.application1Korean },
@@ -2756,13 +2892,13 @@
                 { japanese: data.application4, korean: data.application4Korean },
                 { japanese: data.application5, korean: data.application5Korean }
             ].filter(app => app.japanese && app.japanese.trim() !== '');
-            
+
             // console.log('Filtered applications:', applications);
             // console.log('Applications count:', applications.length);
-            
+
             let html = `
                 <div class="expression-main-section">
-                    <h2 class="expression-main-title" onclick="speakJapanese('${data.title}')">
+                    <h2 class="expression-main-title">
                         ${data.title}
                     </h2>
                     <p class="expression-main-meaning">
@@ -2807,6 +2943,124 @@
             }
         }
 
+        // Global variable to store current expression card data
+        let currentExpressionCardData = null;
+        let isExpressionPlaying = false;
+        let currentExpressionIndex = 0;
+        let expressionSpeechQueue = [];
+
+        // Toggle play/pause for expression card
+        function toggleExpressionPlayPause() {
+            const playPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (!playPauseBtn) return;
+
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            if (isExpressionPlaying) {
+                // Pause
+                window.speechSynthesis.pause();
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                isExpressionPlaying = false;
+            } else {
+                // Check if we're resuming or starting fresh
+                if (window.speechSynthesis.paused && expressionSpeechQueue.length > 0) {
+                    // Resume
+                    window.speechSynthesis.resume();
+                } else {
+                    // Start fresh
+                    playExpressionCardAudio();
+                }
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                isExpressionPlaying = true;
+            }
+        }
+
+        // Reset expression play/pause button
+        function resetExpressionPlayPauseButton() {
+            const playPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (!playPauseBtn) return;
+
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            isExpressionPlaying = false;
+            currentExpressionIndex = 0;
+            expressionSpeechQueue = [];
+        }
+
+        // Play full expression card audio: Japanese title → Korean meaning → 5 examples
+        function playExpressionCardAudio(event) {
+            // Stop event propagation to prevent triggering card behind modal
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            if (!currentExpressionCardData) {
+                console.error('No expression card data available');
+                return;
+            }
+
+            const data = currentExpressionCardData;
+
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+
+            // Prepare applications array
+            const applications = [
+                data.application1,
+                data.application2,
+                data.application3,
+                data.application4,
+                data.application5
+            ].filter(app => app && app.trim() !== '');
+
+            expressionSpeechQueue = [];
+
+            // Add Japanese title
+            expressionSpeechQueue.push({ text: data.title, lang: 'ja-JP' });
+
+            // Add Korean meaning
+            if (data.meaning) {
+                expressionSpeechQueue.push({ text: data.meaning, lang: 'ko-KR' });
+            }
+
+            // Add all example sentences (Japanese)
+            applications.forEach(app => {
+                expressionSpeechQueue.push({ text: app, lang: 'ja-JP' });
+            });
+
+            // Play speech queue sequentially
+            currentExpressionIndex = 0;
+            function playNext() {
+                if (currentExpressionIndex >= expressionSpeechQueue.length) {
+                    // Reset button when playback ends
+                    resetExpressionPlayPauseButton();
+                    return;
+                }
+
+                const item = expressionSpeechQueue[currentExpressionIndex];
+                const utterance = new SpeechSynthesisUtterance(item.text);
+                utterance.lang = item.lang;
+
+                utterance.onend = () => {
+                    currentExpressionIndex++;
+                    playNext();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+
+            playNext();
+        }
+
         // Initialize modal event listener after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             const expressionModal = document.getElementById('expression-modal');
@@ -2817,7 +3071,16 @@
                     }
                 });
             }
-            
+
+            // Add expression play/pause button event listener
+            const expressionPlayPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (expressionPlayPauseBtn) {
+                expressionPlayPauseBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleExpressionPlayPause();
+                });
+            }
+
             const wordModal = document.getElementById('word-modal');
             if (wordModal) {
                 wordModal.addEventListener('click', function(e) {
@@ -2832,6 +3095,14 @@
     <!-- Expression Card Modal -->
     <div class="expression-modal" id="expression-modal">
         <div class="expression-modal-content">
+            <button class="expression-modal-play-pause" id="expression-play-pause-btn">
+                <svg class="play-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+            </button>
             <button class="expression-modal-close" onclick="closeExpressionModal()">&times;</button>
             <div id="expression-modal-body">
                 <div class="expression-loading">Loading...</div>
