@@ -177,6 +177,7 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
         // Get sequence relations from PALM Sequence DB
         const sequenceRelations = {};
         const sequenceTitles = {}; // Store book titles for each sequence
+        const sequenceBookIds = {}; // Store book IDs for each sequence
         const SEQUENCE_DB_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
 
         // First, get all sequences from the sequence database
@@ -189,6 +190,17 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
         for (const seq of sequenceResponse.results) {
             const sequenceTitle = seq.properties['Name']?.title?.[0]?.plain_text;
             const sequenceField = seq.properties['시퀀스']?.rich_text?.[0]?.plain_text || '';
+
+            // Get book relation ID from sequence - the field name is '권'
+            const bookRelationId = seq.properties['권']?.relation?.[0]?.id;
+
+            if (bookRelationId) {
+                sequenceBookIds[seq.id] = bookRelationId;
+                console.log(`Sequence ${sequenceTitle} -> Book ID: ${bookRelationId}`);
+            } else {
+                console.log(`Warning: No book relation found for sequence ${sequenceTitle}`);
+                console.log('Available properties:', Object.keys(seq.properties));
+            }
 
             if (sequenceTitle) {
                 let identifier;
@@ -266,6 +278,7 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
                                       page.properties['PALM Sequence DB']?.relation?.[0]?.id;
             let sequence = sequenceRelations[sequenceRelationId] || '';
             let bookTitle = sequenceTitles[sequenceRelationId] || 'Unknown';
+            let bookId = sequenceBookIds[sequenceRelationId] || null;
             const order = page.properties['순서']?.number || 0;
 
             // Debug logging for sequence mapping
@@ -343,6 +356,7 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
                 volume: volume,
                 sequence: sequence,
                 bookTitle: bookTitle,
+                bookId: bookId,
                 expressionCardIds: expressionCards.map(card => card.id),
                 n1VocabularyIds: n1Vocabulary.map(vocab => vocab.id)
             };

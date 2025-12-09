@@ -1313,7 +1313,7 @@
             console.log('Current book ID:', currentBookId);
             console.log('Current book title:', currentBookTitle);
 
-            // Filter sequences that belong to the same book
+            // Filter sequences that belong to the same book (using bookId)
             const bookSequences = Object.keys(episodeData).filter(seq => {
                 const cards = episodeData[seq];
                 if (!cards || cards.length === 0) return false;
@@ -2461,7 +2461,15 @@
         }
 
         function goToHomepage() {
-            // Navigate to the homepage
+            // Navigate to the episode list for the current book
+            if (currentEpisodeCards && currentEpisodeCards.length > 0) {
+                const bookId = currentEpisodeCards[0].bookId;
+                if (bookId) {
+                    window.location.href = `/?book=${encodeURIComponent(bookId)}`;
+                    return;
+                }
+            }
+            // Fallback to homepage if no book ID is available
             window.location.href = '/';
         }
 
