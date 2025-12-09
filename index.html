@@ -640,7 +640,7 @@
         }
 
         .korean-text {
-            font-size: 0.88rem;
+            font-size: 1.12rem;
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
@@ -891,7 +891,7 @@
             }
 
             .korean-text {
-                font-size: 0.76rem;
+                font-size: 1.32rem;
                 margin-top: 0.245rem;
             }
             
@@ -1062,6 +1062,12 @@
         // Remove unused episode buttons that were deleted from HTML
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
         const nextSequenceBtn = document.getElementById('next-sequence-btn');
+
+        console.log('=== Sequence Navigation Buttons Debug ===');
+        console.log('prevSequenceBtn:', prevSequenceBtn);
+        console.log('nextSequenceBtn:', nextSequenceBtn);
+        console.log('prevSequenceBtn ID found:', prevSequenceBtn !== null);
+        console.log('nextSequenceBtn ID found:', nextSequenceBtn !== null);
         const dbStatusFront = document.getElementById('db-status-front');
         const dbStatusBack = document.getElementById('db-status-back');
         const dbStatusTextFront = document.getElementById('db-status-text-front');
@@ -1076,10 +1082,9 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const episodeParam = urlParams.get('episode');
 
-                // Build API URL with episode parameter if provided
-                const apiUrl = episodeParam
-                    ? `/api/flashcards?episode=${encodeURIComponent(episodeParam)}`
-                    : '/api/flashcards';
+                // Always load all flashcards to enable sequence navigation
+                // The episode parameter will be used to select which sequence to show
+                const apiUrl = '/api/flashcards';
 
                 console.log('Fetching flashcards from:', apiUrl);
                 const response = await fetch(apiUrl);
@@ -1242,9 +1247,6 @@
             // Update sequence title in header
             updateSequenceTitle();
             
-            // Update sequence navigation buttons
-            updateSequenceNavigation();
-            
             // Check if sequence exists
             if (!episodeData[sequenceName] || episodeData[sequenceName].length === 0) {
                 console.warn(`Sequence ${sequenceName} not found or empty`);
@@ -1276,6 +1278,18 @@
                     return aNum - bNum; // Ascending order
                 });
 
+                // Reset card state when changing sequences
+                isFlipped = false;
+                if (flashcard) {
+                    flashcard.classList.remove('flipped');
+                }
+                resetPlayPauseButton();
+
+                // Update URL to reflect current sequence
+                const url = new URL(window.location);
+                url.searchParams.set('episode', sequenceName);
+                window.history.pushState({}, '', url);
+
                 loadCard(currentCardIndex);
                 // totalCardsSpan removed - now using play/pause button instead
                 updateNavigationButtons();
@@ -1286,19 +1300,64 @@
             }
         }
 
+        // Get sequences for current book only
+        function getSequencesForCurrentBook() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                return [];
+            }
+
+            // Get current book ID from current episode cards
+            const currentBookId = currentEpisodeCards[0].bookId;
+            const currentBookTitle = currentEpisodeCards[0].bookTitle;
+
+            console.log('Current book ID:', currentBookId);
+            console.log('Current book title:', currentBookTitle);
+
+            // Filter sequences that belong to the same book
+            const bookSequences = Object.keys(episodeData).filter(seq => {
+                const cards = episodeData[seq];
+                if (!cards || cards.length === 0) return false;
+                return cards[0].bookId === currentBookId;
+            }).sort();
+
+            console.log('Sequences for current book:', bookSequences);
+            return bookSequences;
+        }
+
         // Update sequence navigation buttons
         function updateEpisodeButtons() {
-            const sequences = Object.keys(episodeData).sort();
+            console.log('=== updateEpisodeButtons called ===');
+            console.log('episodeData:', episodeData);
+            console.log('episodeData keys:', Object.keys(episodeData));
+            console.log('currentEpisode:', currentEpisode);
+
+            if (!episodeData || Object.keys(episodeData).length === 0) {
+                console.warn('No episode data available, disabling buttons');
+                if (prevSequenceBtn) prevSequenceBtn.disabled = true;
+                if (nextSequenceBtn) nextSequenceBtn.disabled = true;
+                return;
+            }
+
+            // Get sequences for current book only
+            const sequences = getSequencesForCurrentBook();
             const currentIndex = sequences.indexOf(currentEpisode);
-            
+
+            console.log('sequences (current book only):', sequences);
+            console.log('currentIndex:', currentIndex);
+            console.log('sequences.length:', sequences.length);
+
             // Update sequence navigation buttons
             if (prevSequenceBtn) {
-                prevSequenceBtn.disabled = currentIndex <= 0;
+                const shouldDisable = currentIndex <= 0;
+                prevSequenceBtn.disabled = shouldDisable;
+                console.log('prevSequenceBtn disabled:', shouldDisable);
             }
             if (nextSequenceBtn) {
-                nextSequenceBtn.disabled = currentIndex >= sequences.length - 1;
+                const shouldDisable = currentIndex >= sequences.length - 1;
+                nextSequenceBtn.disabled = shouldDisable;
+                console.log('nextSequenceBtn disabled:', shouldDisable);
             }
-            
+
             // Episode buttons have been removed from HTML
         }
 
@@ -2322,6 +2381,14 @@
         // Navigation functions
         function goToPreviousCard() {
             if (currentCardIndex > 0) {
+                // Stop current audio and clear reference
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                    window.currentAudio.currentTime = 0;
+                    window.currentAudio = null;
+                }
+                speechSynthesis.cancel();
+
                 currentCardIndex--;
                 resetPlayPauseButton();
                 loadCard(currentCardIndex);
@@ -2352,6 +2419,14 @@
 
         function goToNextCard() {
             if (currentCardIndex < currentEpisodeCards.length - 1) {
+                // Stop current audio and clear reference
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                    window.currentAudio.currentTime = 0;
+                    window.currentAudio = null;
+                }
+                speechSynthesis.cancel();
+
                 currentCardIndex++;
                 resetPlayPauseButton();
                 loadCard(currentCardIndex);
@@ -2440,15 +2515,25 @@
                 pauseIcon.style.display = 'none';
                 isPlaying = false;
             } else {
-                // Check if we're resuming or starting fresh
-                if (window.currentAudio && window.currentAudio.paused && window.currentAudio.currentTime > 0) {
-                    // Resume paused audio
+                // Always start fresh with current card's audio
+                // This ensures we're playing the correct audio for the current card
+                const currentCard = currentEpisodeCards[currentCardIndex];
+                const currentAudioCard = window.currentAudio ? window.currentAudio.src : null;
+                const expectedAudioUrl = currentCard ? currentCard.audioUrl : null;
+
+                // Check if current audio matches current card
+                const audioMatches = currentAudioCard && expectedAudioUrl &&
+                                   currentAudioCard.includes(expectedAudioUrl.split('/').pop());
+
+                if (window.currentAudio && window.currentAudio.paused &&
+                    window.currentAudio.currentTime > 0 && audioMatches) {
+                    // Resume paused audio only if it's for the current card
                     window.currentAudio.play();
                 } else if (window.speechSynthesis.paused) {
                     // Resume paused TTS
                     window.speechSynthesis.resume();
                 } else {
-                    // Start playing from beginning
+                    // Start playing from beginning with correct audio
                     speakJapanese();
                 }
 
@@ -2466,24 +2551,70 @@
         // Old episode navigation buttons removed from HTML
         
         // New sequence navigation button event listeners
+        console.log('=== Setting up sequence navigation event listeners ===');
+        console.log('prevSequenceBtn exists:', !!prevSequenceBtn);
+        console.log('nextSequenceBtn exists:', !!nextSequenceBtn);
+
         if (prevSequenceBtn) {
+            console.log('Adding click listener to prevSequenceBtn');
             prevSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                console.log('Previous sequence button clicked');
+                console.log('Current episode:', currentEpisode);
+                console.log('Episode data keys:', Object.keys(episodeData));
+
+                if (!episodeData || Object.keys(episodeData).length === 0) {
+                    console.error('No episode data available');
+                    return;
+                }
+
+                // Get sequences for current book only
+                const sequences = getSequencesForCurrentBook();
                 const currentIndex = sequences.indexOf(currentEpisode);
+
+                console.log('Current index:', currentIndex);
+                console.log('Sequences (current book):', sequences);
+
                 if (currentIndex > 0) {
-                    loadEpisode(sequences[currentIndex - 1]);
+                    const prevSequence = sequences[currentIndex - 1];
+                    console.log('Loading previous sequence:', prevSequence);
+                    loadEpisode(prevSequence);
+                } else {
+                    console.log('Already at first sequence of current book');
                 }
             });
+        } else {
+            console.error('prevSequenceBtn is null - element not found!');
         }
-        
+
         if (nextSequenceBtn) {
+            console.log('Adding click listener to nextSequenceBtn');
             nextSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                console.log('Next sequence button clicked');
+                console.log('Current episode:', currentEpisode);
+                console.log('Episode data keys:', Object.keys(episodeData));
+
+                if (!episodeData || Object.keys(episodeData).length === 0) {
+                    console.error('No episode data available');
+                    return;
+                }
+
+                // Get sequences for current book only
+                const sequences = getSequencesForCurrentBook();
                 const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex < sequences.length - 1) {
-                    loadEpisode(sequences[currentIndex + 1]);
+
+                console.log('Current index:', currentIndex);
+                console.log('Sequences (current book):', sequences);
+
+                if (currentIndex < sequences.length - 1 && currentIndex !== -1) {
+                    const nextSequence = sequences[currentIndex + 1];
+                    console.log('Loading next sequence:', nextSequence);
+                    loadEpisode(nextSequence);
+                } else {
+                    console.log('Already at last sequence of current book');
                 }
             });
+        } else {
+            console.error('nextSequenceBtn is null - element not found!');
         }
 
         // Update sequence title in header
@@ -2495,20 +2626,6 @@
             }
         }
 
-        // Update sequence navigation buttons
-        function updateSequenceNavigation() {
-            if (episodeData) {
-                const sequences = Object.keys(episodeData).sort();
-                const currentIndex = sequences.indexOf(currentEpisode);
-                
-                if (prevSequenceBtn) {
-                    prevSequenceBtn.disabled = currentIndex <= 0;
-                }
-                if (nextSequenceBtn) {
-                    nextSequenceBtn.disabled = currentIndex >= sequences.length - 1;
-                }
-            }
-        }
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
