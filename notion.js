@@ -598,14 +598,8 @@ async function getSequencesForBook(bookId, limit = null) {
                     } else {
                         // Other sequences - try to use 시퀀스 field first
                         if (sequence) {
-                            // Extract numbers from the 시퀀스 field
-                            const sequenceMatch = sequence.match(/\d+/);
-                            if (sequenceMatch) {
-                                episodeIdentifier = '#' + sequenceMatch[0];
-                            } else {
-                                // If no number found in 시퀀스, use it as-is
-                                episodeIdentifier = sequence.startsWith('#') ? sequence : '#' + sequence;
-                            }
+                            // Use the full 시퀀스 value as-is (includes suffixes like -1, -2)
+                            episodeIdentifier = sequence.startsWith('#') ? sequence : '#' + sequence;
                         } else {
                             // Try to extract from title (e.g., "3월의 라이온 - 195화" -> "195")
                             const titleMatch = title.match(/(\d+)화/);
@@ -638,9 +632,31 @@ async function getSequencesForBook(bookId, limit = null) {
         // Filter out null results and sort by sequence
         const validSequences = sequences.filter(s => s !== null);
         validSequences.sort((a, b) => {
-            const aNum = parseInt(a.sequence.replace('#', ''));
-            const bNum = parseInt(b.sequence.replace('#', ''));
-            return bNum - aNum; // descending order
+            // Extract main number and suffix from sequences like "#197-1", "#197-2"
+            const parseSequence = (seq) => {
+                const cleaned = seq.replace('#', '');
+                const match = cleaned.match(/^(\d+)(?:-(\d+))?$/);
+                if (match) {
+                    return {
+                        main: parseInt(match[1]),
+                        suffix: match[2] ? parseInt(match[2]) : 0
+                    };
+                }
+                // Fallback for non-numeric sequences
+                return { main: 0, suffix: 0 };
+            };
+
+            const aParsed = parseSequence(a.sequence);
+            const bParsed = parseSequence(b.sequence);
+
+            // Sort by main number first (descending)
+            if (bParsed.main !== aParsed.main) {
+                return bParsed.main - aParsed.main;
+            }
+
+            // If main numbers are equal, sort by suffix (descending)
+            // So #197-2 comes before #197-1
+            return bParsed.suffix - aParsed.suffix;
         });
 
         // Cache the results
