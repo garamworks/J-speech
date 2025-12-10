@@ -640,7 +640,7 @@
         }
 
         .korean-text {
-            font-size: 1.12rem;
+            font-size: 0.896rem;
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
@@ -891,7 +891,7 @@
             }
 
             .korean-text {
-                font-size: 1.32rem;
+                font-size: 1.056rem;
                 margin-top: 0.245rem;
             }
             
@@ -971,7 +971,7 @@
         <button class="nav-arrow" id="prev-sequence-btn">
             <i class="fas fa-chevron-left"></i>
         </button>
-        <h1 id="sequence-title" onclick="goToHomepage()" style="cursor: pointer;">PALM #001</h1>
+        <h1 id="sequence-title" onclick="goToHomepage()" style="cursor: pointer;">대사 로딩중</h1>
         <button class="nav-arrow" id="next-sequence-btn">
             <i class="fas fa-chevron-right"></i>
         </button>
@@ -1613,7 +1613,7 @@
                     
                     expressionCards.forEach((expressionCard, index) => {
                         if (expressionCard && expressionCard.title) {
-                            const expressionId = card.expressionCardIds[index];
+                            const expressionId = expressionCard.id;
                             console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title);
                             
                             // Create front expression item
