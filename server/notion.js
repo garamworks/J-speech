@@ -1,9 +1,15 @@
-const { Client } = require("@notionhq/client");
-
-// Initialize Notion client
-const notion = new Client({
-    auth: process.env.GARAM_NOTION_SECRET,
-});
+// Import centralized modules
+const notion = require('./config/notion-client');
+const DB_IDS = require('./config/databases');
+const {
+    getRichTextContent,
+    getTitleContent,
+    getSelectValue,
+    getNumberValue,
+    getFileUrl,
+    getRelationIds
+} = require('./utils/notion-helpers');
+const cacheManager = require('./utils/cache-manager');
 
 // Extract the database ID from the Notion URL
 function extractDatabaseIdFromUrl(pageUrl) {
@@ -15,14 +21,6 @@ function extractDatabaseIdFromUrl(pageUrl) {
     throw Error("Failed to extract database ID from URL");
 }
 
-// Updated database structure - using connected databases
-const DATABASE_ID = "228fe404-b3dc-80f0-a0c0-d83aaa28aa9b"; // Main dialogue database
-const CHARACTER_DATABASE_ID = "229fe404-b3dc-80ec-830c-e619a046cf3a"; // Character database
-const EXPRESSION_CARDS_DATABASE_ID = "228fe404-b3dc-8037-86b5-fea02dcf9913"; // Expression cards database (connected)
-const N1_VOCABULARY_DATABASE_ID = "2bafe404-b3dc-811a-913f-df1dc06ea699"; // N1 vocabulary database (connected) - Updated 2025-12-07
-const EPISODES_DATABASE_ID = "228fe404-b3dc-8045-930e-f78bb8348f21"; // Episodes/Sequence database (connected)
-const BOOK_DATABASE_ID = "22cfe404-b3dc-8035-baae-ea57e7401e3a"; // Book database (main menu)
-
 // Get database info by ID
 async function getNotionDatabases() {
     const databases = [];
@@ -30,20 +28,20 @@ async function getNotionDatabases() {
     try {
         // Get the main database info
         const databaseInfo = await notion.databases.retrieve({
-            database_id: DATABASE_ID,
+            database_id: DB_IDS.MAIN_DIALOGUE,
         });
         databases.push(databaseInfo);
-        
+
         // Also try to get character database info
         try {
             const characterDatabaseInfo = await notion.databases.retrieve({
-                database_id: CHARACTER_DATABASE_ID,
+                database_id: DB_IDS.CHARACTER,
             });
             databases.push(characterDatabaseInfo);
         } catch (error) {
             console.log('Character database not accessible:', error.message);
         }
-        
+
         return databases;
     } catch (error) {
         console.error('Error retrieving databases:', error);
@@ -55,18 +53,16 @@ async function getNotionDatabases() {
 async function getCharacterData() {
     try {
         const response = await notion.databases.query({
-            database_id: CHARACTER_DATABASE_ID,
+            database_id: DB_IDS.CHARACTER,
         });
 
         const characterMap = {};
         response.results.forEach(page => {
-            const name = page.properties.Name?.title?.[0]?.plain_text;
-            const imageFile = page.properties.face?.files?.[0];
-            const gender = page.properties.Gender?.select?.name;
-            
-            if (name && imageFile) {
-                const imageUrl = imageFile.type === 'external' ? 
-                    imageFile.external.url : imageFile.file.url;
+            const name = getTitleContent(page.properties.Name);
+            const imageUrl = getFileUrl(page.properties.face);
+            const gender = getSelectValue(page.properties.Gender);
+
+            if (name && imageUrl) {
                 characterMap[name] = {
                     imageUrl: imageUrl,
                     emoji: getCharacterEmoji(name),
@@ -94,43 +90,26 @@ function getCharacterEmoji(characterName) {
     return emojiMap[characterName] || emojiMap.default;
 }
 
-// Cache for flashcards data
-let flashcardsCache = null;
-let flashcardsCacheTime = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Cache for sequences per book
-let sequencesCache = {}; // bookId -> sequences array
-let sequencesCacheTime = {}; // bookId -> timestamp
-
-function isCacheValid() {
-    return flashcardsCache !== null &&
-           flashcardsCacheTime !== null &&
-           (Date.now() - flashcardsCacheTime) < CACHE_DURATION;
-}
-
-function isSequenceCacheValid(bookId) {
-    return sequencesCache[bookId] !== undefined &&
-           sequencesCacheTime[bookId] !== undefined &&
-           (Date.now() - sequencesCacheTime[bookId]) < CACHE_DURATION;
-}
+// Cache TTL duration (5 minutes)
+const CACHE_TTL = 5 * 60 * 1000;
 
 // Get flashcard data from Notion database (updated for connected database structure)
 async function getFlashcardsFromNotion(episodeSequence = null) {
     try {
         // Check cache first - use cache for both full and filtered requests
-        if (isCacheValid()) {
+        const cachedData = cacheManager.get('flashcards');
+        if (cachedData) {
             console.log('Using cached flashcards data');
             if (episodeSequence) {
                 // Return filtered data from cache
-                if (flashcardsCache[episodeSequence]) {
-                    return { [episodeSequence]: flashcardsCache[episodeSequence] };
+                if (cachedData[episodeSequence]) {
+                    return { [episodeSequence]: cachedData[episodeSequence] };
                 } else {
                     console.log(`No flashcards found for sequence: ${episodeSequence} in cache`);
                     return {};
                 }
             }
-            return flashcardsCache;
+            return cachedData;
         }
 
         const startTime = Date.now();
@@ -143,7 +122,7 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
 
         while (hasMore) {
             const response = await notion.databases.query({
-                database_id: DATABASE_ID,
+                database_id: DB_IDS.MAIN_DIALOGUE,
                 start_cursor: startCursor,
                 page_size: 100
                 // Removed status filter to include all entries (Done and Not started)
@@ -178,11 +157,10 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
         const sequenceRelations = {};
         const sequenceTitles = {}; // Store book titles for each sequence
         const sequenceBookIds = {}; // Store book IDs for each sequence
-        const SEQUENCE_DB_ID = "228fe404-b3dc-8045-930e-f78bb8348f21";
 
         // First, get all sequences from the sequence database
         const sequenceResponse = await notion.databases.query({
-            database_id: SEQUENCE_DB_ID
+            database_id: DB_IDS.EPISODES
         });
 
         // Map sequence IDs to their identifiers and titles
@@ -205,23 +183,29 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
             if (sequenceTitle) {
                 let identifier;
                 let bookTitle;
-                // For PALM sequences, convert "PALM 26-002" to "#002" format
-                const palmMatch = sequenceTitle.match(/PALM 26-(\d+)/);
-                if (palmMatch) {
-                    identifier = '#' + palmMatch[1].padStart(3, '0');
-                    bookTitle = 'PALM';
-                    console.log(`Mapped PALM sequence: ${seq.id} -> ${identifier} (${sequenceTitle})`);
+
+                // Priority 1: Use '시퀀스' field directly if it exists (handles sub-episodes like #197-1)
+                if (sequenceField) {
+                    identifier = sequenceField.startsWith('#') ? sequenceField : '#' + sequenceField;
+
+                    // Determine book title from sequence title
+                    const palmMatch = sequenceTitle.match(/PALM/);
+                    if (palmMatch) {
+                        bookTitle = 'PALM';
+                        console.log(`Mapped sequence from 시퀀스 field: ${seq.id} -> ${identifier} (${sequenceTitle})`);
+                    } else {
+                        const bookTitleMatch = sequenceTitle.match(/^(.+?)\s*-\s*\d+화/);
+                        bookTitle = bookTitleMatch ? bookTitleMatch[1] : sequenceTitle;
+                        console.log(`Mapped other sequence from 시퀀스 field: ${seq.id} -> ${identifier} (${sequenceTitle})`);
+                    }
                 } else {
-                    // For other sequences, try to use 시퀀스 field first
-                    if (sequenceField) {
-                        // Extract numbers from the 시퀀스 field
-                        const sequenceMatch = sequenceField.match(/\d+/);
-                        if (sequenceMatch) {
-                            identifier = '#' + sequenceMatch[0];
-                        } else {
-                            // If no number found in 시퀀스, use it as-is
-                            identifier = sequenceField.startsWith('#') ? sequenceField : '#' + sequenceField;
-                        }
+                    // Priority 2: Parse from title if 시퀀스 field is not available
+                    // For PALM sequences, convert "PALM 26-002" to "#002" format
+                    const palmMatch = sequenceTitle.match(/PALM 26-(\d+)/);
+                    if (palmMatch) {
+                        identifier = '#' + palmMatch[1].padStart(3, '0');
+                        bookTitle = 'PALM';
+                        console.log(`Mapped PALM sequence from title: ${seq.id} -> ${identifier} (${sequenceTitle})`);
                     } else {
                         // Try to extract from title (e.g., "3월의 라이온 - 195화" -> "195")
                         const titleMatch = sequenceTitle.match(/(\d+)화/);
@@ -231,12 +215,13 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
                             // Fallback to page ID
                             identifier = seq.id;
                         }
+                        // Extract book title from sequence title
+                        const bookTitleMatch = sequenceTitle.match(/^(.+?)\s*-\s*\d+화/);
+                        bookTitle = bookTitleMatch ? bookTitleMatch[1] : sequenceTitle;
+                        console.log(`Mapped sequence from title: ${seq.id} -> ${identifier} (${sequenceTitle})`);
                     }
-                    // Extract book title from sequence title (e.g., "3월의 라이온 - 195화" -> "3월의 라이온")
-                    const bookTitleMatch = sequenceTitle.match(/^(.+?)\s*-\s*\d+화/);
-                    bookTitle = bookTitleMatch ? bookTitleMatch[1] : sequenceTitle;
-                    console.log(`Mapped other sequence: ${seq.id} -> ${identifier} (${sequenceTitle}, 시퀀스: "${sequenceField}")`);
                 }
+
                 sequenceRelations[seq.id] = identifier;
                 sequenceTitles[seq.id] = bookTitle;
             }
@@ -380,8 +365,7 @@ async function getFlashcardsFromNotion(episodeSequence = null) {
         });
 
         // Always cache the full dataset
-        flashcardsCache = episodeData;
-        flashcardsCacheTime = Date.now();
+        cacheManager.set('flashcards', episodeData, CACHE_TTL);
         console.log('Cached flashcards data for 5 minutes');
 
         // If episodeSequence parameter is provided, return only that specific episode
@@ -408,18 +392,10 @@ async function getExpressionCardInfo(expressionCardId) {
         const response = await notion.pages.retrieve({
             page_id: expressionCardId
         });
-        
-        // Helper function to get all rich text content
-        const getRichTextContent = (richTextProperty) => {
-            if (!richTextProperty?.rich_text || richTextProperty.rich_text.length === 0) {
-                return '';
-            }
-            return richTextProperty.rich_text.map(text => text.plain_text).join('');
-        };
 
-        const title = response.properties['표현(일본어)']?.title?.[0]?.plain_text || '';
+        const title = getTitleContent(response.properties['표현(일본어)']);
         const meaning = getRichTextContent(response.properties['뜻(한국어)']);
-        const id = response.properties['ID']?.unique_id?.number || '';
+        const id = getNumberValue(response.properties['ID']);
 
         // Get application expressions with correct field names
         const application1 = getRichTextContent(response.properties['응용1J']);
@@ -466,25 +442,16 @@ async function getN1VocabularyInfo(n1VocabularyId) {
         const response = await notion.pages.retrieve({
             page_id: n1VocabularyId
         });
-        
-        // Helper function to get all rich text content
-        const getRichTextContent = (richTextProperty) => {
-            if (!richTextProperty?.rich_text || richTextProperty.rich_text.length === 0) {
-                return '';
-            }
-            return richTextProperty.rich_text.map(text => text.plain_text).join('');
-        };
 
-        const word = response.properties['단어']?.title?.[0]?.plain_text || '';
+        const word = getTitleContent(response.properties['단어']);
         const meaning = getRichTextContent(response.properties['뜻']);
         const reading = getRichTextContent(response.properties['독음']);
         const example = getRichTextContent(response.properties['예문']);
         const exampleTranslation = getRichTextContent(response.properties['예문 해석']);
-        const id = response.properties['ID']?.unique_id?.number || '';
-        
+        const id = getNumberValue(response.properties['ID']);
+
         // Get image from the img field
-        const imageFile = response.properties['img']?.files?.[0];
-        const imageUrl = imageFile ? (imageFile.type === 'external' ? imageFile.external.url : imageFile.file.url) : '';
+        const imageUrl = getFileUrl(response.properties['img']) || '';
         
         return {
             word: word,
@@ -506,7 +473,7 @@ async function getEpisodesFromNotion() {
     try {
         // Query the Book database
         const response = await notion.databases.query({
-            database_id: BOOK_DATABASE_ID,
+            database_id: DB_IDS.BOOK,
         });
 
         const books = response.results.map(page => {
@@ -514,14 +481,13 @@ async function getEpisodesFromNotion() {
 
             // Extract book data from Book DB
             // 권 (title field) - e.g., "PALM 26"
-            const bookTitle = properties.권?.title?.[0]?.plain_text || 'Untitled Book';
+            const bookTitle = getTitleContent(properties.권) || 'Untitled Book';
 
             // 제목 (rich_text) - e.g., "오후의 빛 I"
-            const subtitle = properties.제목?.rich_text?.[0]?.plain_text || '';
+            const subtitle = getRichTextContent(properties.제목);
 
             // 표지 (files) - book cover image
-            const thumbnail = properties.표지?.files?.[0];
-            const thumbnailUrl = thumbnail ? (thumbnail.type === 'external' ? thumbnail.external.url : thumbnail.file.url) : null;
+            const thumbnailUrl = getFileUrl(properties.표지);
 
             // Sequence DB (relation) - array of related sequence IDs
             const sequenceRelations = properties['Sequence DB']?.relation ||
@@ -550,11 +516,12 @@ async function getEpisodesFromNotion() {
 async function getSequencesForBook(bookId, limit = null) {
     try {
         // Check cache first
-        if (isSequenceCacheValid(bookId)) {
+        const cacheKey = `sequences:${bookId}`;
+        const cachedSequences = cacheManager.get(cacheKey);
+        if (cachedSequences) {
             console.log(`Using cached sequences for book ${bookId}`);
-            const cached = sequencesCache[bookId];
             // Return limited results if limit is specified
-            return limit ? cached.slice(0, limit) : cached;
+            return limit ? cachedSequences.slice(0, limit) : cachedSequences;
         }
 
         console.log(`Fetching sequences for book ${bookId}...`);
@@ -660,8 +627,7 @@ async function getSequencesForBook(bookId, limit = null) {
         });
 
         // Cache the results
-        sequencesCache[bookId] = validSequences;
-        sequencesCacheTime[bookId] = Date.now();
+        cacheManager.set(cacheKey, validSequences, CACHE_TTL);
 
         console.log(`Found ${validSequences.length} sequences for book ${bookId} in ${Date.now() - startTime}ms`);
         console.log(`Cached sequences for book ${bookId}`);

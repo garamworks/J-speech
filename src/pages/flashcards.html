@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/flashcards.css">
     <style>
         * {
             margin: 0;
@@ -622,27 +624,32 @@
         }
 
         .japanese-text {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 500;
             color: #2d3748;
             line-height: 1.6;
-            margin-bottom: 0.49rem;
+            margin-bottom: 0.245rem;
             text-align: center;
         }
 
         .card-back .japanese-text {
-            font-size: 1.12rem;
+            font-size: 1rem;
             line-height: 1.12;
+            color: #2d3748 !important;
         }
 
         .korean-text {
-            font-size: 0.896rem;
+            font-size: 0.6rem;
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
-            margin-top: 0.245rem;
+            margin-top: 0.1225rem;
             margin-bottom: 1rem;
             font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .card-back .korean-text {
+            color: #4a5568 !important;
         }
 
         .speaker-btn {
@@ -836,6 +843,43 @@
             display: none;
         }
 
+        /* Desktop - Reduce sizes by 50% */
+        @media (min-width: 481px) {
+            .character-avatar {
+                width: 108px !important;
+                height: 108px !important;
+                font-size: 3.4rem !important;
+                margin: 0.5rem auto !important;
+            }
+
+            .character-avatar img {
+                width: 108px !important;
+                height: 108px !important;
+            }
+
+            .japanese-text {
+                font-size: 2rem !important;
+                line-height: 1.4 !important;
+            }
+
+            .card-back .japanese-text {
+                font-size: 1.6rem !important;
+                line-height: 1.12 !important;
+                margin-bottom: 0.245rem !important;
+            }
+
+            .korean-text {
+                font-size: 1.25rem !important;
+                line-height: 1.5 !important;
+                margin-top: 0.1225rem !important;
+            }
+
+            .speaker-name {
+                font-size: 0.6rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+        }
+
         /* Mobile optimizations */
         @media (max-width: 480px) {
             body {
@@ -881,14 +925,19 @@
             }
 
             .japanese-text {
-                font-size: 1.32rem;
-                line-height: 1.4;
-                margin-bottom: 0.37rem;
+                font-size: 1.6rem !important;
+                line-height: 1.4 !important;
+                margin-bottom: 0.245rem !important;
+            }
+
+            .card-back .japanese-text {
+                font-size: 1.4rem !important;
+                margin-bottom: 0.245rem !important;
             }
 
             .korean-text {
-                font-size: 1.056rem;
-                margin-top: 0.245rem;
+                font-size: 1.2rem !important;
+                margin-top: 0.1225rem !important;
             }
             
             .speaker-btn {
@@ -1149,7 +1198,7 @@
             `;
             errorDiv.innerHTML = `
                 <div style="margin-bottom: 10px;">${message}</div>
-                <button onclick="this.parentElement.remove(); window.location.href = '/';" style="
+                <button onclick="this.parentElement.remove(); window.location.href = '/pages/episodes.html';" style="
                     background: white;
                     color: #ff6b6b;
                     border: none;
@@ -1523,11 +1572,20 @@
         // Load a specific card
         function loadCard(index) {
             if (index < 0 || index >= currentEpisodeCards.length) return;
-            
+
             const card = currentEpisodeCards[index];
+            console.log('Loading card:', index, card);
+            console.log('Japanese:', card.japanese);
+            console.log('Korean:', card.korean);
+            console.log('japaneseTextBack element:', japaneseTextBack);
+            console.log('koreanText element:', koreanText);
+
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
+
+            console.log('After setting - japaneseTextBack.textContent:', japaneseTextBack.textContent);
+            console.log('After setting - koreanText.textContent:', koreanText.textContent);
             speakerName.textContent = "";
             // currentCardSpan removed - now using play/pause button instead
 
@@ -1700,8 +1758,8 @@
 
                         expressionCards.forEach((expressionCard, index) => {
                             if (expressionCard && expressionCard.title) {
-                                const expressionId = expressionCard.id;
-                                console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title);
+                                const expressionId = card.expressionCardIds[index];
+                                console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title, 'ID:', expressionId);
 
                                 // Create front expression item
                                 const frontItem = document.createElement('div');
@@ -2686,12 +2744,12 @@
             if (currentEpisodeCards && currentEpisodeCards.length > 0) {
                 const bookId = currentEpisodeCards[0].bookId;
                 if (bookId) {
-                    window.location.href = `/?book=${encodeURIComponent(bookId)}`;
+                    window.location.href = `/pages/episodes.html?book=${encodeURIComponent(bookId)}`;
                     return;
                 }
             }
             // Fallback to homepage if no book ID is available
-            window.location.href = '/';
+            window.location.href = '/pages/episodes.html';
         }
 
         function previousVolume() {
@@ -3437,7 +3495,7 @@
             }
         });
     </script>
-    
+
     <!-- Expression Card Modal -->
     <div class="expression-modal" id="expression-modal">
         <div class="expression-modal-content">

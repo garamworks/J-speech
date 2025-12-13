@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J-speech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fjalla+One:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            min-height: 100vh;
+            padding: 20px 15px;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .episodes-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+            gap: 15px !important;
+            margin-top: 30px !important;
+        }
+
+        .episode-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .episode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .episode-thumbnail {
+            width: 100%;
+            height: 0;
+            padding-bottom: 142%;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border: 0.5px solid rgba(128, 128, 128, 0.3);
+            cursor: pointer;
+        }
+
+        .episode-thumbnail.episode-ratio {
+            padding-bottom: 56.25%; /* 16:9 ratio (9/16 = 0.5625) */
+        }
+        
+        .episode-thumbnail-safe-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 75px;
+            bottom: 60px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .episode-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .episode-sequence {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 0.5px solid rgba(128, 128, 128, 0.3);
+            font-family: 'Fjalla One', sans-serif;
+        }
+
+        .episode-sequence .hash {
+            font-size: 1.5rem;
+        }
+
+        .episode-speaker {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            z-index: 20;
+            color: #555;
+            font-family: 'Fjalla One', sans-serif;
+            font-size: 20px;
+            font-weight: normal;
+        }
+
+        .episode-speaker-left {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            z-index: 20;
+            color: #555;
+            font-family: 'Fjalla One', sans-serif;
+            font-size: 20px;
+            font-weight: normal;
+        }
+
+        .episode-speaker:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        .episode-speaker-left:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        .episode-speaker.playing {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .episode-speaker-left.playing {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .episode-speaker.disabled {
+            background: rgba(128, 128, 128, 0.5);
+            cursor: not-allowed;
+        }
+
+        .episode-speaker-left.disabled {
+            background: rgba(128, 128, 128, 0.5);
+            cursor: not-allowed;
+        }
+
+
+
+        .episode-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .episode-description {
+            font-size: 1rem;
+            line-height: 1.4;
+            opacity: 0.7;
+            margin-bottom: 0;
+            color: #666;
+        }
+
+
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #ff6b6b;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .episodes-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Password overlay */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .password-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-modal h2 {
+            color: #357abd;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .password-modal input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .password-modal input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .password-modal button {
+            width: 100%;
+            padding: 15px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .password-modal button:hover {
+            background: #357abd;
+        }
+
+        .password-error {
+            color: #ff6b6b;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Loading placeholder cards */
+        .episode-card.placeholder {
+            background: rgb(255, 255, 255);
+            cursor: default;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .episode-card.placeholder:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgb(255, 255, 255);
+        }
+
+        .episode-card.placeholder .episode-thumbnail {
+            background: rgb(245, 245, 245);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="passwordOverlay">
+        <div class="password-modal">
+            <h2>J-speech</h2>
+            <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" />
+            <button onclick="checkPassword()">확인</button>
+            <p class="password-error" id="passwordError">비밀번호가 올바르지 않습니다</p>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header" id="pageHeader" style="display: none;">
+            <h1 id="headerTitle"></h1>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>에피소드를 로딩 중...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>에피소드를 불러오는 중 오류가 발생했습니다.</p>
+        </div>
+
+        <div id="episodesContainer" class="episodes-grid" style="display: none;">
+            <!-- Episodes will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        // Password authentication
+        const CORRECT_PASSWORD = 'sunchip2025';
+
+        // Check if already authenticated
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('jspeech_authenticated') === 'true';
+            if (isAuthenticated) {
+                document.getElementById('passwordOverlay').style.display = 'none';
+                return true;
+            }
+            return false;
+        }
+
+        // Check password
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+
+            if (input.value === CORRECT_PASSWORD) {
+                sessionStorage.setItem('jspeech_authenticated', 'true');
+                document.getElementById('passwordOverlay').style.display = 'none';
+                error.style.display = 'none';
+                input.value = '';
+                // Load content after authentication
+                loadEpisodes();
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Allow Enter key to submit password
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('passwordInput');
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            input.focus();
+        });
+
+        // Check URL parameters to determine what to load
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                bookId: params.get('book')
+            };
+        }
+
+        // Load books or sequences based on URL
+        async function loadEpisodes() {
+            const params = getUrlParams();
+
+            if (params.bookId) {
+                // Load sequences for a specific book
+                await loadSequences(params.bookId);
+            } else {
+                // Load all books
+                await loadBooks();
+            }
+        }
+
+        // Load books from API
+        async function loadBooks() {
+            try {
+                const response = await fetch('/api/books');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch books');
+                }
+
+                const books = await response.json();
+                console.log('Loaded books:', books);
+
+                renderBooks(books);
+            } catch (error) {
+                console.error('Error loading books:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        // Load sequences for a specific book
+        async function loadSequences(bookId) {
+            try {
+                // First, get book info to display title
+                const bookResponse = await fetch('/api/books');
+                const books = await bookResponse.json();
+                const currentBook = books.find(b => b.id === bookId);
+
+                // Fetch first 5 sequences to ensure we have at least 2 after filtering
+                console.log('Loading initial sequences...');
+                const initialResponse = await fetch(`/api/book/${bookId}/sequences?limit=5`);
+                if (!initialResponse.ok) {
+                    throw new Error('Failed to fetch sequences');
+                }
+
+                const initialSequences = await initialResponse.json();
+                console.log('Loaded initial sequences:', initialSequences);
+
+                // Filter sequences with thumbnails first
+                const filteredInitial = initialSequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+                console.log(`Filtered initial sequences: ${filteredInitial.length} out of ${initialSequences.length}`);
+
+                // Take only first 2 after filtering
+                const first2Sequences = filteredInitial.slice(0, 2);
+                console.log('Showing first 2 filtered sequences:', first2Sequences.length);
+
+                // Render initial sequences immediately with placeholders
+                renderSequences(first2Sequences, bookId, currentBook, true);
+
+                // Only load remaining sequences if we have at least 1 sequence showing
+                if (first2Sequences.length > 0) {
+                    // Load remaining sequences in background after user has time to see initial content
+                    setTimeout(async () => {
+                        try {
+                            console.log('Loading all remaining sequences...');
+                            const allResponse = await fetch(`/api/book/${bookId}/sequences`);
+                            if (!allResponse.ok) {
+                                throw new Error('Failed to fetch all sequences');
+                            }
+
+                            const allSequences = await allResponse.json();
+                            console.log('Loaded all sequences:', allSequences.length);
+
+                            // Filter all sequences
+                            const allFiltered = allSequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+                            console.log('Filtered all sequences:', allFiltered.length);
+
+                            // If there are more sequences than the initial 2, append them
+                            if (allFiltered.length > first2Sequences.length) {
+                                const remainingSequences = allFiltered.slice(first2Sequences.length);
+                                console.log('Appending', remainingSequences.length, 'additional sequences');
+                                appendSequences(remainingSequences);
+                            } else {
+                                // Still need to remove placeholders even if no new sequences
+                                const container = document.getElementById('episodesContainer');
+                                const placeholders = container.querySelectorAll('.episode-card.placeholder');
+                                placeholders.forEach(placeholder => placeholder.remove());
+                            }
+                        } catch (error) {
+                            console.error('Error loading remaining sequences:', error);
+                        }
+                    }, 2000); // Wait 2 seconds before loading the rest
+                }
+
+            } catch (error) {
+                console.error('Error loading sequences:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function renderBooks(books) {
+            const container = document.getElementById('episodesContainer');
+            const loading = document.getElementById('loading');
+
+            if (books.length === 0) {
+                container.innerHTML = '<p class="error">사용 가능한 책이 없습니다.</p>';
+            } else {
+                // Sort books by title (newest first)
+                const sortedBooks = books.sort((a, b) => {
+                    return b.bookTitle.localeCompare(a.bookTitle);
+                });
+
+                container.innerHTML = sortedBooks.map(book => createBookCard(book)).join('');
+            }
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+        }
+
+        function renderSequences(sequences, bookId, currentBook, isInitialLoad = false) {
+            const container = document.getElementById('episodesContainer');
+            const loading = document.getElementById('loading');
+            const pageHeader = document.getElementById('pageHeader');
+            const headerTitle = document.getElementById('headerTitle');
+
+            // Show header with book title
+            if (currentBook) {
+                const bookTitle = currentBook.subtitle
+                    ? `${currentBook.bookTitle} - ${currentBook.subtitle}`
+                    : currentBook.bookTitle;
+                headerTitle.textContent = bookTitle;
+                pageHeader.style.display = 'block';
+            }
+
+            // Filter out sequences without thumbnails (only if not already filtered)
+            const sequencesWithThumbnails = sequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+            console.log(`Rendering ${sequencesWithThumbnails.length} sequences (filtered ${sequences.length - sequencesWithThumbnails.length})`);
+
+            if (sequencesWithThumbnails.length === 0) {
+                container.innerHTML = '<p class="error">사용 가능한 에피소드가 없습니다.</p>';
+            } else {
+                // Add back button at the top
+                const backButton = `
+                    <div style="grid-column: 1 / -1; padding: 0 0 5px 0;">
+                        <div style="padding: 4px 7.5px 7.5px 7.5px; text-align: left; cursor: pointer; color: white; font-size: 1.1rem;" onclick="window.location.href='/pages/episodes.html'">
+                            ← 책 목록으로 돌아가기
+                        </div>
+                    </div>
+                `;
+
+                const sequenceCards = sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
+
+                // Add placeholder cards if this is the initial load
+                let placeholders = '';
+                if (isInitialLoad) {
+                    console.log('Adding placeholder cards for initial load');
+                    // Add 4 placeholder cards to indicate more content is loading
+                    placeholders = createPlaceholderCard() + createPlaceholderCard() + createPlaceholderCard() + createPlaceholderCard();
+                }
+
+                container.innerHTML = backButton + sequenceCards + placeholders;
+            }
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+        }
+
+        function appendSequences(sequences) {
+            const container = document.getElementById('episodesContainer');
+
+            if (sequences.length === 0) {
+                console.log('No sequences to append');
+                return;
+            }
+
+            // Filter out sequences without thumbnails
+            const sequencesWithThumbnails = sequences.filter(seq => seq.thumbnailUrl && seq.thumbnailUrl.trim() !== '');
+            console.log(`Appending ${sequencesWithThumbnails.length} sequences (filtered ${sequences.length - sequencesWithThumbnails.length} without thumbnails)`);
+
+            if (sequencesWithThumbnails.length === 0) {
+                console.log('No sequences with thumbnails to append');
+                // Remove placeholders even if no new sequences
+                const placeholders = container.querySelectorAll('.episode-card.placeholder');
+                placeholders.forEach(placeholder => placeholder.remove());
+                return;
+            }
+
+            // Remove placeholder cards first
+            const placeholders = container.querySelectorAll('.episode-card.placeholder');
+            placeholders.forEach(placeholder => placeholder.remove());
+
+            // Append new sequence cards to the existing container
+            const newCardsHTML = sequencesWithThumbnails.map(seq => createEpisodeCard(seq)).join('');
+            container.insertAdjacentHTML('beforeend', newCardsHTML);
+
+            console.log(`Appended ${sequencesWithThumbnails.length} sequence cards`);
+        }
+
+        function createBookCard(book) {
+            const thumbnailContent = book.thumbnailUrl
+                ? `<img src="${book.thumbnailUrl}" alt="${book.bookTitle}">`
+                : `<div style="font-size: 3rem;">📚</div>`;
+
+            // Display book title and subtitle
+            const displayTitle = book.bookTitle;
+            const displaySubtitle = book.subtitle || '';
+
+            return `
+                <div class="episode-card">
+                    <div class="episode-thumbnail" onclick="selectBook('${book.id}')" style="cursor: pointer;">
+                        ${thumbnailContent}
+                    </div>
+                    <div class="episode-description" onclick="selectBook('${book.id}')" style="cursor: pointer;">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #000000; font-size: 1.2em;">${displayTitle}</div>
+                        ${displaySubtitle}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createEpisodeCard(episode) {
+            const thumbnailContent = episode.thumbnailUrl
+                ? `<img src="${episode.thumbnailUrl}" alt="${episode.title}">`
+                : `<div style="font-size: 3rem;">🎬</div>`;
+
+            // Format sequence with larger # symbol
+            const formattedSequence = episode.sequence.replace('#', '<span class="hash">#</span>');
+
+            return `
+                <div class="episode-card">
+                    <div class="episode-thumbnail episode-ratio">
+                        ${thumbnailContent}
+                        <div class="episode-sequence">${formattedSequence}</div>
+                        <div class="episode-thumbnail-safe-area" onclick="selectEpisode('${episode.sequence}')"></div>
+                        <div class="episode-speaker-left" onclick="event.stopPropagation(); playEpisodeAudio('${episode.sequence}', this, 'basic')">
+                            B
+                        </div>
+                        <div class="episode-speaker" onclick="event.stopPropagation(); playEpisodeAudio('${episode.sequence}', this, 'expression')">
+                            E
+                        </div>
+                    </div>
+                    <div class="episode-description" onclick="selectEpisode('${episode.sequence}')">${episode.description}</div>
+                </div>
+            `;
+        }
+
+        function createPlaceholderCard() {
+            return `
+                <div class="episode-card placeholder">
+                    <div class="episode-thumbnail episode-ratio">
+                    </div>
+                    <div class="episode-description"></div>
+                </div>
+            `;
+        }
+
+        function selectBook(bookId) {
+            console.log('Selected book ID:', bookId);
+            // Navigate to episode list for this book
+            window.location.href = `/pages/episodes.html?book=${encodeURIComponent(bookId)}`;
+        }
+
+        function selectEpisode(sequence) {
+            console.log('Selected episode sequence:', sequence);
+            // Navigate to the main app with the selected episode
+            window.location.href = `/pages/flashcards.html?episode=${encodeURIComponent(sequence)}`;
+        }
+
+        // Track currently playing audio
+        let currentAudio = null;
+        let currentSpeakerButton = null;
+        let isPlayingSequence = false;
+        let sequenceTimeout = null;
+
+        // Check if Android environment is available
+        function isAndroidApp() {
+            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
+        }
+
+        // Play sequence using Android background audio
+        async function playSequenceOnAndroid(sequence, mode = 'basic') {
+            try {
+                console.log(`Playing sequence ${sequence} on Android in ${mode} mode`);
+                
+                // Fetch flashcards for this sequence
+                const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const episodeData = await response.json();
+                console.log('Episode data received for Android:', episodeData);
+                
+                // Handle different response formats
+                let flashcards;
+                if (episodeData.flashcards) {
+                    flashcards = episodeData.flashcards;
+                } else if (episodeData[sequence]) {
+                    flashcards = episodeData[sequence];
+                } else {
+                    const keys = Object.keys(episodeData);
+                    const matchingKey = keys.find(key => key === sequence);
+                    if (matchingKey) {
+                        flashcards = episodeData[matchingKey];
+                    } else {
+                        console.log('No flashcards found for this sequence');
+                        return false;
+                    }
+                }
+
+                if (!flashcards || flashcards.length === 0) {
+                    console.log('No flashcards found for this sequence');
+                    return false;
+                }
+
+                // Create playlist for Android
+                const playlist = flashcards.map(card => ({
+                    audioUrl: card.audioUrl,
+                    japanese: card.japanese,
+                    korean: card.korean,
+                    koreanAudioUrl: card.koreanAudioUrl,
+                    characterImage: card.characterImage,
+                    speaker: card.speaker
+                })).filter(card => card.audioUrl);
+
+                if (playlist.length === 0) {
+                    console.log('No audio URLs found in flashcards');
+                    return false;
+                }
+
+                // Call Android background player
+                Android.playPlaylist(JSON.stringify(playlist));
+                
+                // Set mode if available
+                if (typeof Android.setMode === 'function') {
+                    Android.setMode(mode);
+                }
+
+                console.log(`Android playback started for ${playlist.length} cards`);
+                return true;
+
+            } catch (error) {
+                console.error('Error in Android playback:', error);
+                return false;
+            }
+        }
+
+        async function playEpisodeAudio(sequence, speakerButton, mode = 'basic') {
+            try {
+                console.log(`Starting playback for sequence: ${sequence} in ${mode} mode`);
+                
+                // Check if Android environment is available
+                if (isAndroidApp()) {
+                    console.log('Android environment detected - using background player');
+                    
+                    // Visual feedback for Android playback
+                    speakerButton.classList.add('playing');
+                    
+                    // Try Android playback
+                    const androidSuccess = await playSequenceOnAndroid(sequence, mode);
+                    
+                    if (androidSuccess) {
+                        console.log('Android playback successful');
+                        return;
+                    } else {
+                        console.log('Android playback failed, falling back to web audio');
+                        speakerButton.classList.remove('playing');
+                    }
+                }
+                
+                // Web environment or Android fallback
+                console.log('Using web audio playback');
+                
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
+                // Clear any existing timeout
+                if (sequenceTimeout) {
+                    clearTimeout(sequenceTimeout);
+                    sequenceTimeout = null;
+                }
+
+                // Reset previous speaker button
+                if (currentSpeakerButton) {
+                    currentSpeakerButton.classList.remove('playing');
+                }
+
+                // Reset all speaker buttons
+                document.querySelectorAll('.episode-speaker, .episode-speaker-left').forEach(btn => {
+                    btn.classList.remove('playing');
+                });
+
+                // If already playing this sequence, stop it
+                if (isPlayingSequence && currentSpeakerButton === speakerButton) {
+                    console.log('Stopping current playback');
+                    isPlayingSequence = false;
+                    currentSpeakerButton = null;
+                    return;
+                }
+
+                // Set button to playing state
+                speakerButton.classList.add('playing');
+                currentSpeakerButton = speakerButton;
+                isPlayingSequence = true;
+
+                // Fetch all cards for the episode
+                console.log(`Fetching cards for episode: ${sequence}`);
+                const response = await fetch(`/api/flashcards?episode=${encodeURIComponent(sequence)}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch episode data: ${response.status}`);
+                }
+
+                const episodeData = await response.json();
+                console.log('Episode data received:', episodeData);
+                
+                // Handle different response formats
+                let flashcards;
+                if (episodeData.flashcards) {
+                    // Standard format
+                    flashcards = episodeData.flashcards;
+                } else if (episodeData[sequence]) {
+                    // Grouped format
+                    flashcards = episodeData[sequence];
+                } else {
+                    // Try to find the sequence in the grouped data
+                    const keys = Object.keys(episodeData);
+                    const matchingKey = keys.find(key => key === sequence);
+                    if (matchingKey) {
+                        flashcards = episodeData[matchingKey];
+                    } else {
+                        throw new Error('No flashcards found for this episode');
+                    }
+                }
+                
+                if (!flashcards || flashcards.length === 0) {
+                    throw new Error('No flashcards found for this episode');
+                }
+                console.log(`Playing full sequence ${sequence} with ${flashcards.length} cards`);
+
+                // Play all cards in sequence
+                await playCardSequence(flashcards, 0, speakerButton);
+                
+            } catch (error) {
+                console.error('Error playing episode audio:', error);
+                console.error('Error details:', error.message);
+                speakerButton.classList.remove('playing');
+                speakerButton.classList.add('disabled');
+                currentAudio = null;
+                currentSpeakerButton = null;
+                isPlayingSequence = false;
+            }
+        }
+
+        async function playCardSequence(flashcards, cardIndex, speakerButton) {
+            // Check if we should stop
+            if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                console.log('Playback stopped - sequence flag or speaker button changed');
+                return;
+            }
+
+            // Check if we've reached the end
+            if (cardIndex >= flashcards.length) {
+                console.log('Sequence playback completed');
+                speakerButton.classList.remove('playing');
+                currentSpeakerButton = null;
+                isPlayingSequence = false;
+                
+                // Auto-advance to next sequence
+                await autoAdvanceToNextSequence(speakerButton);
+                return;
+            }
+
+            const card = flashcards[cardIndex];
+            console.log(`Playing card ${cardIndex + 1}/${flashcards.length}: ${card.japanese}`);
+            console.log(`Card has audioUrl: ${!!card.audioUrl}`);
+
+            try {
+                // Play Japanese audio (recorded file)
+                if (card.audioUrl) {
+                    console.log(`Starting Japanese audio playback for card ${cardIndex + 1}`);
+                    await playAudioFile(card.audioUrl);
+                    console.log(`Japanese audio completed for card ${cardIndex + 1}`);
+                    
+                    // Wait 3 seconds after Japanese audio
+                    console.log('Waiting 3 seconds...');
+                    await sleep(3000);
+                    console.log('3 second wait completed');
+                    
+                    // Check if we should continue
+                    if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                        console.log('Playback stopped during wait period');
+                        return;
+                    }
+                } else {
+                    console.log(`No audio URL for card ${cardIndex + 1}, skipping Japanese audio`);
+                }
+
+                // Play Korean audio (MP3 or TTS fallback)
+                if (card.koreanAudioUrl) {
+                    console.log(`Starting Korean MP3 playback for card ${cardIndex + 1}: ${card.korean}`);
+                    await playAudioFile(card.koreanAudioUrl);
+                    console.log(`Korean MP3 completed for card ${cardIndex + 1}`);
+                } else if (card.korean) {
+                    console.log(`No Korean MP3 found, using TTS for card ${cardIndex + 1}: ${card.korean}`);
+                    await playKoreanTTS(card.korean);
+                    console.log(`Korean TTS completed for card ${cardIndex + 1}`);
+                } else {
+                    console.log(`No Korean audio or text for card ${cardIndex + 1}, skipping`);
+                }
+
+                // Check if we should continue
+                if (!isPlayingSequence || currentSpeakerButton !== speakerButton) {
+                    console.log('Playback stopped after Korean TTS');
+                    return;
+                }
+
+                // Short pause before next card
+                console.log('Waiting 1 second before next card...');
+                await sleep(1000);
+
+                // Continue to next card
+                console.log(`Moving to next card: ${cardIndex + 2}/${flashcards.length}`);
+                await playCardSequence(flashcards, cardIndex + 1, speakerButton);
+
+            } catch (error) {
+                console.error('Error playing card:', error);
+                // Continue to next card even if this one fails
+                console.log(`Error occurred, moving to next card: ${cardIndex + 2}/${flashcards.length}`);
+                await playCardSequence(flashcards, cardIndex + 1, speakerButton);
+            }
+        }
+
+        function playAudioFile(audioUrl) {
+            return new Promise((resolve, reject) => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+
+                console.log(`Playing audio file: ${audioUrl}`);
+                currentAudio = new Audio(audioUrl);
+                
+                currentAudio.onended = () => {
+                    console.log('Audio file ended');
+                    currentAudio = null;
+                    resolve();
+                };
+
+                currentAudio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    currentAudio = null;
+                    resolve(); // Continue even if audio fails
+                };
+
+                currentAudio.oncanplaythrough = () => {
+                    console.log('Audio can play through');
+                };
+
+                currentAudio.play().then(() => {
+                    console.log('Audio started playing');
+                }).catch((error) => {
+                    console.error('Audio play failed:', error);
+                    resolve(); // Continue even if audio fails
+                });
+            });
+        }
+
+        function playKoreanTTS(koreanText) {
+            return new Promise((resolve, reject) => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+
+                console.log(`Playing Korean TTS: ${koreanText}`);
+
+                // Check if speech synthesis is available
+                if (!window.speechSynthesis) {
+                    console.warn('Speech synthesis not available');
+                    resolve();
+                    return;
+                }
+
+                // Cancel any existing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(koreanText);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9;
+                utterance.volume = 0.8;
+
+                utterance.onstart = () => {
+                    console.log('TTS started');
+                };
+
+                utterance.onend = () => {
+                    console.log('TTS ended');
+                    resolve();
+                };
+
+                utterance.onerror = (error) => {
+                    console.error('TTS error:', error);
+                    resolve(); // Continue even if TTS fails
+                };
+
+                // Wait a bit before speaking to ensure previous speech is cancelled
+                setTimeout(() => {
+                    if (isPlayingSequence) {
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => {
+                if (!isPlayingSequence) {
+                    resolve();
+                    return;
+                }
+                console.log(`Sleep starting for ${ms}ms`);
+                sequenceTimeout = setTimeout(() => {
+                    console.log(`Sleep completed after ${ms}ms`);
+                    resolve();
+                }, ms);
+            });
+        }
+
+        async function autoAdvanceToNextSequence(currentSpeakerButton) {
+            try {
+                // Get the current sequence number from the speaker button
+                const currentSequenceCard = currentSpeakerButton.closest('.episode-card');
+                if (!currentSequenceCard) {
+                    console.log('Could not find current sequence card');
+                    return;
+                }
+                
+                const currentSequenceElement = currentSequenceCard.querySelector('.episode-sequence');
+                if (!currentSequenceElement) {
+                    console.log('Could not find episode sequence element');
+                    return;
+                }
+                
+                const currentSequenceText = currentSequenceElement.textContent;
+                const currentSequenceMatch = currentSequenceText.match(/#(\d+)/);
+                
+                if (!currentSequenceMatch) {
+                    console.log('Could not determine current sequence number from:', currentSequenceText);
+                    return;
+                }
+                
+                const currentSequenceNumber = parseInt(currentSequenceMatch[1]);
+                const nextSequenceNumber = currentSequenceNumber + 1;
+                const nextSequenceId = `#${nextSequenceNumber.toString().padStart(3, '0')}`;
+                
+                console.log(`Auto-advancing from sequence ${currentSequenceNumber} to ${nextSequenceNumber}`);
+                
+                // Find the next sequence card
+                const allEpisodeCards = document.querySelectorAll('.episode-card');
+                console.log(`Found ${allEpisodeCards.length} episode cards`);
+                
+                let nextSequenceCard = null;
+                for (const card of allEpisodeCards) {
+                    const sequenceElement = card.querySelector('.episode-sequence');
+                    if (sequenceElement) {
+                        const sequenceText = sequenceElement.textContent;
+                        console.log(`Checking card sequence: ${sequenceText}`);
+                        if (sequenceText.includes(nextSequenceId)) {
+                            nextSequenceCard = card;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!nextSequenceCard) {
+                    console.log(`Next sequence ${nextSequenceId} not found - reached end of available sequences`);
+                    return;
+                }
+                
+                // Wait 2 seconds before starting next sequence
+                console.log('Waiting 2 seconds before starting next sequence...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Start the next sequence - try both speaker buttons
+                const nextSpeakerButton = nextSequenceCard.querySelector('.episode-speaker') || nextSequenceCard.querySelector('.episode-speaker-left');
+                if (nextSpeakerButton) {
+                    console.log(`Starting next sequence: ${nextSequenceId}`);
+                    nextSpeakerButton.click();
+                } else {
+                    console.log('Could not find speaker button for next sequence');
+                }
+                
+            } catch (error) {
+                console.error('Error in autoAdvanceToNextSequence:', error);
+            }
+        }
+
+        // Redirect to player page
+        async function playEpisodeAudio(sequence, speakerButton, mode = 'basic') {
+            // Navigate to player page with autoplay enabled
+            console.log('Navigating to player with sequence:', sequence, 'mode:', mode);
+            window.location.href = `/pages/player.html?sequence=${encodeURIComponent(sequence)}&mode=${mode}&autoplay=true`;
+        }
+
+        async function playBookAudio(bookId, speakerButton, mode = 'basic') {
+            // Navigate to player page with book ID
+            console.log('Navigating to player with book:', bookId, 'mode:', mode);
+            window.location.href = `/pages/player.html?book=${encodeURIComponent(bookId)}&mode=${mode}&autoplay=true`;
+        }
+
+
+        // Simplified function for homepage - no complex audio playback needed
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Add TTS function
+        function playTTSAudio(text, language) {
+            return new Promise((resolve, reject) => {
+                if (!window.speechSynthesis) {
+                    console.log('Speech synthesis not supported');
+                    resolve();
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = language === 'ko' ? 'ko-KR' : 'ja-JP';
+                utterance.rate = 1.2;
+                
+                // Select voice based on language and gender
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    const targetVoice = voices.find(voice => 
+                        voice.lang.startsWith(language === 'ko' ? 'ko' : 'ja')
+                    );
+                    if (targetVoice) {
+                        utterance.voice = targetVoice;
+                    }
+                }
+                
+                utterance.onend = () => resolve();
+                utterance.onerror = (error) => {
+                    console.error('TTS error:', error);
+                    resolve(); // Continue even if TTS fails
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        // Load episodes when page loads (only if authenticated)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                loadEpisodes();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japanese Learning Flashcards</title>
+    <title>J-speech</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,7 +17,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -38,12 +42,110 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .episode-nav {
+        .header {
+            padding: 15px 20px 15px 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: normal;
+            margin-bottom: 0px;
+            flex: 1;
+            font-family: 'Fjalla One', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        .header h1:hover {
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #sequence-title {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .nav-arrow {
+            background: none;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1rem;
-            gap: 1rem;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            padding: 10px;
+        }
+        
+        .nav-arrow:hover {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+        
+        .nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .nav-arrow:disabled:hover {
+            opacity: 0.3;
+            transform: none;
+        }
+
+        .volume-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            min-width: 120px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .volume-title:hover {
+            color: rgba(255, 255, 255, 1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .sequence-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .sequence-nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sequence-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .sequence-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .episode-title {
@@ -62,6 +164,7 @@
         }
         
         .sequence-text {
+            color: white;
             font-size: 1.0rem;
             font-weight: 300;
             min-width: 50px;
@@ -97,27 +200,46 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
+            right: 10px; /* 좌우 동일한 여백 */
             display: flex;
             flex-direction: column;
             gap: 5px;
             z-index: 10;
             pointer-events: none;
+            max-width: none; /* 전체 폭 사용 */
+        }
+        
+        .db-expression-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 5px;
+            width: fit-content;
         }
         
         .db-connection-status {
             background: #F1F8E9;
             color: #555;
-            padding: 6px 12px;
+            padding: 6px 12px; /* 오른쪽 여백 증가 */
             border-radius: 15px;
             border: 0.25px solid #E0E0E0;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 400;
-            display: none;
+            display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             backdrop-filter: blur(5px);
             width: fit-content;
             pointer-events: auto;
+            max-width: none; /* 버튼 자체는 제한 없이, 내부 span이 overflow 처리 */
+        }
+        
+        .db-connection-status span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 12em; /* 약 10-12글자 후 생략, 화면 공간 절약 */
+            flex: 0 1 auto; /* 내용에 맞게 축소, 필요시 확장 */
         }
         
         .db-connection-status.clickable {
@@ -135,11 +257,18 @@
             gap: 5px;
             margin-bottom: 5px;
             flex-wrap: wrap;
+            max-width: 100%;
+            width: fit-content;
         }
         
         .db-n1-status {
             background: #F3F9FF;
             width: fit-content;
+            max-width: none;
+        }
+
+        .db-n1-status span {
+            min-width: 0; /* 단어 버튼은 텍스트 길이에 맞춰 가변폭 */
         }
 
         /* Expression Card Modal Styles */
@@ -155,18 +284,20 @@
             align-items: center;
             z-index: 1000;
             padding: 20px;
+            pointer-events: auto; /* 모달이 모든 클릭 이벤트를 차단 */
         }
 
         .expression-modal-content {
             background: white;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            padding: 30px;
+            padding: 20px 16px; /* 좌우 여백을 30px에서 16px로 줄임 */
             max-width: 600px;
             width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
+            max-height: 85vh;
+            overflow-y: visible;
             position: relative;
+            height: fit-content;
         }
 
         .expression-modal-close {
@@ -185,38 +316,62 @@
             color: #000;
         }
 
+        .expression-modal-play-pause {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: rgba(74, 144, 226, 0.1);
+            border: 2px solid #4a90e2;
+            color: #4a90e2;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .expression-modal-play-pause:hover {
+            background: rgba(74, 144, 226, 0.2);
+            transform: scale(1.05);
+        }
+
+        .expression-modal-play-pause svg {
+            width: 18px;
+            height: 18px;
+            fill: #4a90e2;
+        }
+
         .expression-main-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px; /* 30px의 50% */
         }
 
         .expression-main-title {
-            font-size: 32px;
+            font-size: 25.6px; /* 32px의 80% */
             font-weight: bold;
             color: #1a1a1a;
             margin-bottom: 8px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .expression-main-title:hover {
-            color: #3b82f6;
         }
 
         .expression-main-meaning {
             font-size: 18px;
             color: #666;
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         .expression-applications {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px; /* 예문 간 간격을 8px에서 4px로 줄임 */
         }
 
         .expression-application-item {
             border-left: 4px solid #c084fc;
-            padding: 12px 16px;
+            padding: 6px 8px; /* 위아래 여백을 12px에서 6px로 줄임 */
             cursor: pointer;
             transition: background-color 0.2s;
             border-radius: 0 8px 8px 0;
@@ -227,15 +382,16 @@
         }
 
         .expression-application-japanese {
-            font-size: 20px;
+            font-size: 14.4px; /* 18px의 80% */
             font-weight: bold;
             color: #1a1a1a;
-            margin-bottom: 4px;
+            margin-bottom: 2px; /* 일본어와 한국어 간 간격을 4px에서 2px로 줄임 */
         }
 
         .expression-application-korean {
             font-size: 14px;
             color: #6b7280;
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         .expression-loading {
@@ -244,11 +400,128 @@
             color: #666;
         }
 
+        /* Word Card Modal Styles */
+        .word-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            pointer-events: auto; /* 모달이 모든 클릭 이벤트를 차단 */
+        }
+
+        .word-modal-content {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 20px 16px 16px 16px;
+            max-width: 90%;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: visible;
+            position: relative;
+            height: fit-content;
+        }
+
+
+
+        .word-main-section {
+            text-align: center;
+            margin-bottom: 0px;
+        }
+
+        .word-examples:hover {
+            background: rgba(0,0,0,0.08) !important;
+        }
+
+        .word-main-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .word-main-title:hover {
+            color: #3b82f6;
+        }
+
+        .word-main-reading {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .word-main-meaning {
+            font-size: 16px;
+            color: #888;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .word-sentence-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .word-sentence-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .word-sentence-item {
+            border-left: 4px solid #48bb78;
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 8px;
+        }
+
+        .word-sentence-item:hover {
+            background-color: #f0f9ff;
+        }
+
+        .word-sentence-japanese {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            text-align: justify;
+        }
+
+        .word-sentence-korean {
+            font-size: 14px;
+            color: #6b7280;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            text-align: justify;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .word-example-ko {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
         .db-status-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             background: #C8E6C9;
+            flex-shrink: 0; /* 원이 찌그러지지 않도록 */
         }
         
         .db-n1-status-dot {
@@ -292,6 +565,13 @@
         .flashcard-container {
             perspective: 1000px;
             margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .flashcard-container {
+                min-height: 480px;
+            }
         }
 
         .flashcard {
@@ -303,6 +583,13 @@
             cursor: pointer;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .flashcard {
+                aspect-ratio: 3/4;
+                min-height: 480px;
+            }
         }
 
         .flashcard.flipped {
@@ -339,17 +626,23 @@
             font-weight: 500;
             color: #2d3748;
             line-height: 1.6;
-            margin-bottom: 1rem;
+            margin-bottom: 0.49rem;
             text-align: center;
         }
 
+        .card-back .japanese-text {
+            font-size: 1.12rem;
+            line-height: 1.12;
+        }
+
         .korean-text {
-            font-size: 1.1rem;
+            font-size: 0.896rem;
             color: #4a5568;
             line-height: 1.5;
             text-align: center;
-            margin-top: 0.5rem;
+            margin-top: 0.245rem;
             margin-bottom: 1rem;
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         .speaker-btn {
@@ -369,7 +662,7 @@
             bottom: 1rem;
             right: 1rem;
             box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
-            z-index: 10;
+            z-index: 20;
         }
 
         .speaker-btn:hover {
@@ -392,15 +685,19 @@
 
         .nav-btn {
             background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
+            border: none;
+            border-radius: 50%;
             color: white;
-            padding: 12px 20px;
+            width: 48px;
+            height: 48px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .nav-btn:hover {
@@ -420,6 +717,38 @@
             font-size: 1rem;
             font-weight: 500;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-family: 'Fjalla One', sans-serif;
+        }
+
+        .play-pause-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .play-pause-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .play-pause-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-pause-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
 
         .flip-instruction {
@@ -451,11 +780,12 @@
             justify-content: center;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 10;
+            z-index: 20;
         }
 
         .word-speaker-btn {
             display: none;
+            z-index: 20;
         }
 
         .speaker-btn:hover {
@@ -481,7 +811,7 @@
             height: 128px;
             border-radius: 50%;
             background: transparent;
-            margin: 1.5rem auto 2rem auto;
+            margin: 0.375rem auto 1rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -553,12 +883,12 @@
             .japanese-text {
                 font-size: 1.32rem;
                 line-height: 1.4;
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.37rem;
             }
 
             .korean-text {
-                font-size: 0.95rem;
-                margin-top: 0.5rem;
+                font-size: 1.056rem;
+                margin-top: 0.245rem;
             }
             
             .speaker-btn {
@@ -585,7 +915,7 @@
             .character-avatar {
                 width: 96px;
                 height: 96px;
-                margin-bottom: 0.75rem;
+                margin: 0.375rem auto 0.375rem auto;
                 font-size: 3.2rem;
             }
             
@@ -633,23 +963,17 @@
     </style>
 </head>
 <body>
+    <div class="header">
+        <button class="nav-arrow" id="prev-sequence-btn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <h1 id="sequence-title" onclick="goToHomepage()" style="cursor: pointer;">대사 로딩중</h1>
+        <button class="nav-arrow" id="next-sequence-btn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
     <div class="app-container">
-        <div class="episode-nav">
-            <div class="episode-title" id="episode-title">
-                <span class="volume-text">26권</span>
-                <button class="sequence-nav-btn" id="prev-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                </button>
-                <span class="sequence-text" id="sequence-text">#001</span>
-                <button class="sequence-nav-btn" id="next-sequence-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
         
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
@@ -659,16 +983,6 @@
                         <div class="speaker-name" id="speaker-name"></div>
                         <div class="japanese-text" id="japanese-text"></div>
                     </div>
-                    <button class="speaker-btn" id="speaker-btn" title="Listen to pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                    </button>
-                    <button class="word-speaker-btn" id="word-speaker-btn" title="Listen to word pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                        </svg>
-                    </button>
                     <div class="db-status-container" id="db-status-container-front">
                         <div class="db-n1-status-container" id="db-n1-status-container-front">
                             <!-- Multiple N1 vocabulary items will be inserted here -->
@@ -685,16 +999,6 @@
                         <div class="japanese-text" id="japanese-text-back"></div>
                         <div class="korean-text" id="korean-text"></div>
                     </div>
-                    <button class="speaker-btn" id="speaker-btn-back" title="Listen to pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                    </button>
-                    <button class="word-speaker-btn" id="word-speaker-btn-back" title="Listen to word pronunciation">
-                        <svg class="speaker-icon" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                        </svg>
-                    </button>
                     <div class="db-status-container" id="db-status-container-back">
                         <div class="db-n1-status-container" id="db-n1-status-container-back">
                             <!-- Multiple N1 vocabulary items will be inserted here -->
@@ -710,17 +1014,18 @@
 
         <div class="controls">
             <button class="nav-btn" id="prev-btn">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                <i class="fa-solid fa-caret-left"></i>
+            </button>
+            <button class="play-pause-btn" id="play-pause-btn">
+                <svg class="play-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
                 </svg>
             </button>
-            <div class="card-counter">
-                <span id="current-card">1</span> / <span id="total-cards">3</span>
-            </div>
             <button class="nav-btn" id="next-btn">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
+                <i class="fa-solid fa-caret-right"></i>
             </button>
         </div>
     </div>
@@ -731,6 +1036,7 @@
 
         let currentCardIndex = 0;
         let isFlipped = false;
+        let isPlaying = false;
 
         // DOM elements
         const flashcard = document.getElementById('flashcard');
@@ -740,18 +1046,24 @@
         const characterAvatar = document.getElementById('character-avatar');
         const characterAvatarBack = document.getElementById('character-avatar-back');
         const speakerName = document.getElementById('speaker-name');
-        const speakerBtn = document.getElementById('speaker-btn');
-        const speakerBtnBack = document.getElementById('speaker-btn-back');
-        const wordSpeakerBtn = document.getElementById('word-speaker-btn');
-        const wordSpeakerBtnBack = document.getElementById('word-speaker-btn-back');
+        // Speaker buttons removed - now using play/pause button instead
+        // const speakerBtn = document.getElementById('speaker-btn');
+        // const speakerBtnBack = document.getElementById('speaker-btn-back');
+        // const wordSpeakerBtn = document.getElementById('word-speaker-btn');
+        // const wordSpeakerBtnBack = document.getElementById('word-speaker-btn-back');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
-        const currentCardSpan = document.getElementById('current-card');
-        const totalCardsSpan = document.getElementById('total-cards');
+        const playPauseBtn = document.getElementById('play-pause-btn');
         const episodeTitle = document.getElementById('episode-title');
         // Remove unused episode buttons that were deleted from HTML
         const prevSequenceBtn = document.getElementById('prev-sequence-btn');
         const nextSequenceBtn = document.getElementById('next-sequence-btn');
+
+        console.log('=== Sequence Navigation Buttons Debug ===');
+        console.log('prevSequenceBtn:', prevSequenceBtn);
+        console.log('nextSequenceBtn:', nextSequenceBtn);
+        console.log('prevSequenceBtn ID found:', prevSequenceBtn !== null);
+        console.log('nextSequenceBtn ID found:', nextSequenceBtn !== null);
         const dbStatusFront = document.getElementById('db-status-front');
         const dbStatusBack = document.getElementById('db-status-back');
         const dbStatusTextFront = document.getElementById('db-status-text-front');
@@ -762,12 +1074,46 @@
         // Load flashcards from Notion
         async function loadFlashcardsFromNotion() {
             try {
-                const response = await fetch('/api/flashcards');
+                // Check if there's an episode parameter in the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const episodeParam = urlParams.get('episode');
+
+                // Always load all flashcards to enable sequence navigation
+                // The episode parameter will be used to select which sequence to show
+                const apiUrl = '/api/flashcards';
+
+                console.log('Fetching flashcards from:', apiUrl);
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error('Failed to fetch flashcards');
                 }
                 const data = await response.json();
-                flashcards = data;
+                
+                // Check if data is grouped by sequence (new structure)
+                if (data && typeof data === 'object' && !Array.isArray(data)) {
+                    console.log('Received grouped data structure:', Object.keys(data));
+                    
+                    // Convert grouped data to flat array for compatibility
+                    flashcards = [];
+                    Object.keys(data).forEach(sequence => {
+                        if (Array.isArray(data[sequence])) {
+                            flashcards.push(...data[sequence]);
+                        }
+                    });
+                    
+                    // Store the grouped data for episode management
+                    episodeData = data;
+                    
+                    console.log('Converted to flat array:', flashcards.length, 'cards');
+                    console.log('Available sequences:', Object.keys(episodeData));
+                } else if (Array.isArray(data)) {
+                    // Legacy flat array structure
+                    flashcards = data;
+                    console.log('Received flat array structure:', flashcards.length, 'cards');
+                } else {
+                    console.error('Unexpected data structure:', data);
+                    throw new Error('Invalid data structure received');
+                }
                 
                 if (flashcards.length === 0) {
                     showError('노션 데이터베이스에서 플래시카드를 찾을 수 없습니다.');
@@ -798,41 +1144,162 @@
                 border-radius: 8px;
                 text-align: center;
                 z-index: 1000;
+                max-width: 80%;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             `;
-            errorDiv.textContent = message;
+            errorDiv.innerHTML = `
+                <div style="margin-bottom: 10px;">${message}</div>
+                <button onclick="this.parentElement.remove(); window.location.href = '/';" style="
+                    background: white;
+                    color: #ff6b6b;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">홈으로 돌아가기</button>
+            `;
             document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
         }
 
         // Episode management
-        let currentEpisode = 1;
+        let currentEpisode = null;
         let episodeData = {};
         let currentEpisodeCards = [];
+        let preloadedAudios = {}; // Store preloaded audio elements
+        let preloadedExpressionCards = {}; // Store preloaded expression card data
+        let preloadedN1WordData = {}; // Store preloaded N1 word data
+
+        // LocalStorage cache helpers for expression cards and N1 vocabulary
+        const CACHE_EXPIRY_HOURS = 24;
+        const EXPRESSION_CACHE_PREFIX = 'expr_';
+        const N1_VOCAB_CACHE_PREFIX = 'n1vocab_';
+
+        function saveToLocalStorage(key, data) {
+            try {
+                const cacheItem = {
+                    data: data,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(cacheItem));
+            } catch (e) {
+                console.warn('Failed to save to localStorage:', e);
+            }
+        }
+
+        function loadFromLocalStorage(key) {
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+
+                const cacheItem = JSON.parse(cached);
+                const now = Date.now();
+                const expiryTime = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+                // Check if cache is still valid
+                if (now - cacheItem.timestamp < expiryTime) {
+                    return cacheItem.data;
+                } else {
+                    // Expired, remove it
+                    localStorage.removeItem(key);
+                    return null;
+                }
+            } catch (e) {
+                console.warn('Failed to load from localStorage:', e);
+                return null;
+            }
+        }
+
+        function clearOldCache() {
+            try {
+                const keys = Object.keys(localStorage);
+                const now = Date.now();
+                const expiryTime = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+                keys.forEach(key => {
+                    if (key.startsWith(EXPRESSION_CACHE_PREFIX) || key.startsWith(N1_VOCAB_CACHE_PREFIX)) {
+                        try {
+                            const cached = localStorage.getItem(key);
+                            if (cached) {
+                                const cacheItem = JSON.parse(cached);
+                                if (now - cacheItem.timestamp >= expiryTime) {
+                                    localStorage.removeItem(key);
+                                }
+                            }
+                        } catch (e) {
+                            // If parsing fails, remove the corrupted item
+                            localStorage.removeItem(key);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('Failed to clear old cache:', e);
+            }
+        }
+
+        // Clear old cache on page load
+        clearOldCache();
 
         // Parse sequence data from flashcards
         function parseEpisodes() {
-            episodeData = {};
-            flashcards.forEach((card, index) => {
-                // Group by sequence instead of episode
-                const sequence = card.sequence || '#001';
+            // If episodeData is already populated from grouped API response, use it
+            if (Object.keys(episodeData).length > 0) {
+                console.log('Using pre-grouped episode data');
                 
-                if (!episodeData[sequence]) {
-                    episodeData[sequence] = [];
-                }
+                // Sort sentences within each episode by romanji
+                Object.keys(episodeData).forEach(ep => {
+                    episodeData[ep].sort((a, b) => {
+                        const aNum = parseInt(a.romanji) || 0;
+                        const bNum = parseInt(b.romanji) || 0;
+                        return aNum - bNum;
+                    });
+                });
+            } else {
+                // Fallback: group from flat array (legacy mode)
+                console.log('Grouping from flat array');
+                episodeData = {};
+                flashcards.forEach((card, index) => {
+                    // Group by sequence instead of episode
+                    const sequence = card.sequence || '#001';
+                    
+                    if (!episodeData[sequence]) {
+                        episodeData[sequence] = [];
+                    }
+                    
+                    // Sort by romanji (sequence number)
+                    const sortOrder = parseInt(card.romanji) || (index + 1);
+                    episodeData[sequence].push({...card, sentenceNum: sortOrder});
+                });
                 
-                // Sort by romanji (sequence number)
-                const sortOrder = parseInt(card.romanji) || (index + 1);
-                episodeData[sequence].push({...card, sentenceNum: sortOrder});
-            });
+                // Sort sentences within each episode
+                Object.keys(episodeData).forEach(ep => {
+                    episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
+                });
+            }
             
-            // Sort sentences within each episode
-            Object.keys(episodeData).forEach(ep => {
-                episodeData[ep].sort((a, b) => a.sentenceNum - b.sentenceNum);
-            });
-            
-            // Set current sequence to first available
+            // Set current sequence to first available or use URL parameter
             const availableSequences = Object.keys(episodeData).sort();
             if (availableSequences.length > 0) {
-                currentEpisode = availableSequences[0]; // Use currentEpisode variable for sequence
+                // Check if requested sequence exists
+                if (currentEpisode && !availableSequences.includes(currentEpisode)) {
+                    console.warn(`Requested sequence ${currentEpisode} not found. Available sequences:`, availableSequences);
+                    showError(`시퀀스 ${currentEpisode}는 아직 준비되지 않았습니다. 사용 가능한 시퀀스: ${availableSequences.join(', ')}`);
+                    // Don't load any episode - let user choose from available sequences
+                    return;
+                }
+                
+                // If currentEpisode is not set from URL parameter, use first available
+                if (!currentEpisode) {
+                    currentEpisode = availableSequences[0];
+                }
+                
                 loadEpisode(currentEpisode);
             }
         }
@@ -842,6 +1309,22 @@
             currentEpisode = sequenceName;
             currentEpisodeCards = episodeData[sequenceName] || [];
             currentCardIndex = 0;
+            
+            // Update sequence title in header
+            updateSequenceTitle();
+            
+            // Check if sequence exists
+            if (!episodeData[sequenceName] || episodeData[sequenceName].length === 0) {
+                console.warn(`Sequence ${sequenceName} not found or empty`);
+                showError(`시퀀스 ${sequenceName}는 아직 준비되지 않았습니다.`);
+                return;
+            }
+            
+            // Clear previous preloaded data when switching sequences
+            preloadedAudios = {};
+            preloadedExpressionCards = {};
+            preloadedN1WordData = {};
+            console.log('Cleared preloaded data for new sequence:', sequenceName);
             
             // Update title to show volume and sequence
             const firstCard = currentEpisodeCards[0];
@@ -860,27 +1343,87 @@
                     const bNum = parseInt(b.romanji) || 0;
                     return aNum - bNum; // Ascending order
                 });
-                
+
+                // Reset card state when changing sequences
+                isFlipped = false;
+                if (flashcard) {
+                    flashcard.classList.remove('flipped');
+                }
+                resetPlayPauseButton();
+
+                // Update URL to reflect current sequence
+                const url = new URL(window.location);
+                url.searchParams.set('episode', sequenceName);
+                window.history.pushState({}, '', url);
+
                 loadCard(currentCardIndex);
-                totalCardsSpan.textContent = currentEpisodeCards.length;
+                // totalCardsSpan removed - now using play/pause button instead
                 updateNavigationButtons();
                 updateEpisodeButtons();
+
+                // Progressive loading: Preload first 3 cards immediately, then load rest in background
+                preloadInitialCards();
             }
+        }
+
+        // Get sequences for current book only
+        function getSequencesForCurrentBook() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                return [];
+            }
+
+            // Get current book ID from current episode cards
+            const currentBookId = currentEpisodeCards[0].bookId;
+            const currentBookTitle = currentEpisodeCards[0].bookTitle;
+
+            console.log('Current book ID:', currentBookId);
+            console.log('Current book title:', currentBookTitle);
+
+            // Filter sequences that belong to the same book (using bookId)
+            const bookSequences = Object.keys(episodeData).filter(seq => {
+                const cards = episodeData[seq];
+                if (!cards || cards.length === 0) return false;
+                return cards[0].bookId === currentBookId;
+            }).sort();
+
+            console.log('Sequences for current book:', bookSequences);
+            return bookSequences;
         }
 
         // Update sequence navigation buttons
         function updateEpisodeButtons() {
-            const sequences = Object.keys(episodeData).sort();
+            console.log('=== updateEpisodeButtons called ===');
+            console.log('episodeData:', episodeData);
+            console.log('episodeData keys:', Object.keys(episodeData));
+            console.log('currentEpisode:', currentEpisode);
+
+            if (!episodeData || Object.keys(episodeData).length === 0) {
+                console.warn('No episode data available, disabling buttons');
+                if (prevSequenceBtn) prevSequenceBtn.disabled = true;
+                if (nextSequenceBtn) nextSequenceBtn.disabled = true;
+                return;
+            }
+
+            // Get sequences for current book only
+            const sequences = getSequencesForCurrentBook();
             const currentIndex = sequences.indexOf(currentEpisode);
-            
+
+            console.log('sequences (current book only):', sequences);
+            console.log('currentIndex:', currentIndex);
+            console.log('sequences.length:', sequences.length);
+
             // Update sequence navigation buttons
             if (prevSequenceBtn) {
-                prevSequenceBtn.disabled = currentIndex <= 0;
+                const shouldDisable = currentIndex <= 0;
+                prevSequenceBtn.disabled = shouldDisable;
+                console.log('prevSequenceBtn disabled:', shouldDisable);
             }
             if (nextSequenceBtn) {
-                nextSequenceBtn.disabled = currentIndex >= sequences.length - 1;
+                const shouldDisable = currentIndex >= sequences.length - 1;
+                nextSequenceBtn.disabled = shouldDisable;
+                console.log('nextSequenceBtn disabled:', shouldDisable);
             }
-            
+
             // Episode buttons have been removed from HTML
         }
 
@@ -964,6 +1507,16 @@
 
         // Initialize the app
         function init() {
+            // Check if there's a specific episode parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedEpisode = urlParams.get('episode');
+            
+            if (selectedEpisode) {
+                console.log('URL parameter episode:', selectedEpisode);
+                // Set the current episode to the one selected from the episodes page
+                currentEpisode = selectedEpisode;
+            }
+            
             parseEpisodes();
         }
 
@@ -975,16 +1528,68 @@
             japaneseText.textContent = card.japanese;
             japaneseTextBack.textContent = card.japanese;
             koreanText.textContent = card.korean;
-            speakerName.textContent = card.speaker || "";
-            currentCardSpan.textContent = index + 1;
-            
+            speakerName.textContent = "";
+            // currentCardSpan removed - now using play/pause button instead
+
             // Set character avatar for both front and back - use image if available, otherwise emoji based on sentence mood
             if (card.characterImage) {
-                characterAvatar.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
-                characterAvatarBack.innerHTML = `<img src="${card.characterImage}" alt="${card.speaker}" />`;
+                console.log('Character image URL:', card.characterImage);
+
+                // Create image elements with error handling and lazy loading
+                const frontImg = document.createElement('img');
+                frontImg.src = card.characterImage;
+                frontImg.alt = card.speaker || 'Character';
+                frontImg.loading = 'lazy'; // Native lazy loading
+                frontImg.style.width = '100%';
+                frontImg.style.height = '100%';
+                frontImg.style.objectFit = 'cover';
+                frontImg.style.borderRadius = '50%';
+
+                const backImg = document.createElement('img');
+                backImg.src = card.characterImage;
+                backImg.alt = card.speaker || 'Character';
+                backImg.loading = 'lazy'; // Native lazy loading
+                backImg.style.width = '100%';
+                backImg.style.height = '100%';
+                backImg.style.objectFit = 'cover';
+                backImg.style.borderRadius = '50%';
+                
+                // Add error handling - fallback to emoji if image fails to load
+                const fallbackEmoji = getEmojiForSentence(card.japanese, index);
+                
+                frontImg.onload = () => {
+                    console.log('Character image loaded successfully');
+                };
+                
+                frontImg.onerror = () => {
+                    console.log('Failed to load character image, using emoji fallback');
+                    characterAvatar.textContent = fallbackEmoji;
+                    characterAvatar.innerHTML = '';
+                };
+                
+                backImg.onload = () => {
+                    console.log('Character image loaded successfully (back)');
+                };
+                
+                backImg.onerror = () => {
+                    console.log('Failed to load character image, using emoji fallback (back)');
+                    characterAvatarBack.textContent = fallbackEmoji;
+                    characterAvatarBack.innerHTML = '';
+                };
+                
+                // Clear previous content and add image
+                characterAvatar.innerHTML = '';
+                characterAvatar.textContent = '';
+                characterAvatar.appendChild(frontImg);
+                
+                characterAvatarBack.innerHTML = '';
+                characterAvatarBack.textContent = '';
+                characterAvatarBack.appendChild(backImg);
             } else {
                 const emoji = getEmojiForSentence(card.japanese, index);
+                characterAvatar.innerHTML = '';
                 characterAvatar.textContent = emoji;
+                characterAvatarBack.innerHTML = '';
                 characterAvatarBack.textContent = emoji;
             }
             
@@ -1017,79 +1622,224 @@
             if (dbN1StatusContainerFront) dbN1StatusContainerFront.innerHTML = '';
             if (dbN1StatusContainerBack) dbN1StatusContainerBack.innerHTML = '';
             
-            // Check if card has expression card relation
-            if (card.expressionCardId) {
-                try {
-                    const response = await fetch(`/api/expression-card/${card.expressionCardId}`);
-                    const expressionCard = await response.json();
-                    
-                    if (expressionCard && expressionCard.title) {
-                        if (dbStatusTextFront) dbStatusTextFront.textContent = expressionCard.title;
-                        if (dbStatusTextBack) dbStatusTextBack.textContent = expressionCard.title;
-                        
-                        // Make expression card clickable
-                        if (dbStatusFront) {
-                            dbStatusFront.style.display = 'flex';
-                            dbStatusFront.classList.add('clickable');
-                            dbStatusFront.removeEventListener('click', dbStatusFront.clickHandler);
-                            dbStatusFront.clickHandler = (e) => {
-                                e.stopPropagation();
-                                openExpressionModal(card.expressionCardId);
-                            };
-                            dbStatusFront.addEventListener('click', dbStatusFront.clickHandler);
+            // Clear all additional expression cards created previously
+            const frontContainer = document.getElementById('db-status-container-front');
+            const backContainer = document.getElementById('db-status-container-back');
+            
+            if (frontContainer) {
+                // Remove all dynamically created expression cards (keep original elements)
+                const dynamicElements = frontContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-front)');
+                dynamicElements.forEach(element => element.remove());
+                // Remove expression container if it exists
+                const expressionContainer = frontContainer.querySelector('.db-expression-container');
+                if (expressionContainer) expressionContainer.remove();
+            }
+            if (backContainer) {
+                // Remove all dynamically created expression cards (keep original elements)
+                const dynamicElements = backContainer.querySelectorAll('.db-connection-status.clickable:not(#db-status-back)');
+                dynamicElements.forEach(element => element.remove());
+                // Remove expression container if it exists
+                const expressionContainer = backContainer.querySelector('.db-expression-container');
+                if (expressionContainer) expressionContainer.remove();
+            }
+            
+            // Check if card has expression card relations (multiple possible)
+            if (card.expressionCardIds && card.expressionCardIds.length > 0) {
+                // NON-BLOCKING: Fetch expression cards asynchronously
+                (async () => {
+                    try {
+                        console.log('Processing expression cards:', card.expressionCardIds);
+
+                        // Check if expression cards are already preloaded in memory
+                        const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+                        const preloadedData = preloadedExpressionCards[currentCardKey];
+
+                        let expressionCards;
+                        if (preloadedData && Array.isArray(preloadedData)) {
+                            console.log('Using preloaded expression cards from memory');
+                            expressionCards = preloadedData;
+                        } else {
+                            // Try loading from localStorage cache
+                            const localStorageKey = EXPRESSION_CACHE_PREFIX + currentCardKey;
+                            const cachedData = loadFromLocalStorage(localStorageKey);
+
+                            if (cachedData && Array.isArray(cachedData)) {
+                                console.log('Using cached expression cards from localStorage');
+                                expressionCards = cachedData;
+                                // Also populate in-memory cache
+                                preloadedExpressionCards[currentCardKey] = expressionCards;
+                            } else {
+                                // Fetch all expression cards asynchronously (non-blocking)
+                                const expressionPromises = card.expressionCardIds.map(id =>
+                                    fetch(`/api/expression/${id}`).then(res => res.json())
+                                );
+
+                                expressionCards = await Promise.all(expressionPromises);
+                                console.log('Fetched expression cards from API:', expressionCards);
+
+                                // Cache the results for future use (both in-memory and localStorage)
+                                preloadedExpressionCards[currentCardKey] = expressionCards;
+                                saveToLocalStorage(localStorageKey, expressionCards);
+                            }
                         }
-                        if (dbStatusBack) {
-                            dbStatusBack.style.display = 'flex';
-                            dbStatusBack.classList.add('clickable');
-                            dbStatusBack.removeEventListener('click', dbStatusBack.clickHandler);
-                            dbStatusBack.clickHandler = (e) => {
-                                e.stopPropagation();
-                                openExpressionModal(card.expressionCardId);
-                            };
-                            dbStatusBack.addEventListener('click', dbStatusBack.clickHandler);
+
+                        // Create expression containers for horizontal layout
+                        const frontContainer = document.getElementById('db-status-container-front');
+                        const backContainer = document.getElementById('db-status-container-back');
+
+                        if (!frontContainer || !backContainer) {
+                            console.log('Containers not found, card may have changed');
+                            return;
                         }
+
+                        const frontExpressionContainer = document.createElement('div');
+                        frontExpressionContainer.className = 'db-expression-container';
+
+                        const backExpressionContainer = document.createElement('div');
+                        backExpressionContainer.className = 'db-expression-container';
+
+                        expressionCards.forEach((expressionCard, index) => {
+                            if (expressionCard && expressionCard.title) {
+                                const expressionId = expressionCard.id;
+                                console.log(`Processing expression card ${index + 1}/${expressionCards.length}:`, expressionCard.title);
+
+                                // Create front expression item
+                                const frontItem = document.createElement('div');
+                                frontItem.className = 'db-connection-status clickable';
+                                frontItem.style.display = 'flex';
+
+                                const frontDot = document.createElement('div');
+                                frontDot.className = 'db-status-dot';
+                                frontItem.appendChild(frontDot);
+
+                                const frontText = document.createElement('span');
+                                frontText.textContent = expressionCard.title;
+                                frontItem.appendChild(frontText);
+
+                                // Add click handler
+                                frontItem.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openExpressionModal(expressionId);
+                                });
+
+                                // Create back expression item
+                                const backItem = document.createElement('div');
+                                backItem.className = 'db-connection-status clickable';
+                                backItem.style.display = 'flex';
+
+                                const backDot = document.createElement('div');
+                                backDot.className = 'db-status-dot';
+                                backItem.appendChild(backDot);
+
+                                const backText = document.createElement('span');
+                                backText.textContent = expressionCard.title;
+                                backItem.appendChild(backText);
+
+                                // Add click handler
+                                backItem.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openExpressionModal(expressionId);
+                                });
+
+                                // Add to expression containers
+                                frontExpressionContainer.appendChild(frontItem);
+                                backExpressionContainer.appendChild(backItem);
+                            }
+                        });
+
+                        // Add expression containers to main containers
+                        if (frontContainer && expressionCards.length > 0) {
+                            frontContainer.appendChild(frontExpressionContainer);
+                            console.log('Added front expression container with', expressionCards.length, 'items');
+                        }
+                        if (backContainer && expressionCards.length > 0) {
+                            backContainer.appendChild(backExpressionContainer);
+                            console.log('Added back expression container with', expressionCards.length, 'items');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching expression card info:', error);
                     }
-                } catch (error) {
-                    console.error('Error fetching expression card info:', error);
-                }
+                })();
             }
             
             // Check if card has N1 vocabulary relations (multiple possible)
             if (card.n1VocabularyIds && card.n1VocabularyIds.length > 0) {
-                try {
-                    const response = await fetch(`/api/n1-vocabulary-multiple/${card.n1VocabularyIds.join(',')}`);
-                    const n1Vocabularies = await response.json();
-                    
-                    if (n1Vocabularies && n1Vocabularies.length > 0) {
-                        // Create N1 vocabulary status items for each word
-                        n1Vocabularies.forEach(vocabulary => {
-                            if (vocabulary && vocabulary.word) {
-                                // Create elements for front
-                                const frontStatusItem = document.createElement('div');
-                                frontStatusItem.className = 'db-connection-status db-n1-status';
-                                frontStatusItem.style.display = 'flex';
-                                frontStatusItem.innerHTML = `
-                                    <div class="db-n1-status-dot"></div>
-                                    <span>${vocabulary.word}</span>
-                                `;
-                                
-                                // Create elements for back
-                                const backStatusItem = document.createElement('div');
-                                backStatusItem.className = 'db-connection-status db-n1-status';
-                                backStatusItem.style.display = 'flex';
-                                backStatusItem.innerHTML = `
-                                    <div class="db-n1-status-dot"></div>
-                                    <span>${vocabulary.word}</span>
-                                `;
-                                
-                                if (dbN1StatusContainerFront) dbN1StatusContainerFront.appendChild(frontStatusItem);
-                                if (dbN1StatusContainerBack) dbN1StatusContainerBack.appendChild(backStatusItem);
+                // NON-BLOCKING: Fetch N1 vocabulary asynchronously
+                (async () => {
+                    try {
+                        // Check if N1 vocabulary data is already preloaded in memory
+                        const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+                        const preloadedData = preloadedN1WordData[currentCardKey];
+
+                        let n1Vocabularies;
+                        if (preloadedData && Array.isArray(preloadedData)) {
+                            console.log('Using preloaded N1 vocabulary data from memory');
+                            n1Vocabularies = preloadedData;
+                        } else {
+                            // Try loading from localStorage cache
+                            const localStorageKey = N1_VOCAB_CACHE_PREFIX + currentCardKey;
+                            const cachedData = loadFromLocalStorage(localStorageKey);
+
+                            if (cachedData && Array.isArray(cachedData)) {
+                                console.log('Using cached N1 vocabulary from localStorage');
+                                n1Vocabularies = cachedData;
+                                // Also populate in-memory cache
+                                preloadedN1WordData[currentCardKey] = n1Vocabularies;
+                            } else {
+                                // Fetch asynchronously (non-blocking)
+                                console.log('Fetching N1 vocabulary data from API');
+                                const response = await fetch(`/api/n1-vocabulary-multiple/${card.n1VocabularyIds.join(',')}`);
+                                n1Vocabularies = await response.json();
+
+                                // Cache the results for future use (both in-memory and localStorage)
+                                preloadedN1WordData[currentCardKey] = n1Vocabularies;
+                                saveToLocalStorage(localStorageKey, n1Vocabularies);
                             }
-                        });
+                        }
+
+                        if (n1Vocabularies && n1Vocabularies.length > 0) {
+                            // Create N1 vocabulary status items for each word
+                            n1Vocabularies.forEach(vocabulary => {
+                                if (vocabulary && vocabulary.word) {
+                                    // Create elements for front
+                                    const frontStatusItem = document.createElement('div');
+                                    frontStatusItem.className = 'db-connection-status db-n1-status clickable';
+                                    frontStatusItem.style.display = 'flex';
+                                    frontStatusItem.style.cursor = 'pointer';
+                                    frontStatusItem.innerHTML = `
+                                        <div class="db-n1-status-dot"></div>
+                                        <span>${vocabulary.word}</span>
+                                    `;
+                                    frontStatusItem.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        openWordModalWithN1Data(vocabulary);
+                                    });
+
+                                    // Create elements for back
+                                    const backStatusItem = document.createElement('div');
+                                    backStatusItem.className = 'db-connection-status db-n1-status clickable';
+                                    backStatusItem.style.display = 'flex';
+                                    backStatusItem.style.cursor = 'pointer';
+                                    backStatusItem.innerHTML = `
+                                        <div class="db-n1-status-dot"></div>
+                                        <span>${vocabulary.word}</span>
+                                    `;
+                                    backStatusItem.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        openWordModalWithN1Data(vocabulary);
+                                    });
+
+                                    if (dbN1StatusContainerFront) dbN1StatusContainerFront.appendChild(frontStatusItem);
+                                    if (dbN1StatusContainerBack) dbN1StatusContainerBack.appendChild(backStatusItem);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error fetching N1 vocabulary info:', error);
                     }
-                } catch (error) {
-                    console.error('Error fetching N1 vocabulary info:', error);
-                }
+                })();
             }
         }
         
@@ -1101,13 +1851,62 @@
             isFlipped = !isFlipped;
         }
 
+        // Check if Android environment is available
+        function isAndroidApp() {
+            return typeof Android !== 'undefined' && typeof Android.playPlaylist === 'function';
+        }
+
+        // Play current sequence using Android background audio
+        function playCurrentSequenceOnAndroid() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) {
+                console.log('No episode cards available for Android playback');
+                return false;
+            }
+
+            // Create playlist from current episode cards
+            const playlist = currentEpisodeCards.map(card => ({
+                audioUrl: card.audioUrl,
+                japanese: card.japanese,
+                korean: card.korean,
+                koreanAudioUrl: card.koreanAudioUrl,
+                characterImage: card.characterImage,
+                speaker: card.speaker
+            })).filter(card => card.audioUrl); // Only include cards with audio
+
+            if (playlist.length === 0) {
+                console.log('No audio URLs found in current episode');
+                return false;
+            }
+
+            try {
+                console.log(`Playing ${playlist.length} audio files on Android background player`);
+                Android.playPlaylist(JSON.stringify(playlist));
+                
+                // Set current index to match Android player
+                if (typeof Android.goToIndex === 'function') {
+                    Android.goToIndex(currentCardIndex);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error playing playlist on Android:', error);
+                return false;
+            }
+        }
+
         // Text-to-speech functionality
         function speakJapanese() {
             console.log('=== speakJapanese function started ===');
             
+            // Stop any ongoing audio
+            if (window.currentAudio) {
+                window.currentAudio.pause();
+                window.currentAudio.currentTime = 0;
+            }
+            
             // Cancel any ongoing speech
             speechSynthesis.cancel();
-            console.log('Speech synthesis cancelled');
+            console.log('Previous audio/speech cancelled');
             
             console.log('currentEpisodeCards:', currentEpisodeCards);
             console.log('currentCardIndex:', currentCardIndex);
@@ -1125,20 +1924,566 @@
             
             const currentCard = currentEpisodeCards[currentCardIndex];
             console.log('Current card:', currentCard);
+            console.log('Current card audioUrl:', currentCard.audioUrl);
+            console.log('Current episode:', currentEpisode);
+            console.log('Current card index:', currentCardIndex);
+            console.log('Current card Japanese text:', currentCard.japanese);
             
             if (!currentCard) {
                 console.error('Current card is null or undefined');
                 return;
             }
+
+            // Check if Android environment is available
+            if (isAndroidApp()) {
+                console.log('Android environment detected - using background player');
+                
+                // Visual feedback for playing
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#2b6cb0';
+                // speakerBtnBack.style.background = '#2b6cb0';
+                
+                // Try to play using Android background player
+                if (playCurrentSequenceOnAndroid()) {
+                    console.log('=== speakJapanese function ended (Android background playback) ===');
+                    return;
+                } else {
+                    console.log('Android playback failed, falling back to web audio');
+                    // Reset visual feedback
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
+                }
+            }
+            
+            // Web environment or Android fallback - use regular Audio() object
+            if (currentCard.audioUrl) {
+                console.log('Playing audio from Notion MP3 (Web mode):', currentCard.audioUrl);
+                
+                // Use preloaded audio if available
+                const preloadedKey = `${currentEpisode}_${currentCardIndex}`;
+                console.log('Looking for preloaded audio with key:', preloadedKey);
+                console.log('Available preloaded keys:', Object.keys(preloadedAudios));
+                const audio = preloadedAudios[preloadedKey] || new Audio(currentCard.audioUrl);
+                console.log('Audio source URL:', audio.src);
+                window.currentAudio = audio;
+                
+                // Visual feedback for playing
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#2b6cb0';
+                // speakerBtnBack.style.background = '#2b6cb0';
+                
+                audio.onended = () => {
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
+                    resetPlayPauseButton();
+                    console.log('Audio playback ended');
+                };
+                
+                audio.onerror = (event) => {
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
+                    console.warn('Audio playback error - no fallback');
+                    console.error('Audio Error:', event);
+                };
+                
+                // Start loading and play when ready (skip load if preloaded)
+                if (!preloadedAudios[preloadedKey]) {
+                    console.log('Audio not preloaded, loading now');
+                    audio.load();
+                } else {
+                    console.log('Using preloaded audio');
+                }
+                audio.play().catch(error => {
+                    console.error('Error playing audio:', error);
+                    // Speaker buttons removed
+                    // speakerBtn.style.background = '#4299e1';
+                    // speakerBtnBack.style.background = '#4299e1';
+                });
+                
+                console.log('=== speakJapanese function ended (Web MP3 playback) ===');
+                return;
+            }
+            
+            // No audio URL found - no fallback
+            console.log('No audio URL found - no audio will be played');
+            console.log('=== speakJapanese function ended (no audio) ===');
+        }
+
+        // Preload audio and data for current and next cards
+        function preloadAudio() {
+            if (!currentEpisodeCards || currentEpisodeCards.length === 0) return;
+            
+            // Preload current card audio
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (currentCard && currentCard.audioUrl) {
+                const key = `${currentEpisode}_${currentCardIndex}`;
+                if (!preloadedAudios[key]) {
+                    console.log('Preloading audio for current card:', currentCard.japanese, 'Key:', key);
+                    preloadedAudios[key] = new Audio(currentCard.audioUrl);
+                    preloadedAudios[key].preload = 'auto';
+                    preloadedAudios[key].load();
+                }
+            }
+            
+            // Preload current card Korean audio if it exists
+            if (currentCard && currentCard.koreanAudioUrl) {
+                const key = `${currentEpisode}_${currentCardIndex}_K`;
+                if (!preloadedAudios[key]) {
+                    console.log('Preloading Korean audio for current card:', currentCard.korean, 'Key:', key);
+                    preloadedAudios[key] = new Audio(currentCard.koreanAudioUrl);
+                    preloadedAudios[key].preload = 'auto';
+                    preloadedAudios[key].load();
+                }
+            }
+            
+            // Preload next card audio if it exists
+            if (currentCardIndex + 1 < currentEpisodeCards.length) {
+                const nextCard = currentEpisodeCards[currentCardIndex + 1];
+                if (nextCard && nextCard.audioUrl) {
+                    const key = `${currentEpisode}_${currentCardIndex + 1}`;
+                    if (!preloadedAudios[key]) {
+                        console.log('Preloading audio for next card:', nextCard.japanese, 'Key:', key);
+                        preloadedAudios[key] = new Audio(nextCard.audioUrl);
+                        preloadedAudios[key].preload = 'auto';
+                        preloadedAudios[key].load();
+                    }
+                }
+                
+                // Preload next card Korean audio if it exists
+                if (nextCard && nextCard.koreanAudioUrl) {
+                    const key = `${currentEpisode}_${currentCardIndex + 1}_K`;
+                    if (!preloadedAudios[key]) {
+                        console.log('Preloading Korean audio for next card:', nextCard.korean, 'Key:', key);
+                        preloadedAudios[key] = new Audio(nextCard.koreanAudioUrl);
+                        preloadedAudios[key].preload = 'auto';
+                        preloadedAudios[key].load();
+                    }
+                }
+            }
+            
+            // Preload expression card data for next card
+            preloadNextCardData();
+        }
+        
+        // Preload expression cards and N1 word data for current and next cards
+        function preloadNextCardData() {
+            // Preload current card data first
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            
+            if (currentCard) {
+                // Preload expression cards for current card (use expressionCardIds if available)
+                if (currentCard.expressionCardIds && currentCard.expressionCardIds.length > 0) {
+                    if (!preloadedExpressionCards[currentCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = EXPRESSION_CACHE_PREFIX + currentCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded expression cards from localStorage for current card:', currentCard.japanese);
+                            preloadedExpressionCards[currentCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading expression cards for current card:', currentCard.japanese);
+                            preloadedExpressionCards[currentCardKey] = 'loading';
+
+                            // Fetch expression cards for current card
+                            Promise.all(currentCard.expressionCardIds.map(id =>
+                                fetch(`/api/expression/${id}`)
+                                    .then(response => response.json())
+                                    .catch(error => {
+                                        console.error('Error preloading expression card:', error);
+                                        return null;
+                                    })
+                            )).then(results => {
+                                const filtered = results.filter(r => r !== null);
+                                preloadedExpressionCards[currentCardKey] = filtered;
+                                saveToLocalStorage(localStorageKey, filtered);
+                                console.log('Preloaded expression cards for current card:', filtered.length);
+                            });
+                        }
+                    }
+                } else if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[currentCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = EXPRESSION_CACHE_PREFIX + currentCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded expression cards from localStorage for current card (fallback):', currentCard.japanese);
+                            preloadedExpressionCards[currentCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading expression cards for current card (fallback):', currentCard.japanese);
+                            preloadedExpressionCards[currentCardKey] = 'loading';
+
+                            // Fetch expression cards for current card
+                            Promise.all(currentCard.expressionCards.map(id =>
+                                fetch(`/api/expression/${id}`)
+                                    .then(response => response.json())
+                                    .catch(error => {
+                                        console.error('Error preloading expression card:', error);
+                                        return null;
+                                    })
+                            )).then(results => {
+                                const filtered = results.filter(r => r !== null);
+                                preloadedExpressionCards[currentCardKey] = filtered;
+                                saveToLocalStorage(localStorageKey, filtered);
+                                console.log('Preloaded expression cards for current card (fallback):', filtered.length);
+                            });
+                        }
+                    }
+                }
+                
+                // Preload N1 word data for current card (support both single and multiple)
+                if (currentCard.n1VocabularyIds && currentCard.n1VocabularyIds.length > 0) {
+                    if (!preloadedN1WordData[currentCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = N1_VOCAB_CACHE_PREFIX + currentCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded N1 vocabulary from localStorage for current card:', currentCard.japanese);
+                            preloadedN1WordData[currentCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading N1 word data for current card:', currentCard.japanese);
+                            preloadedN1WordData[currentCardKey] = 'loading';
+
+                            fetch(`/api/n1-vocabulary-multiple/${currentCard.n1VocabularyIds.join(',')}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    preloadedN1WordData[currentCardKey] = data;
+                                    saveToLocalStorage(localStorageKey, data);
+                                    console.log('Preloaded N1 word data for current card:', data?.length, 'items');
+                                })
+                                .catch(error => {
+                                    console.error('Error preloading N1 word data:', error);
+                                    preloadedN1WordData[currentCardKey] = null;
+                                });
+                        }
+                    }
+                } else if (currentCard.n1VocabularyId) {
+                    // Legacy support for single n1VocabularyId
+                    if (!preloadedN1WordData[currentCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = N1_VOCAB_CACHE_PREFIX + currentCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData) {
+                            console.log('Loaded N1 vocabulary from localStorage for current card (legacy):', currentCard.japanese);
+                            preloadedN1WordData[currentCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading N1 word data for current card (legacy):', currentCard.japanese);
+                            preloadedN1WordData[currentCardKey] = 'loading';
+
+                            fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    preloadedN1WordData[currentCardKey] = data;
+                                    saveToLocalStorage(localStorageKey, data);
+                                    console.log('Preloaded N1 word data for current card:', data?.word);
+                                })
+                                .catch(error => {
+                                    console.error('Error preloading N1 word data:', error);
+                                    preloadedN1WordData[currentCardKey] = null;
+                                });
+                        }
+                    }
+                }
+            }
+            
+            // Then preload next card data
+            if (currentCardIndex + 1 < currentEpisodeCards.length) {
+                const nextCard = currentEpisodeCards[currentCardIndex + 1];
+                const nextCardKey = `${currentEpisode}_${currentCardIndex + 1}`;
+                
+                // Preload expression cards for next card (use expressionCardIds if available)
+                if (nextCard.expressionCardIds && nextCard.expressionCardIds.length > 0) {
+                    if (!preloadedExpressionCards[nextCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = EXPRESSION_CACHE_PREFIX + nextCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded expression cards from localStorage for next card:', nextCard.japanese);
+                            preloadedExpressionCards[nextCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading expression cards for next card:', nextCard.japanese);
+                            preloadedExpressionCards[nextCardKey] = 'loading';
+
+                            // Fetch expression cards for next card
+                            Promise.all(nextCard.expressionCardIds.map(id =>
+                                fetch(`/api/expression/${id}`)
+                                    .then(response => response.json())
+                                    .catch(error => {
+                                        console.error('Error preloading expression card:', error);
+                                        return null;
+                                    })
+                            )).then(results => {
+                                const filtered = results.filter(r => r !== null);
+                                preloadedExpressionCards[nextCardKey] = filtered;
+                                saveToLocalStorage(localStorageKey, filtered);
+                                console.log('Preloaded expression cards for next card:', filtered.length);
+                            });
+                        }
+                    }
+                } else if (nextCard.expressionCards && nextCard.expressionCards.length > 0) {
+                    if (!preloadedExpressionCards[nextCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = EXPRESSION_CACHE_PREFIX + nextCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded expression cards from localStorage for next card (fallback):', nextCard.japanese);
+                            preloadedExpressionCards[nextCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading expression cards for next card (fallback):', nextCard.japanese);
+                            preloadedExpressionCards[nextCardKey] = 'loading';
+
+                            // Fetch expression cards for next card
+                            Promise.all(nextCard.expressionCards.map(id =>
+                                fetch(`/api/expression/${id}`)
+                                    .then(response => response.json())
+                                    .catch(error => {
+                                        console.error('Error preloading expression card:', error);
+                                        return null;
+                                    })
+                            )).then(results => {
+                                const filtered = results.filter(r => r !== null);
+                                preloadedExpressionCards[nextCardKey] = filtered;
+                                saveToLocalStorage(localStorageKey, filtered);
+                                console.log('Preloaded expression cards for next card (fallback):', filtered.length);
+                            });
+                        }
+                    }
+                }
+
+                // Preload N1 word data for next card (support both single and multiple)
+                if (nextCard.n1VocabularyIds && nextCard.n1VocabularyIds.length > 0) {
+                    if (!preloadedN1WordData[nextCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = N1_VOCAB_CACHE_PREFIX + nextCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData && Array.isArray(cachedData)) {
+                            console.log('Loaded N1 vocabulary from localStorage for next card:', nextCard.japanese);
+                            preloadedN1WordData[nextCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading N1 word data for next card:', nextCard.japanese);
+                            preloadedN1WordData[nextCardKey] = 'loading';
+
+                            fetch(`/api/n1-vocabulary-multiple/${nextCard.n1VocabularyIds.join(',')}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    preloadedN1WordData[nextCardKey] = data;
+                                    saveToLocalStorage(localStorageKey, data);
+                                    console.log('Preloaded N1 word data for next card:', data?.length, 'items');
+                                })
+                                .catch(error => {
+                                    console.error('Error preloading N1 word data:', error);
+                                    preloadedN1WordData[nextCardKey] = null;
+                                });
+                        }
+                    }
+                } else if (nextCard.n1VocabularyId) {
+                    // Legacy support for single n1VocabularyId
+                    if (!preloadedN1WordData[nextCardKey]) {
+                        // Check localStorage first
+                        const localStorageKey = N1_VOCAB_CACHE_PREFIX + nextCardKey;
+                        const cachedData = loadFromLocalStorage(localStorageKey);
+
+                        if (cachedData) {
+                            console.log('Loaded N1 vocabulary from localStorage for next card (legacy):', nextCard.japanese);
+                            preloadedN1WordData[nextCardKey] = cachedData;
+                        } else {
+                            console.log('Preloading N1 word data for next card (legacy):', nextCard.japanese);
+                            preloadedN1WordData[nextCardKey] = 'loading';
+
+                            fetch(`/api/n1-vocabulary/${nextCard.n1VocabularyId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    preloadedN1WordData[nextCardKey] = data;
+                                    saveToLocalStorage(localStorageKey, data);
+                                    console.log('Preloaded N1 word data for next card:', data?.word);
+                                })
+                                .catch(error => {
+                                    console.error('Error preloading N1 word data:', error);
+                                    preloadedN1WordData[nextCardKey] = null;
+                                });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Progressive loading: Preload first 3 cards immediately, then rest in background
+        function preloadInitialCards() {
+            console.log('Starting progressive loading...');
+            const totalCards = currentEpisodeCards.length;
+            const initialLoadCount = Math.min(3, totalCards);
+
+            // Preload first 3 cards immediately
+            console.log(`Preloading first ${initialLoadCount} cards immediately...`);
+            for (let i = 0; i < initialLoadCount; i++) {
+                preloadCardResources(i);
+            }
+
+            // Preload remaining cards progressively in background after a short delay
+            if (totalCards > initialLoadCount) {
+                console.log(`Will preload remaining ${totalCards - initialLoadCount} cards in background...`);
+                setTimeout(() => {
+                    preloadRemainingCards(initialLoadCount);
+                }, 500); // 500ms delay to let initial cards load first
+            }
+        }
+
+        // Preload resources for a specific card index
+        function preloadCardResources(cardIndex) {
+            if (cardIndex >= currentEpisodeCards.length) return;
+
+            const card = currentEpisodeCards[cardIndex];
+            const cardKey = `${currentEpisode}_${cardIndex}`;
+
+            // Preload audio
+            if (card.audioUrl && !preloadedAudios[cardKey]) {
+                preloadedAudios[cardKey] = new Audio(card.audioUrl);
+                preloadedAudios[cardKey].preload = 'auto';
+                preloadedAudios[cardKey].load();
+            }
+
+            // Preload Korean audio
+            if (card.koreanAudioUrl) {
+                const koreanKey = `${cardKey}_K`;
+                if (!preloadedAudios[koreanKey]) {
+                    preloadedAudios[koreanKey] = new Audio(card.koreanAudioUrl);
+                    preloadedAudios[koreanKey].preload = 'auto';
+                    preloadedAudios[koreanKey].load();
+                }
+            }
+
+            // Preload expression cards
+            if (card.expressionCardIds && card.expressionCardIds.length > 0) {
+                Promise.all(card.expressionCardIds.map(id =>
+                    fetch(`/api/expression/${id}`)
+                        .then(response => response.json())
+                        .catch(error => null)
+                )).then(results => {
+                    preloadedExpressionCards[cardKey] = results.filter(r => r !== null);
+                });
+            }
+
+            // Preload N1 vocabulary data
+            if (card.n1VocabularyIds && card.n1VocabularyIds.length > 0) {
+                const ids = card.n1VocabularyIds.join(',');
+                fetch(`/api/n1-vocabulary-multiple/${ids}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        preloadedN1WordData[cardKey] = data;
+                    })
+                    .catch(error => {
+                        console.error('Error loading N1 vocabulary data:', error);
+                    });
+            }
+        }
+
+        // Preload remaining cards progressively in background
+        function preloadRemainingCards(startIndex) {
+            const totalCards = currentEpisodeCards.length;
+            console.log(`Preloading remaining cards from index ${startIndex} to ${totalCards - 1}...`);
+
+            // Preload in batches to avoid overwhelming the browser
+            const batchSize = 5;
+            let currentBatch = startIndex;
+
+            function preloadNextBatch() {
+                const endIndex = Math.min(currentBatch + batchSize, totalCards);
+                console.log(`Preloading batch: cards ${currentBatch} to ${endIndex - 1}`);
+
+                for (let i = currentBatch; i < endIndex; i++) {
+                    preloadCardResources(i);
+                }
+
+                currentBatch = endIndex;
+
+                // Continue with next batch after a delay
+                if (currentBatch < totalCards) {
+                    setTimeout(preloadNextBatch, 1000); // 1 second between batches
+                } else {
+                    console.log('All cards preloaded!');
+                }
+            }
+
+            preloadNextBatch();
+        }
+
+        // Aggressively preload current card data immediately when card is loaded
+        function preloadCurrentCardDataImmediately() {
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            if (!currentCard) return;
+            
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            console.log('Aggressively preloading current card data:', currentCard.japanese);
+            
+            // Load expression cards immediately (use expressionCardIds if available)
+            if (currentCard.expressionCardIds && currentCard.expressionCardIds.length > 0) {
+                console.log('Loading expression cards immediately:', currentCard.expressionCardIds.length);
+                Promise.all(currentCard.expressionCardIds.map(id => 
+                    fetch(`/api/expression/${id}`)
+                        .then(response => response.json())
+                        .catch(error => {
+                            console.error('Error loading expression card:', error);
+                            return null;
+                        })
+                )).then(results => {
+                    preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                    console.log('Immediately loaded expression cards:', preloadedExpressionCards[currentCardKey].length);
+                });
+            } else if (currentCard.expressionCards && currentCard.expressionCards.length > 0) {
+                console.log('Loading expression cards immediately (fallback):', currentCard.expressionCards.length);
+                Promise.all(currentCard.expressionCards.map(id => 
+                    fetch(`/api/expression/${id}`)
+                        .then(response => response.json())
+                        .catch(error => {
+                            console.error('Error loading expression card:', error);
+                            return null;
+                        })
+                )).then(results => {
+                    preloadedExpressionCards[currentCardKey] = results.filter(r => r !== null);
+                    console.log('Immediately loaded expression cards (fallback):', preloadedExpressionCards[currentCardKey].length);
+                });
+            }
+            
+            // Load N1 word data immediately
+            if (currentCard.n1VocabularyId) {
+                console.log('Loading N1 word data immediately:', currentCard.n1VocabularyId);
+                fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        preloadedN1WordData[currentCardKey] = data;
+                        console.log('Immediately loaded N1 word data:', data?.word);
+                    })
+                    .catch(error => {
+                        console.error('Error loading N1 word data:', error);
+                        preloadedN1WordData[currentCardKey] = null;
+                    });
+            }
+        }
+
+        // Fallback TTS function
+        function speakJapaneseWithTTS() {
+            console.log('=== speakJapaneseWithTTS function started ===');
+            
+            const currentCard = currentEpisodeCards[currentCardIndex];
             
             if (!currentCard.japanese) {
                 console.error('No Japanese text in current card');
                 return;
             }
             
-            console.log('Speaking Japanese text:', currentCard.japanese);
+            console.log('Speaking Japanese text with TTS:', currentCard.japanese);
             const utterance = new SpeechSynthesisUtterance(currentCard.japanese);
-            console.log('Utterance created');
+            console.log('TTS Utterance created');
             
             // Wait for voices to load on mobile browsers
             const voices = speechSynthesis.getVoices();
@@ -1149,91 +2494,37 @@
                 // Retry after voices are loaded
                 speechSynthesis.addEventListener('voiceschanged', () => {
                     console.log('Voices changed event triggered');
-                    speakJapanese();
+                    speakJapaneseWithTTS();
                 }, { once: true });
                 return;
             }
             
-            // Try to use Japanese voice based on character gender
-            let selectedVoice = null;
-            
-            if (currentCard.gender === 'F') {
-                // Find female Japanese voice - prioritize natural female voices
-                selectedVoice = voices.find(voice => 
-                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                    (voice.name.includes('Female') || voice.name.includes('female') || 
-                     voice.name.includes('Woman') || voice.name.includes('woman') ||
-                     voice.name.includes('Kyoko') || voice.name.includes('Otoya') ||
-                     voice.name.includes('女'))
-                ) || voices.find(voice => 
-                    (voice.lang === 'ja-JP' || voice.lang === 'ja') && 
-                    !voice.name.toLowerCase().includes('male') && !voice.name.toLowerCase().includes('man')
-                );
-            } else if (currentCard.gender === 'M') {
-                // For male voices, try different approach - look for specific male voice names
-                const maleVoiceNames = ['Kenji', 'Hattori', 'Ichiro', 'Takeshi', 'Hiroshi', 'Taro', 'Jiro'];
-                
-                selectedVoice = voices.find(voice => 
-                    (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                    maleVoiceNames.some(name => voice.name.includes(name))
-                );
-                
-                // If no specific male name found, try broader search
-                if (!selectedVoice) {
-                    selectedVoice = voices.find(voice => 
-                        (voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')) &&
-                        (voice.name.includes('Male') || voice.name.includes('male') || 
-                         voice.name.includes('Man') || voice.name.includes('man') ||
-                         voice.name.includes('男'))
-                    );
-                }
-                
-                // Last resort - use any Japanese voice for male with pitch adjustment
-                if (!selectedVoice) {
-                    selectedVoice = voices.find(voice => 
-                        voice.lang === 'ja-JP' || voice.lang === 'ja'
-                    );
-                }
-            }
-            
-            // Fallback to any Japanese voice
-            if (!selectedVoice) {
-                selectedVoice = voices.find(voice => 
-                    voice.lang.startsWith('ja') || voice.name.includes('Japanese')
-                );
-            }
+            // Find Japanese voice
+            const selectedVoice = voices.find(voice => 
+                voice.lang.startsWith('ja') || voice.name.includes('Japanese') || voice.name.includes('ja-')
+            );
             
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
             
             utterance.lang = 'ja-JP';
-            // Rate will be set based on gender below
-            
-            // Adjust pitch and rate based on gender for more natural voices
-            if (currentCard.gender === 'F') {
-                utterance.pitch = 1.1; // Slightly higher pitch for female
-                utterance.rate = 1.2; // Normal rate
-            } else if (currentCard.gender === 'M') {
-                utterance.pitch = 0.75; // Lower pitch for male
-                utterance.rate = 1.0; // Slightly slower rate for deeper sound
-            } else {
-                utterance.pitch = 1.0; // Default pitch
-                utterance.rate = 1.2; // Default rate
-            }
             
             // Visual feedback for speaking
-            speakerBtn.style.background = '#2b6cb0';
-            speakerBtnBack.style.background = '#2b6cb0';
+            // Speaker buttons removed
+            // speakerBtn.style.background = '#2b6cb0';
+            // speakerBtnBack.style.background = '#2b6cb0';
             
             utterance.onend = () => {
-                speakerBtn.style.background = '#4299e1';
-                speakerBtnBack.style.background = '#4299e1';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#4299e1';
+                // speakerBtnBack.style.background = '#4299e1';
             };
             
             utterance.onerror = (event) => {
-                speakerBtn.style.background = '#4299e1';
-                speakerBtnBack.style.background = '#4299e1';
+                // Speaker buttons removed
+                // speakerBtn.style.background = '#4299e1';
+                // speakerBtnBack.style.background = '#4299e1';
                 console.warn('Speech synthesis error - Japanese voice may not be available');
                 console.error('TTS Error:', event);
                 
@@ -1241,10 +2532,10 @@
                 console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
             };
             
-            console.log('About to speak with utterance:', utterance);
+            console.log('About to speak with TTS utterance:', utterance);
             speechSynthesis.speak(utterance);
             console.log('speechSynthesis.speak() called');
-            console.log('=== speakJapanese function ended ===');
+            console.log('=== speakJapaneseWithTTS function ended ===');
         }
 
         // Text-to-speech for N2 words
@@ -1277,8 +2568,7 @@
             }
             
             utterance.lang = 'ja-JP';
-            utterance.rate = 0.7; // Slower for individual words
-            utterance.pitch = 1.0;
+            // Use default settings for individual words
             
             // Visual feedback for speaking
             wordSpeakerBtn.style.background = '#2d7748';
@@ -1298,12 +2588,38 @@
             speechSynthesis.speak(utterance);
         }
 
+        // Reset play/pause button to play state
+        function resetPlayPauseButton() {
+            if (!playPauseBtn) return;
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            isPlaying = false;
+        }
+
         // Navigation functions
         function goToPreviousCard() {
             if (currentCardIndex > 0) {
+                // Stop current audio and clear reference
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                    window.currentAudio.currentTime = 0;
+                    window.currentAudio = null;
+                }
+                speechSynthesis.cancel();
+
                 currentCardIndex--;
+                resetPlayPauseButton();
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+                
+                // Preload audio after navigation
+                preloadAudio();
+                
+                // Aggressively preload current card data immediately
+                preloadCurrentCardDataImmediately();
             } else {
                 // At first card of episode, try to go to previous episode
                 const sequences = Object.keys(episodeData).sort();
@@ -1324,9 +2640,24 @@
 
         function goToNextCard() {
             if (currentCardIndex < currentEpisodeCards.length - 1) {
+                // Stop current audio and clear reference
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                    window.currentAudio.currentTime = 0;
+                    window.currentAudio = null;
+                }
+                speechSynthesis.cancel();
+
                 currentCardIndex++;
+                resetPlayPauseButton();
                 loadCard(currentCardIndex);
                 updateNavigationButtons();
+                
+                // Preload audio after navigation
+                preloadAudio();
+                
+                // Aggressively preload current card data immediately
+                preloadCurrentCardDataImmediately();
             } else {
                 // At last card of episode, try to go to next episode
                 const sequences = Object.keys(episodeData).sort();
@@ -1350,57 +2681,180 @@
             nextBtn.disabled = currentCardIndex === currentEpisodeCards.length - 1;
         }
 
+        function goToHomepage() {
+            // Navigate to the episode list for the current book
+            if (currentEpisodeCards && currentEpisodeCards.length > 0) {
+                const bookId = currentEpisodeCards[0].bookId;
+                if (bookId) {
+                    window.location.href = `/?book=${encodeURIComponent(bookId)}`;
+                    return;
+                }
+            }
+            // Fallback to homepage if no book ID is available
+            window.location.href = '/';
+        }
+
+        function previousVolume() {
+            // Volume navigation placeholder
+            console.log('Previous volume clicked');
+        }
+
+        function nextVolume() {
+            // Volume navigation placeholder
+            console.log('Next volume clicked');
+        }
+
         // Event listeners
         // Remove global click event - now handled by clickable areas only
-        speakerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            console.log('Speaker button clicked');
-            console.log('typeof speakJapanese:', typeof speakJapanese);
-            console.log('About to call speakJapanese()');
-            try {
-                speakJapanese();
-                console.log('speakJapanese() call completed');
-            } catch (error) {
-                console.error('Error calling speakJapanese:', error);
+        // Speaker buttons removed - now using play/pause button instead
+        // speakerBtn.addEventListener('click', (e) => {
+        //     e.stopPropagation();
+        //     speakJapanese();
+        // });
+        // speakerBtnBack.addEventListener('click', (e) => {
+        //     e.stopPropagation();
+        //     speakJapanese();
+        // });
+
+        // Play/Pause button functionality
+        if (playPauseBtn) {
+            playPauseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePlayPause();
+            });
+        }
+
+        function togglePlayPause() {
+            if (!playPauseBtn) return;
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            if (isPlaying) {
+                // Pause the audio
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                }
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
+                }
+
+                // Switch to play icon
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                isPlaying = false;
+            } else {
+                // Always start fresh with current card's audio
+                // This ensures we're playing the correct audio for the current card
+                const currentCard = currentEpisodeCards[currentCardIndex];
+                const currentAudioCard = window.currentAudio ? window.currentAudio.src : null;
+                const expectedAudioUrl = currentCard ? currentCard.audioUrl : null;
+
+                // Check if current audio matches current card
+                const audioMatches = currentAudioCard && expectedAudioUrl &&
+                                   currentAudioCard.includes(expectedAudioUrl.split('/').pop());
+
+                if (window.currentAudio && window.currentAudio.paused &&
+                    window.currentAudio.currentTime > 0 && audioMatches) {
+                    // Resume paused audio only if it's for the current card
+                    window.currentAudio.play();
+                } else if (window.speechSynthesis.paused) {
+                    // Resume paused TTS
+                    window.speechSynthesis.resume();
+                } else {
+                    // Start playing from beginning with correct audio
+                    speakJapanese();
+                }
+
+                // Switch to pause icon
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                isPlaying = true;
             }
-        });
-        speakerBtnBack.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakJapanese();
-        });
-        wordSpeakerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakWord();
-        });
-        wordSpeakerBtnBack.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking speaker
-            speakWord();
-        });
+        }
+
+        // Word speaker buttons are hidden and not used
         prevBtn.addEventListener('click', goToPreviousCard);
         nextBtn.addEventListener('click', goToNextCard);
         
         // Old episode navigation buttons removed from HTML
         
         // New sequence navigation button event listeners
+        console.log('=== Setting up sequence navigation event listeners ===');
+        console.log('prevSequenceBtn exists:', !!prevSequenceBtn);
+        console.log('nextSequenceBtn exists:', !!nextSequenceBtn);
+
         if (prevSequenceBtn) {
+            console.log('Adding click listener to prevSequenceBtn');
             prevSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                console.log('Previous sequence button clicked');
+                console.log('Current episode:', currentEpisode);
+                console.log('Episode data keys:', Object.keys(episodeData));
+
+                if (!episodeData || Object.keys(episodeData).length === 0) {
+                    console.error('No episode data available');
+                    return;
+                }
+
+                // Get sequences for current book only
+                const sequences = getSequencesForCurrentBook();
                 const currentIndex = sequences.indexOf(currentEpisode);
+
+                console.log('Current index:', currentIndex);
+                console.log('Sequences (current book):', sequences);
+
                 if (currentIndex > 0) {
-                    loadEpisode(sequences[currentIndex - 1]);
+                    const prevSequence = sequences[currentIndex - 1];
+                    console.log('Loading previous sequence:', prevSequence);
+                    loadEpisode(prevSequence);
+                } else {
+                    console.log('Already at first sequence of current book');
                 }
             });
+        } else {
+            console.error('prevSequenceBtn is null - element not found!');
         }
-        
+
         if (nextSequenceBtn) {
+            console.log('Adding click listener to nextSequenceBtn');
             nextSequenceBtn.addEventListener('click', () => {
-                const sequences = Object.keys(episodeData).sort();
+                console.log('Next sequence button clicked');
+                console.log('Current episode:', currentEpisode);
+                console.log('Episode data keys:', Object.keys(episodeData));
+
+                if (!episodeData || Object.keys(episodeData).length === 0) {
+                    console.error('No episode data available');
+                    return;
+                }
+
+                // Get sequences for current book only
+                const sequences = getSequencesForCurrentBook();
                 const currentIndex = sequences.indexOf(currentEpisode);
-                if (currentIndex < sequences.length - 1) {
-                    loadEpisode(sequences[currentIndex + 1]);
+
+                console.log('Current index:', currentIndex);
+                console.log('Sequences (current book):', sequences);
+
+                if (currentIndex < sequences.length - 1 && currentIndex !== -1) {
+                    const nextSequence = sequences[currentIndex + 1];
+                    console.log('Loading next sequence:', nextSequence);
+                    loadEpisode(nextSequence);
+                } else {
+                    console.log('Already at last sequence of current book');
                 }
             });
+        } else {
+            console.error('nextSequenceBtn is null - element not found!');
         }
+
+        // Update sequence title in header
+        function updateSequenceTitle() {
+            const sequenceTitle = document.getElementById('sequence-title');
+            if (sequenceTitle && currentEpisodeCards && currentEpisodeCards.length > 0) {
+                const bookTitle = currentEpisodeCards[0].bookTitle || 'PALM';
+                sequenceTitle.textContent = `${bookTitle} ${currentEpisode}`;
+            }
+        }
+
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
@@ -1471,14 +2925,29 @@
             // Show modal
             modal.style.display = 'flex';
             
-            // Show loading
+            // Check if expression card data is preloaded
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            const preloadedData = preloadedExpressionCards[currentCardKey];
+            
+            if (preloadedData && Array.isArray(preloadedData)) {
+                console.log('Using preloaded expression card data');
+                const expressionCard = preloadedData.find(card => card.id === expressionCardId);
+                if (expressionCard) {
+                    renderExpressionCard(expressionCard);
+                    return;
+                }
+            }
+            
+            // Show loading if not preloaded
             modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
             
-            // Fetch expression card data
-            fetch(`/api/expression-card/${expressionCardId}`)
+            // Fetch expression card data immediately
+            console.log('Fetching expression card data for ID:', expressionCardId);
+            fetch(`/api/expression/${expressionCardId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
+                        console.log('Expression card data loaded:', data.title);
                         renderExpressionCard(data);
                     } else {
                         modalBody.innerHTML = '<div class="expression-loading">Expression card not found.</div>';
@@ -1493,11 +2962,274 @@
         function closeExpressionModal() {
             const modal = document.getElementById('expression-modal');
             modal.style.display = 'none';
+            // Stop any ongoing speech and reset button
+            window.speechSynthesis.cancel();
+            resetExpressionPlayPauseButton();
+        }
+
+        function openWordModal() {
+            console.log('=== openWordModal called ===');
+            const modal = document.getElementById('word-modal');
+            const modalBody = document.getElementById('word-modal-body');
+            
+            console.log('modal element:', modal);
+            console.log('modalBody element:', modalBody);
+            
+            modal.style.display = 'flex';
+            
+            // Get current card data
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            console.log('currentCard:', currentCard);
+            
+            // Check if N1 word data is preloaded
+            const currentCardKey = `${currentEpisode}_${currentCardIndex}`;
+            const preloadedData = preloadedN1WordData[currentCardKey];
+            
+            if (preloadedData && preloadedData !== 'loading') {
+                console.log('Using preloaded N1 word data');
+                renderWordModal(preloadedData);
+                return;
+            }
+            
+            // Show loading if not preloaded
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
+            
+            if (!currentCard) {
+                modalBody.innerHTML = '<div class="expression-loading">No current card available.</div>';
+                return;
+            }
+            
+            if (currentCard.n1VocabularyId) {
+                console.log('N1 vocabulary ID found:', currentCard.n1VocabularyId);
+                
+                // Fetch N1 vocabulary data immediately
+                fetch(`/api/n1-vocabulary/${currentCard.n1VocabularyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('N1 vocabulary data loaded:', data);
+                        if (data) {
+                            renderWordModal(data);
+                        } else {
+                            modalBody.innerHTML = '<div class="expression-loading">N1 vocabulary not found.</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching N1 vocabulary:', error);
+                        modalBody.innerHTML = '<div class="expression-loading">Error loading N1 vocabulary.</div>';
+                    });
+            } else {
+                // Create word modal content with available data
+                const wordData = {
+                    word: currentCard.speaker || currentCard.japanese || '단어 없음',
+                    reading: currentCard.speakerReading || currentCard.speaker || currentCard.japanese || '',
+                    meaning: currentCard.speakerMeaning || '의미 정보 없음',
+                    sentence: currentCard.japanese || '',
+                    sentenceKorean: currentCard.korean || ''
+                };
+                
+                console.log('Using fallback wordData:', wordData);
+                renderWordModal(wordData);
+            }
+        }
+
+        function renderWordModal(data) {
+            const modalBody = document.getElementById('word-modal-body');
+            
+            // Get current card for character image
+            const currentCard = currentEpisodeCards[currentCardIndex];
+            const characterImage = currentCard?.characterImage || '';
+            
+            let html = `
+                <div class="word-main-section" style="text-align: center;">
+                    ${characterImage ? `
+                        <div style="margin-bottom: 20px;">
+                            <img src="${characterImage}" alt="캐릭터" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                        </div>
+                    ` : ''}
+                    <h2 class="word-main-title" onclick="speakJapaneseText('${data.word}')" style="font-size: 29px; margin-bottom: 16px;">
+                        ${data.word}
+                    </h2>
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 12px; color: #666;">
+                        ${data.reading}
+                    </p>
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888;">
+                        ${data.meaning}
+                    </p>
+                </div>
+            `;
+            
+            modalBody.innerHTML = html;
+        }
+
+        function closeWordModal() {
+            const modal = document.getElementById('word-modal');
+            modal.style.display = 'none';
+        }
+
+        function openWordModalWithN1Data(vocabulary) {
+            console.log('=== openWordModalWithN1Data called ===');
+            console.log('vocabulary data:', vocabulary);
+            
+            const modal = document.getElementById('word-modal');
+            const modalBody = document.getElementById('word-modal-body');
+            
+            modal.style.display = 'flex';
+            modalBody.innerHTML = '<div class="expression-loading">Loading...</div>';
+            
+            // Use N1 vocabulary image from img field
+            const vocabularyImage = vocabulary.img || '';
+            
+            // Create word modal content with N1 vocabulary data
+            const wordData = {
+                word: vocabulary.word || '단어 없음',
+                reading: vocabulary.reading || vocabulary.word || '',
+                meaning: vocabulary.meaning || '의미 정보 없음',
+                example: vocabulary.example || '',
+                exampleTranslation: vocabulary.exampleTranslation || ''
+            };
+            
+            let html = `
+                <div class="word-main-section" style="text-align: center;">
+                    ${vocabularyImage ? `
+                        <div style="margin-bottom: 12px; position: relative; display: inline-block;">
+                            <img src="${vocabularyImage}" alt="단어 이미지" style="width: 90%; max-width: 300px; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover;" />
+                            <button class="word-modal-speaker-btn" onclick="speakWordInModal('${wordData.word}')" style="position: absolute; bottom: 16px; right: 35px; width: 40px; height: 40px; border-radius: 50%; background: rgba(66, 153, 225, 0.9); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    ` : ''}
+                    <h2 class="word-main-title" onclick="speakWordInModal('${wordData.word}')" style="font-size: 29px; margin-bottom: 2px; cursor: pointer;">
+                        ${wordData.word}
+                    </h2>
+                    <p class="word-main-reading" style="font-size: 20px; margin-bottom: 4px; color: #666;">
+                        ${wordData.reading}
+                    </p>
+                    <p class="word-main-meaning" style="font-size: 18px; color: #888; margin-bottom: 12px;">
+                        ${wordData.meaning}
+                    </p>
+                    ${wordData.example ? `
+                        <div class="word-examples" onclick="speakJapaneseExample('${wordData.example.replace(/'/g, "\\'")}'); return false;" style="margin-top: 16px; padding: 12px 8px; background: rgba(0,0,0,0.05); border-radius: 8px; text-align: left; cursor: pointer; transition: background-color 0.2s ease;">
+                            <p class="word-example-ja" style="font-size: 16px; color: #333; margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">
+                                ${wordData.example}
+                            </p>
+                            <p class="word-example-ko" style="font-size: 14px; color: #666; margin-bottom: 0; line-height: 1.4; word-break: keep-all;">
+                                ${wordData.exampleTranslation}
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            modalBody.innerHTML = html;
+            
+            // Adjust modal height based on content
+            setTimeout(() => {
+                adjustModalHeight();
+            }, 50);
+        }
+
+        function adjustModalHeight() {
+            const modal = document.querySelector('.word-modal-content');
+            const modalBody = document.getElementById('word-modal-body');
+            
+            if (modal && modalBody) {
+                // Reset height and overflow first
+                modal.style.height = 'auto';
+                modal.style.overflowY = 'visible';
+                modal.style.maxHeight = '85vh';
+                
+                // Force reflow
+                modal.offsetHeight;
+                
+                // Get actual content height including margins
+                const contentHeight = modalBody.scrollHeight;
+                const modalPadding = 40; // 20px top + 20px bottom padding
+                const totalHeight = contentHeight + modalPadding;
+                const maxHeight = window.innerHeight * 0.85;
+                
+                // Only add scroll if content truly exceeds viewport
+                if (totalHeight > maxHeight) {
+                    modal.style.maxHeight = maxHeight + 'px';
+                    modal.style.overflowY = 'auto';
+                } else {
+                    modal.style.height = 'fit-content';
+                    modal.style.overflowY = 'visible';
+                }
+            }
+        }
+
+        function speakWordInModal(word) {
+            console.log('Speaking word in modal:', word);
+            
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(word);
+            
+            // Wait for voices to load on mobile browsers
+            const voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    speakWordInModal(word);
+                }, { once: true });
+                return;
+            }
+            
+            // Use Japanese voice
+            const japaneseVoice = voices.find(voice => voice.lang.startsWith('ja'));
+            if (japaneseVoice) {
+                utterance.voice = japaneseVoice;
+            }
+            
+            utterance.lang = 'ja-JP';
+            utterance.rate = 1.2;
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function speakJapaneseExample(example) {
+            console.log('Speaking Japanese example:', example);
+            
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            // Small delay to ensure cancellation is complete
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(example);
+                
+                // Wait for voices to load on mobile browsers
+                const voices = speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    speechSynthesis.addEventListener('voiceschanged', () => {
+                        speakJapaneseExample(example);
+                    }, { once: true });
+                    return;
+                }
+                
+                // Use Japanese voice
+                const japaneseVoice = voices.find(voice => voice.lang.startsWith('ja'));
+                if (japaneseVoice) {
+                    utterance.voice = japaneseVoice;
+                }
+                
+                utterance.lang = 'ja-JP';
+                utterance.rate = 1.0;
+                
+                speechSynthesis.speak(utterance);
+            }, 100);
         }
 
         function renderExpressionCard(data) {
             const modalBody = document.getElementById('expression-modal-body');
-            
+
+            // Store data globally for audio playback
+            currentExpressionCardData = data;
+
+            // console.log('=== Expression Card Data ===');
+            // console.log('Full data:', data);
+
             // Prepare applications array
             const applications = [
                 { japanese: data.application1, korean: data.application1Korean },
@@ -1506,10 +3238,13 @@
                 { japanese: data.application4, korean: data.application4Korean },
                 { japanese: data.application5, korean: data.application5Korean }
             ].filter(app => app.japanese && app.japanese.trim() !== '');
-            
+
+            // console.log('Filtered applications:', applications);
+            // console.log('Applications count:', applications.length);
+
             let html = `
                 <div class="expression-main-section">
-                    <h2 class="expression-main-title" onclick="speakJapanese('${data.title}')">
+                    <h2 class="expression-main-title">
                         ${data.title}
                     </h2>
                     <p class="expression-main-meaning">
@@ -1520,7 +3255,8 @@
             
             if (applications.length > 0) {
                 html += '<div class="expression-applications">';
-                applications.forEach(app => {
+                applications.forEach((app, index) => {
+                    // console.log(`Rendering application ${index + 1}:`, app);
                     html += `
                         <div class="expression-application-item" onclick="speakJapaneseText('${app.japanese}')">
                             <div class="expression-application-japanese">${app.japanese}</div>
@@ -1529,9 +3265,18 @@
                     `;
                 });
                 html += '</div>';
+                // console.log('Final HTML length:', html.length);
+                // console.log('Final HTML preview:', html.substring(0, 500));
             }
             
             modalBody.innerHTML = html;
+            
+            // Check how many items were actually rendered
+            // setTimeout(() => {
+            //     const renderedItems = document.querySelectorAll('.expression-application-item');
+            //     console.log('Actually rendered items count:', renderedItems.length);
+            //     console.log('Modal body HTML:', modalBody.innerHTML);
+            // }, 100);
         }
 
         function speakJapaneseText(text) {
@@ -1539,9 +3284,127 @@
                 window.speechSynthesis.cancel(); // Cancel any ongoing speech
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ja-JP';
-                utterance.rate = 1.2;
+                // Use default rate
                 window.speechSynthesis.speak(utterance);
             }
+        }
+
+        // Global variable to store current expression card data
+        let currentExpressionCardData = null;
+        let isExpressionPlaying = false;
+        let currentExpressionIndex = 0;
+        let expressionSpeechQueue = [];
+
+        // Toggle play/pause for expression card
+        function toggleExpressionPlayPause() {
+            const playPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (!playPauseBtn) return;
+
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            if (isExpressionPlaying) {
+                // Pause
+                window.speechSynthesis.pause();
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                isExpressionPlaying = false;
+            } else {
+                // Check if we're resuming or starting fresh
+                if (window.speechSynthesis.paused && expressionSpeechQueue.length > 0) {
+                    // Resume
+                    window.speechSynthesis.resume();
+                } else {
+                    // Start fresh
+                    playExpressionCardAudio();
+                }
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                isExpressionPlaying = true;
+            }
+        }
+
+        // Reset expression play/pause button
+        function resetExpressionPlayPauseButton() {
+            const playPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (!playPauseBtn) return;
+
+            const playIcon = playPauseBtn.querySelector('.play-icon');
+            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+            if (!playIcon || !pauseIcon) return;
+
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            isExpressionPlaying = false;
+            currentExpressionIndex = 0;
+            expressionSpeechQueue = [];
+        }
+
+        // Play full expression card audio: Japanese title → Korean meaning → 5 examples
+        function playExpressionCardAudio(event) {
+            // Stop event propagation to prevent triggering card behind modal
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            if (!currentExpressionCardData) {
+                console.error('No expression card data available');
+                return;
+            }
+
+            const data = currentExpressionCardData;
+
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+
+            // Prepare applications array
+            const applications = [
+                data.application1,
+                data.application2,
+                data.application3,
+                data.application4,
+                data.application5
+            ].filter(app => app && app.trim() !== '');
+
+            expressionSpeechQueue = [];
+
+            // Add Japanese title
+            expressionSpeechQueue.push({ text: data.title, lang: 'ja-JP' });
+
+            // Add Korean meaning
+            if (data.meaning) {
+                expressionSpeechQueue.push({ text: data.meaning, lang: 'ko-KR' });
+            }
+
+            // Add all example sentences (Japanese)
+            applications.forEach(app => {
+                expressionSpeechQueue.push({ text: app, lang: 'ja-JP' });
+            });
+
+            // Play speech queue sequentially
+            currentExpressionIndex = 0;
+            function playNext() {
+                if (currentExpressionIndex >= expressionSpeechQueue.length) {
+                    // Reset button when playback ends
+                    resetExpressionPlayPauseButton();
+                    return;
+                }
+
+                const item = expressionSpeechQueue[currentExpressionIndex];
+                const utterance = new SpeechSynthesisUtterance(item.text);
+                utterance.lang = item.lang;
+
+                utterance.onend = () => {
+                    currentExpressionIndex++;
+                    playNext();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+
+            playNext();
         }
 
         // Initialize modal event listener after DOM is ready
@@ -1554,14 +3417,48 @@
                     }
                 });
             }
+
+            // Add expression play/pause button event listener
+            const expressionPlayPauseBtn = document.getElementById('expression-play-pause-btn');
+            if (expressionPlayPauseBtn) {
+                expressionPlayPauseBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleExpressionPlayPause();
+                });
+            }
+
+            const wordModal = document.getElementById('word-modal');
+            if (wordModal) {
+                wordModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeWordModal();
+                    }
+                });
+            }
         });
     </script>
     
     <!-- Expression Card Modal -->
     <div class="expression-modal" id="expression-modal">
         <div class="expression-modal-content">
-            <button class="expression-modal-close" onclick="closeExpressionModal()">&times;</button>
+            <button class="expression-modal-play-pause" id="expression-play-pause-btn">
+                <svg class="play-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+            </button>
             <div id="expression-modal-body">
+                <div class="expression-loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Modal -->
+    <div id="word-modal" class="word-modal">
+        <div class="word-modal-content">
+            <div id="word-modal-body">
                 <div class="expression-loading">Loading...</div>
             </div>
         </div>
