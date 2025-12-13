@@ -6,6 +6,7 @@ const { asyncHandler, errorMiddleware, notFoundHandler } = require('./utils/erro
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // API endpoint to get flashcards from Notion
 app.get('/api/flashcards', asyncHandler(async (req, res) => {
@@ -104,28 +105,32 @@ app.get('/api/episodes', asyncHandler(async (req, res) => {
     res.json(episodes);
 }));
 
-// Serve the episodes selection page as the main page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'episodes.html'));
-});
+// Serve static files
+if (isProduction) {
+    // In production, serve from dist directory
+    const distPath = path.join(__dirname, '..', 'dist');
+    app.use(express.static(distPath));
+    console.log(`Serving static files from: ${distPath}`);
+} else {
+    // In development, serve from root (for backwards compatibility)
+    app.use(express.static('.'));
 
-// Serve the flashcard app
-app.get('/flashcards', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, 'episodes.html'));
+    });
 
-// Serve the player app
-app.get('/player', (req, res) => {
-    res.sendFile(path.join(__dirname, 'player.html'));
-});
+    app.get('/flashcards', (req, res) => {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    });
 
-// Serve player.html directly
-app.get('/player.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'player.html'));
-});
+    app.get('/player', (req, res) => {
+        res.sendFile(path.join(__dirname, 'player.html'));
+    });
 
-// Serve static files (after all routes are defined)
-app.use(express.static('.'));
+    app.get('/player.html', (req, res) => {
+        res.sendFile(path.join(__dirname, 'player.html'));
+    });
+}
 
 // Error handling middleware (must be last)
 app.use(errorMiddleware);

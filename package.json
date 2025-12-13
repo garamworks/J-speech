@@ -8,6 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "PORT=8080 node server/server.js",
+    "server:prod": "NODE_ENV=production PORT=8080 node server/server.js",
+    "start:prod": "npm run build && npm run server:prod",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@vitest/ui": "^4.0.15",
     "happy-dom": "^20.0.11",
+    "terser": "^5.44.1",
     "vite": "^7.2.7",
     "vitest": "^4.0.15"
   }
